@@ -1,0 +1,25 @@
+# Secrets : ne jamais versionner
+.env
+.env.*
+!.env.example
+
+# Dépendances
+node_modules/
+
+# Builds et caches
+dist/
+build/
+.next/
+.vite/
+coverage/
+*.log
+
+# Données locales Docker
+postgres-data/
+redis-data/
+
+# Éditeur et système
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
