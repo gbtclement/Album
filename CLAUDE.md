@@ -37,3 +37,4 @@ Next.js 16 avec `cacheComponents` : pas de `export const dynamic`. Une page qui 
 - Ne jamais afficher les secrets (`.env`, mots de passe, clés API) dans une réponse.
 - Style : rester sobre pour l'instant. Le seul design travaillé est la page de connexion/inscription (lot 1) ; on répliquera ce style sur le reste du site une fois validé.
 - SEO : chaque page publique définit son titre, sa description et son URL canonique (à partir de `PUBLIC_BASE_URL`).
+- Documentation : la page `/documentation` (`app/documentation/page.tsx`) décrit le site techniquement (routes, tables, variables d'environnement, règles, avancement des lots). Elle est mise à jour à chaque lot. Elle n'est pas protégée pour l'instant.
