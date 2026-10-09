@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
-/* Base volontairement sobre : le style travaillé viendra avec la page de connexion (lot 1) */
+/* Police d'affichage : utilisée uniquement par les pages d'authentification pour l'instant */
+@theme inline {
+  --font-display: var(--font-fraunces);
+}
+
+/* Base volontairement sobre : le reste du site restera simple jusqu'à validation du style */
 body {
   background: #ffffff;
   color: #171717;

@@ -7,7 +7,7 @@ Jeu de collection de cartes d'albums de musique, inspiré de Wikimaster. Interfa
 - Next.js 16 (App Router, TypeScript, Turbopack) : pages et API dans `app/`
 - PostgreSQL (`lib/db.ts`) et Redis (`lib/redis.ts`), tous deux dans Docker
 - Tailwind CSS 4
-- Auth.js (lot 1), Lightweight Charts (lot 6)
+- Auth.js (e-mail/mot de passe ; Google seulement si `AUTH_GOOGLE_ID` et `AUTH_GOOGLE_SECRET` sont renseignés), Lightweight Charts (lot 6)
 
 Next.js 16 a des changements par rapport aux versions habituelles : lire le guide correspondant dans `node_modules/next/dist/docs/` avant d'écrire du code.
 
@@ -17,15 +17,19 @@ Next.js 16 a des changements par rapport aux versions habituelles : lire le guid
 - Voir les logs : `docker compose logs -f app`
 - Arrêter : `docker compose down`
 - Vérifier la santé : http://localhost:3000/api/health (200 si la base et Redis répondent)
+- Appliquer les migrations sur une base existante (le dossier `db/migrations` n'est lu automatiquement que sur une base neuve) :
+  `Get-Content db/migrations/001_users.sql | docker compose exec -T db psql -U album -d album`
 
 Le projet tourne uniquement dans Docker : Node n'est pas installé sur la machine Windows.
+Après un changement dans `.env`, relancer avec `docker compose up -d app` (et non `restart`) pour que le conteneur relise les variables.
+Next.js 16 avec `cacheComponents` : pas de `export const dynamic`. Une page qui lit la configuration à chaque requête appelle `await connection()` dans un composant enveloppé dans `<Suspense>`.
 
 ## Branches
 
 - `dev` : développement local
 - `preprod` : recette avant production
 - `prod` : version en ligne
-- Chaque lot a sa branche (`lot0-socle`, `lot1-auth`, ...) qui part de `dev`, puis passe par une PR vers `dev`.
+- Chaque lot a sa branche (`lot0-socle`, `lot1-auth`, ...) qui part de `dev`, ou du lot précédent tant qu'il n'est pas fusionné. Puis passage par une PR vers `dev`.
 
 ## Règles
 
