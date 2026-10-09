@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Base volontairement sobre : le style travaillé viendra avec la page de connexion (lot 1) */
+body {
+  background: #ffffff;
+  color: #171717;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
