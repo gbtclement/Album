@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { MIN_PASSWORD_LENGTH, resetPassword } from "@/lib/password-reset";
 import { resetRateLimit } from "@/lib/rate-limit";
+import { canonicalEmail } from "@/lib/users";
 
 export type ResetState = { error?: string };
 
@@ -20,6 +21,6 @@ export async function resetPasswordAction(_previous: ResetState, formData: FormD
   if (!email) return { error: "Ce lien a déjà servi ou n'est plus valable. Demande-en un nouveau." };
 
   // Les essais ratés avant l'oubli ne doivent pas bloquer la connexion avec le nouveau mot de passe
-  await resetRateLimit(`login:email:${email}`);
+  await resetRateLimit(`login:email:${canonicalEmail(email)}`);
   redirect("/connexion?mot-de-passe=change");
 }

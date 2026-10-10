@@ -5,6 +5,8 @@ import { auth } from "@/auth";
 import { SwapIcon } from "@/components/icons";
 import { Avatar, Thumb } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
+import { VerifyGate } from "@/components/verify-gate";
+import { isEmailVerified } from "@/lib/users";
 import { RARITY_LABELS, type RarityTier } from "@/lib/rarity";
 import { listTrades, type TradeView } from "@/lib/trades";
 import { respondTradeAction } from "./actions";
@@ -55,6 +57,7 @@ export default async function EchangesPage({ searchParams }: Props) {
   const userId = session.user.id;
 
   const { message, onglet } = await searchParams;
+  if (!(await isEmailVerified(userId))) return <VerifyGate title="Échanges" message={message} />;
   const tab = onglet === "envoyes" ? "out" : onglet === "historique" ? "history" : "in";
   const { incoming, outgoing, history } = await listTrades(userId);
 

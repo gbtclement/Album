@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { requestPasswordReset } from "@/lib/password-reset";
 import { clientIp, HOUR, isRateLimited } from "@/lib/rate-limit";
+import { canonicalEmail } from "@/lib/users";
 
 export type ForgotState = { error?: string; sentTo?: string };
 
@@ -15,7 +16,7 @@ export async function forgotPasswordAction(_previous: ForgotState, formData: For
   // Évite de se servir du site pour envoyer des e-mails en boucle (à une personne ou à beaucoup)
   const [ipLimited, emailLimited] = await Promise.all([
     isRateLimited(`reset:ip:${clientIp(await headers())}`, 10, HOUR),
-    isRateLimited(`reset:email:${email}`, 3, HOUR),
+    isRateLimited(`reset:email:${canonicalEmail(email)}`, 3, HOUR),
   ]);
   if (ipLimited || emailLimited) return { error: "Trop de demandes : réessaie dans une heure." };
 

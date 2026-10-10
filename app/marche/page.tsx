@@ -5,6 +5,8 @@ import type { CSSProperties, ReactNode } from "react";
 import { auth } from "@/auth";
 import { Price, Thumb } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
+import { VerifyGate } from "@/components/verify-gate";
+import { isEmailVerified } from "@/lib/users";
 import { db } from "@/lib/db";
 import { getCollection } from "@/lib/collection";
 import { Pagination, SortLinks, withParams } from "@/components/list-controls";
@@ -31,6 +33,7 @@ export default async function MarchePage({ searchParams }: Props) {
   const userId = session.user.id;
 
   const { message, onglet, rarete, tri, page: pageParam } = await searchParams;
+  if (!(await isEmailVerified(userId))) return <VerifyGate title="Marché" message={message} />;
   const tab = onglet === "mes-annonces" ? "mine" : "buy";
   const tier = RARITY_TIERS.find((value) => value === rarete) ?? null;
   const sort = MARKET_SORTS.find((value) => value === tri) ?? "recentes";

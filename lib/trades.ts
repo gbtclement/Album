@@ -3,6 +3,7 @@ import { db, withTransaction } from "@/lib/db";
 import { areFriends } from "@/lib/friends";
 import { recordEvent } from "@/lib/quests";
 import type { RarityTier } from "@/lib/rarity";
+import { isEmailVerified, VERIFIED_EMAIL_REQUIRED } from "@/lib/users";
 
 export class TradeError extends Error {}
 
@@ -77,6 +78,10 @@ function validateSide(side: TradeSide, label: string) {
 export async function createTrade(proposerId: string, receiverId: string, offer: TradeSide, request: TradeSide) {
   validateSide(offer, "Ton offre");
   validateSide(request, "Ce que tu demandes");
+  if (!(await isEmailVerified(proposerId))) throw new TradeError(VERIFIED_EMAIL_REQUIRED);
+  if (!(await isEmailVerified(receiverId))) {
+    throw new TradeError("Ton ami n'a pas encore confirmé son adresse e-mail : il ne peut pas encore échanger.");
+  }
 
   return withTransaction(async (client) => {
     if (!(await areFriends(proposerId, receiverId))) {
@@ -118,6 +123,7 @@ export async function moveAlbum(client: PoolClient, fromId: string, toId: string
 
 // Accepte un échange : tout ou rien. Les lignes sont verrouillées pour éviter les doubles validations.
 export async function acceptTrade(receiverId: string, tradeId: string) {
+  if (!(await isEmailVerified(receiverId))) throw new TradeError(VERIFIED_EMAIL_REQUIRED);
   return withTransaction(async (client) => {
     const { rows } = await client.query<{
       proposer_id: string;

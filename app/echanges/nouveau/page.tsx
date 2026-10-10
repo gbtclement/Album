@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Avatar } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
+import { VerifyGate } from "@/components/verify-gate";
+import { isEmailVerified } from "@/lib/users";
 import { db } from "@/lib/db";
 import { getCollection } from "@/lib/collection";
 import { listFriends } from "@/lib/friends";
@@ -22,6 +24,7 @@ export default async function NouveauEchangePage({ searchParams }: Props) {
   const userId = session.user.id;
 
   const { avec, message } = await searchParams;
+  if (!(await isEmailVerified(userId))) return <VerifyGate title="Proposer un échange" message={message} />;
   const friends = await listFriends(userId);
   const friend = friends.find((item) => item.id === avec);
   if (!friend) redirect("/amis?message=" + encodeURIComponent("Tu ne peux échanger qu'avec un ami."));

@@ -3,6 +3,7 @@ import { db, withTransaction } from "@/lib/db";
 import type { RarityTier } from "@/lib/rarity";
 import { moveAlbum } from "@/lib/trades";
 import { recordEvent } from "@/lib/quests";
+import { isEmailVerified, VERIFIED_EMAIL_REQUIRED } from "@/lib/users";
 
 export class MarketError extends Error {}
 
@@ -56,6 +57,7 @@ export async function createListing(
   albumSlug: string,
   mode: { kind: "coins"; price: number } | { kind: "swap"; wantedSlug: string },
 ) {
+  if (!(await isEmailVerified(sellerId))) throw new MarketError(VERIFIED_EMAIL_REQUIRED);
   if (mode.kind === "coins" && (!Number.isInteger(mode.price) || mode.price < 1 || mode.price > MAX_PRICE)) {
     throw new MarketError(`Le prix doit être entre 1 et ${MAX_PRICE} pièces.`);
   }
@@ -111,6 +113,7 @@ export async function cancelListing(sellerId: string, listingId: string) {
 
 // Achat : paiement en pièces, ou troc contre un album proposé par l'acheteur. Tout ou rien.
 export async function buyListing(buyerId: string, listingId: string, offeredSlug: string | null) {
+  if (!(await isEmailVerified(buyerId))) throw new MarketError(VERIFIED_EMAIL_REQUIRED);
   const outcome = await withTransaction(async (client) => {
     const { rows } = await client.query<{
       seller_id: string;

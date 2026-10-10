@@ -22,14 +22,41 @@ export function isUniqueViolation(error: unknown) {
   return (error as { code?: string }).code === "23505";
 }
 
+// Même calcul que la fonction SQL canonical_email (migration 013, vérifié par un test) : sert de clé aux limites
+// de tentatives, pour qu'écrire test+1@gmail.com, test+2@gmail.com... ne donne pas de nouveaux essais.
+export function canonicalEmail(address: string) {
+  const lower = address.toLowerCase();
+  const at = lower.indexOf("@");
+  const rawLocal = at === -1 ? lower : lower.slice(0, at);
+  const domain = at === -1 ? "" : lower.slice(at + 1).split("@")[0];
+  const local = rawLocal.replace(/\+.*$/, "");
+  if (domain === "gmail.com" || domain === "googlemail.com") return `${local.replaceAll(".", "")}@gmail.com`;
+  return `${local}@${domain}`;
+}
+
+// Recherche par boîte mail réelle (voir canonical_email, migration 013) : test+1@gmail.com et t.est@gmail.com
+// retrouvent le compte de test@gmail.com, qui reçoit les mêmes e-mails
 export async function findUserByEmail(email: string) {
-  const result = await db.query<UserRow>(`select ${USER_COLUMNS} from users where lower(email) = lower($1)`, [email]);
+  const result = await db.query<UserRow>(
+    `select ${USER_COLUMNS} from users where email_canonical = canonical_email($1)`,
+    [email],
+  );
   return result.rows[0] ?? null;
 }
 
 export async function findUserById(id: string) {
   const result = await db.query<UserRow>(`select ${USER_COLUMNS} from users where id = $1`, [id]);
   return result.rows[0] ?? null;
+}
+
+// Le marché et les échanges sont réservés aux adresses vérifiées : un compte jetable ne peut pas
+// servir à faire passer des cartes ou des pièces vers un autre compte.
+export const VERIFIED_EMAIL_REQUIRED =
+  "Confirme ton adresse e-mail pour utiliser le marché et les échanges : le lien est dans l'e-mail reçu à l'inscription, ou à renvoyer depuis ton profil.";
+
+export async function isEmailVerified(userId: string) {
+  const result = await db.query("select 1 from users where id = $1 and email_verified_at is not null", [userId]);
+  return (result.rowCount ?? 0) > 0;
 }
 
 export async function isPseudoTaken(pseudo: string) {

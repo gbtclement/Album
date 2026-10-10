@@ -3,7 +3,7 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { clientIp, isRateLimited, MINUTE, resetRateLimit } from "@/lib/rate-limit";
-import { claimAccountWithGoogle, createGoogleUser, findUserByEmail, findUserById } from "@/lib/users";
+import { canonicalEmail, claimAccountWithGoogle, createGoogleUser, findUserByEmail, findUserById } from "@/lib/users";
 
 // Google n'apparaît sur la page de connexion que si les clés sont renseignées dans .env
 const googleEnabled = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
@@ -35,7 +35,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Elle s'applique ici, et pas seulement dans le formulaire : /api/auth/callback/credentials passe aussi par là.
         const ip = clientIp(request.headers);
         const [emailLimited, ipLimited] = await Promise.all([
-          isRateLimited(`login:email:${email}`, 10, 15 * MINUTE),
+          isRateLimited(`login:email:${canonicalEmail(email)}`, 10, 15 * MINUTE),
           isRateLimited(`login:ip:${ip}`, 50, 15 * MINUTE),
         ]);
         if (emailLimited || ipLimited) throw new TooManyAttempts();
@@ -46,7 +46,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await bcrypt.compare(password, user.password_hash);
         if (!valid) return null;
 
-        await resetRateLimit(`login:email:${email}`);
+        await resetRateLimit(`login:email:${canonicalEmail(email)}`);
         return { id: user.id, email: user.email, name: user.pseudo };
       },
     }),

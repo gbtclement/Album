@@ -16,7 +16,7 @@ function hashToken(token: string) {
 // Ne dit jamais si l'adresse est inscrite : la page affiche le même message dans tous les cas.
 export async function requestPasswordReset(email: string) {
   const { rows } = await db.query<{ id: string; pseudo: string; email: string }>(
-    "select id, pseudo, email from users where email = $1",
+    "select id, pseudo, email from users where email_canonical = canonical_email($1)",
     [email],
   );
   const user = rows[0];

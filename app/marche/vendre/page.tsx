@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { SiteNav } from "@/components/site-nav";
+import { VerifyGate } from "@/components/verify-gate";
+import { isEmailVerified } from "@/lib/users";
 import { db } from "@/lib/db";
 import { getCollection } from "@/lib/collection";
 import { RARITY_LABELS } from "@/lib/rarity";
@@ -20,6 +22,7 @@ export default async function VendrePage({ searchParams }: Props) {
   const userId = session.user.id;
 
   const { message, album } = await searchParams;
+  if (!(await isEmailVerified(userId))) return <VerifyGate title="Vendre un album" message={message} />;
   const [mine, catalogue] = await Promise.all([
     getCollection(userId, null),
     db.query<{ slug: string; title: string; artist: string }>("select slug, title, artist from albums order by lower(title)"),

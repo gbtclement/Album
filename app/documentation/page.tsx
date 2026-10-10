@@ -113,6 +113,7 @@ const LOTS = [
   { lot: "D3", name: "Marché et bourse : tri (prix, rareté, variation), pagination du marché par la base (24 annonces par page), affichage progressif de la bourse", status: "Terminé", branch: "design3-tri-pagination" },
   { lot: "D4", name: "Comptes : confirmation du mot de passe à l'inscription, mot de passe oublié (e-mail + page de changement), modèles d'e-mails HTML aux couleurs du jeu", status: "Terminé", branch: "design4-comptes-emails" },
   { lot: "D5", name: "SEO et performances : schema.org (WebSite, VideoGame, MusicAlbum, fil d'Ariane), titres h1/h2, accueil enrichi, robots et sitemap, image de partage, icônes et manifeste, pochettes optimisées (WebP, cache 30 jours), en-têtes de sécurité, préparation de la mise en production (Caddy)", status: "Terminé", branch: "design5-seo-performances" },
+  { lot: "C10", name: "Correctif : marché et échanges réservés aux adresses e-mail vérifiées, un seul compte par boîte mail (adresses avec « + » et points Gmail rattachées au compte d'origine)", status: "Terminé", branch: "correctif10-email-verifie" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -283,7 +284,10 @@ export default function DocumentationPage() {
         <Section title="Comptes et sécurité">
           <ul className="list-disc space-y-2 pl-6">
             <li>
-              <strong>Vérification de l&apos;e-mail :</strong> à l&apos;inscription, un lien (valable 24 h, utilisable une fois) est envoyé. Le compte est jouable tout de suite ; le profil affiche un bandeau tant que l&apos;adresse n&apos;est pas vérifiée, avec un bouton pour renvoyer le lien. Les comptes Google sont vérifiés d&apos;office (Google ne transmet que des adresses qu&apos;il a vérifiées, les autres sont refusées).
+              <strong>Vérification de l&apos;e-mail :</strong> à l&apos;inscription, un lien (valable 24 h, utilisable une fois) est envoyé. Le compte est jouable tout de suite ; seuls le marché et les échanges attendent la confirmation (règle dans <code>lib/market.ts</code> et <code>lib/trades.ts</code>, écran <code>components/verify-gate.tsx</code> ; annuler une annonce ou refuser un échange reste possible). Un échange ne peut pas non plus être proposé à un ami non vérifié ; le profil affiche un bandeau tant que l&apos;adresse n&apos;est pas vérifiée, avec un bouton pour renvoyer le lien. Les comptes Google sont vérifiés d&apos;office (Google ne transmet que des adresses qu&apos;il a vérifiées, les autres sont refusées).
+            </li>
+            <li>
+              <strong>Une boîte mail, un compte :</strong> la base calcule la « vraie » boîte de chaque adresse (<code>canonical_email</code>, colonne <code>users.email_canonical</code>, migration 013) : minuscules, sans ce qui suit un « + », et chez Gmail sans les points (<code>googlemail.com</code> = <code>gmail.com</code>). Elle est unique : <code>test+1@gmail.com</code> ou <code>t.est@gmail.com</code> ne peuvent pas créer un second compte, et se connecter avec l&apos;une de ces variantes ouvre le compte d&apos;origine. Les limites de tentatives comptent aussi par vraie boîte.
             </li>
             <li>
               <strong>Mot de passe oublié :</strong> le lien envoyé (valable 1 h, utilisable une fois, remplacé par toute nouvelle demande) permet de choisir un nouveau mot de passe. L&apos;ouvrir prouve que le joueur reçoit les e-mails de l&apos;adresse : elle est marquée vérifiée, toutes les sessions ouvertes sont coupées et les essais de connexion ratés sont oubliés. La page de demande répond la même chose qu&apos;un compte existe ou non (on ne peut pas s&apos;en servir pour savoir qui est inscrit) ; limite de 3 demandes par adresse et 10 par adresse IP et par heure.
