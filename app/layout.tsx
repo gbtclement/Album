@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { connection } from "next/server";
+import { Suspense, type ReactNode } from "react";
 import { indexingEnabled, siteUrl } from "@/lib/seo";
 import "./globals.css";
 
@@ -22,10 +23,21 @@ export const metadata: Metadata = {
   },
 };
 
+// Marque le rendu comme dépendant de la requête : les pages lisent la session et la base
+async function RequestTime() {
+  await connection();
+  return null;
+}
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <body>
+        <Suspense fallback={null}>
+          <RequestTime />
+          {children}
+        </Suspense>
+      </body>
     </html>
   );
 }

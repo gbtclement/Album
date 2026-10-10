@@ -21,6 +21,8 @@ Next.js 16 a des changements par rapport aux versions habituelles : lire le guid
   `Get-Content db/migrations/001_users.sql | docker compose exec -T db psql -U album -d album`
 
 Le projet tourne uniquement dans Docker : Node n'est pas installé sur la machine Windows.
+- Production (test local) : `docker compose -f docker-compose.prod.yml up -d --build`. Arrêter la dev avant (`docker compose down`), les ports sont les mêmes. Le fichier `.env` n'est jamais copié dans l'image.
+- Attention : le serveur de dev ne voit pas toujours les nouveaux dossiers (404 sur une nouvelle route) : `docker compose restart app` règle le problème.
 Après un changement dans `.env`, relancer avec `docker compose up -d app` (et non `restart`) pour que le conteneur relise les variables.
 Next.js 16 avec `cacheComponents` : pas de `export const dynamic`. Une page qui lit la configuration à chaque requête appelle `await connection()` dans un composant enveloppé dans `<Suspense>`.
 

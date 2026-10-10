@@ -43,6 +43,7 @@ const TABLES = [
   { name: "pack_openings", description: "Historique des ouvertures de packs" },
   { name: "friendships", description: "Amitiés et demandes d'amis, une ligne par paire de joueurs" },
   { name: "trades", description: "Propositions d'échange : album et/ou pièces de chaque côté, statut" },
+  { name: "user_quests", description: "Progression des quêtes par joueur et par période, récompense récupérée ou non" },
   { name: "listings", description: "Annonces du marché : vente en pièces ou troc contre un album" },
   { name: "market_sales", description: "Ventes en pièces sur le marché, base de la cote des albums" },
 ];
@@ -64,6 +65,7 @@ const COMMANDS = [
   { command: "docker compose up -d", description: "Lancer l'application, PostgreSQL et Redis" },
   { command: "docker compose logs -f app", description: "Suivre les logs de l'application" },
   { command: "docker compose down", description: "Arrêter les conteneurs" },
+  { command: "docker compose -f docker-compose.prod.yml up -d --build", description: "Lancer la version de production (image construite à partir du Dockerfile)" },
   { command: "npm run import:catalog", description: "Importer le catalogue de test (data/seed-albums.json)" },
   { command: "npm run import:catalog -- --lastfm 3000", description: "Importer les 3000 albums les plus écoutés (clé Last.fm requise)" },
 ];
@@ -79,7 +81,7 @@ const LOTS = [
   { lot: "7", name: "Classement", status: "Terminé", branch: "lot7-classement" },
   { lot: "8", name: "Quêtes", status: "Terminé", branch: "lot8-quetes" },
   { lot: "9", name: "SEO", status: "Terminé", branch: "lot9-seo" },
-  { lot: "10", name: "Mise en production", status: "À faire", branch: "lot10-prod" },
+  { lot: "10", name: "Mise en production", status: "Préparé, pas encore déployé", branch: "lot10-prod" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -195,6 +197,17 @@ export default function DocumentationPage() {
             Last.fm (écoutes) et les liens d&apos;écoute (Spotify, Deezer, YouTube). Quand un lien exact n&apos;est pas
             trouvé, un lien de recherche est proposé à la place.
           </p>
+        </Section>
+
+        <Section title="Mise en production">
+          <ol className="list-decimal space-y-2 pl-6">
+            <li>Remplir le fichier <code>.env</code> du serveur, avec <code>PUBLIC_BASE_URL</code> et <code>AUTH_URL</code> sur l&apos;adresse publique (https).</li>
+            <li>Lancer <code>docker compose -f docker-compose.prod.yml up -d --build</code>. L&apos;image ne contient pas le <code>.env</code> et tourne en utilisateur non root.</li>
+            <li>Sur une base existante, appliquer les nouvelles migrations de <code>db/migrations/</code> dans l&apos;ordre.</li>
+            <li>Mettre un reverse proxy avec HTTPS devant le port 3000, sans l&apos;exposer directement.</li>
+            <li>Passer <code>SEO_INDEXING</code> à <code>true</code> une fois le domaine en ligne, puis soumettre le sitemap.</li>
+          </ol>
+          <p className="mt-3">Les pages joueurs redirigent vers la connexion au niveau du serveur (<code>proxy.ts</code>), avant tout rendu.</p>
         </Section>
 
         <Section title="Référencement (SEO)">

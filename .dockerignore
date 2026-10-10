@@ -1,0 +1,11 @@
+# Ne jamais envoyer les secrets, les dépendances locales ni les builds dans l'image
+.env
+.env.*
+!.env.example
+node_modules
+.next
+.git
+coverage
+*.log
+postgres-data
+redis-data
