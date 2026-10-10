@@ -11,7 +11,7 @@ export default async function BoursePage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
 
-  const stocks = await getStockList(30, 200);
+  const stocks = await getStockList(30, 1000);
 
   return (
     <>

@@ -159,11 +159,40 @@ export async function buyListing(buyerId: string, listingId: string, offeredSlug
   }
 }
 
-export async function listActiveListings(): Promise<ListingView[]> {
-  const result = await db.query<ListingView>(
-    `${LISTING_SELECT} where l.status = 'active' order by l.created_at desc limit 200`,
-  );
-  return result.rows;
+export const MARKET_SORTS = ["recentes", "prix-croissant", "prix-decroissant", "rarete"] as const;
+export type MarketSort = (typeof MARKET_SORTS)[number];
+export const MARKET_PAGE_SIZE = 24;
+
+// Tri en SQL : les trocs (sans prix) passent après les ventes en pièces quand on trie par prix
+const SORT_SQL: Record<MarketSort, string> = {
+  recentes: "l.created_at desc, l.id",
+  "prix-croissant": "l.price_coins asc nulls last, l.created_at desc, l.id",
+  "prix-decroissant": "l.price_coins desc nulls last, l.created_at desc, l.id",
+  rarete: "array_position(array['legendaire','epique','rare','peu_commun','commun'], a.rarity_tier::text), l.created_at desc, l.id",
+};
+
+// Une page d'annonces des autres joueurs, triée et filtrée par la base (seule la page affichée est chargée)
+export async function listMarketPage(options: {
+  excludeSellerId: string;
+  tier: RarityTier | null;
+  sort: MarketSort;
+  page: number;
+}): Promise<{ listings: ListingView[]; total: number }> {
+  const where = "l.status = 'active' and l.seller_id <> $1 and ($2::text is null or a.rarity_tier::text = $2)";
+  const offset = (Math.max(1, options.page) - 1) * MARKET_PAGE_SIZE;
+  const [rows, count] = await Promise.all([
+    db.query<ListingView>(`${LISTING_SELECT} where ${where} order by ${SORT_SQL[options.sort]} limit $3 offset $4`, [
+      options.excludeSellerId,
+      options.tier,
+      MARKET_PAGE_SIZE,
+      offset,
+    ]),
+    db.query<{ total: number }>(
+      `select count(*)::int as total from listings l join albums a on a.id = l.album_id where ${where}`,
+      [options.excludeSellerId, options.tier],
+    ),
+  ]);
+  return { listings: rows.rows, total: count.rows[0].total };
 }
 
 export async function listMyListings(userId: string): Promise<ListingView[]> {

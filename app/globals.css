@@ -91,6 +91,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .bar > div { height: 100%; background: var(--c, var(--r-peu_commun)); border-radius: 99px; transition: width .4s; }
 .chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; margin: 0 -2px; scrollbar-width: none; }
 .chip { flex: none; display: inline-flex; align-items: center; gap: 6px; border: 0; cursor: pointer; background: var(--night-3); color: var(--muted); border-radius: 999px; padding: 6px 12px; font-family: var(--f-ui); font-weight: 600; font-size: 12px; box-shadow: 0 2px 0 var(--dock-edge); text-decoration: none; }
+/* Tri : liens ou boutons discrets, celui choisi en or ; pagination et « afficher plus » sous les listes */
+.sortbar { display: flex; align-items: center; gap: 4px 12px; overflow-x: auto; scrollbar-width: none; margin: 2px 0 10px; font-family: var(--f-ui); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.sortbar span { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: 10px; }
+.sortbar a, .sortbar button { flex: none; background: none; border: 0; padding: 4px 0; color: var(--muted); cursor: pointer; text-decoration: none; border-bottom: 2px solid transparent; }
+.sortbar a:hover, .sortbar button:hover { color: var(--ink); }
+.sortbar [aria-current="true"], .sortbar [aria-pressed="true"] { color: var(--gold); border-bottom-color: var(--gold); }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; }
+.pager-pos { font-family: var(--f-ui); font-size: 13px; color: var(--muted); }
+.pager-pos b { color: var(--ink); }
+.more { display: flex; justify-content: center; margin-top: 14px; }
 .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--muted)); }
 .chip[aria-pressed="true"], .chip[aria-current="page"] { background: var(--dock); color: var(--ink); outline: 2px solid var(--c, var(--gold)); outline-offset: -2px; }
 .seg { display: flex; gap: 4px; padding: 4px; background: var(--dock-edge); border-radius: 14px; margin: 4px 0 12px; }

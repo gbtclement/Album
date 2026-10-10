@@ -103,6 +103,7 @@ const LOTS = [
   { lot: "D1", name: "Design « version jeu » : barre de jeu en bas, barre d'infos en haut, toutes les pages restylées, animation d'ouverture des packs", status: "Terminé", branch: "design1-version-jeu" },
   { lot: "D2", name: "Design : connexion et inscription au thème du jeu, pochettes de secours (vinyle à la place d'une image en panne, script de réparation, pochette Deezer à l'import)", status: "Terminé", branch: "design2-auth-pochettes" },
   { lot: "C9", name: "Correctif : rareté selon les écoutes totales, plafonnées à 100 par auditeur (au lieu du nombre d'auditeurs)", status: "Terminé", branch: "correctif9-rarete-ecoutes" },
+  { lot: "D3", name: "Marché et bourse : tri (prix, rareté, variation), pagination du marché par la base (24 annonces par page), affichage progressif de la bourse", status: "Terminé", branch: "design3-tri-pagination" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -184,6 +185,7 @@ export default function DocumentationPage() {
             <li>Animations coupées quand l&apos;appareil demande moins d&apos;animations (<code>prefers-reduced-motion</code>).</li>
             <li>Connexion et inscription (<code>app/(auth)/</code>) : même thème, sans barre de jeu (logo vinyle, carte en relief, bouton doré). Après une erreur, l&apos;e-mail et le pseudo saisis restent dans le formulaire (jamais le mot de passe).</li>
             <li>Pochettes (<code>components/cover-image.tsx</code>) : si l&apos;image ne répond pas, la grande version est essayée, puis un vinyle aux couleurs de la rareté avec le titre de l&apos;album s&apos;affiche à la place.</li>
+            <li>Marché : tri (récentes, prix croissant ou décroissant, rareté) et pages de 24 annonces, calculés par la base (<code>listMarketPage</code>) ; tri, rareté et page restent dans l&apos;adresse (<code>?tri=&amp;rarete=&amp;page=</code>). Bourse : tri (plus échangées, prix, hausse, baisse) et recherche instantanés, 30 lignes affichées puis la suite en arrivant en bas de la liste.</li>
             <li>La documentation garde son propre style.</li>
           </ul>
         </Section>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { matchesSearch, SearchBar } from "@/components/game-controls";
 import { Price, Thumb } from "@/components/game-ui";
 import { PriceChart } from "@/components/price-chart";
@@ -29,12 +29,59 @@ function Sparkline({ points, change }: { points: number[]; change: number | null
   );
 }
 
-// Grand graphique en haut (indice du marché ou album choisi), puis toutes les cotes avec recherche
+const SORTS = [
+  { value: "echanges", label: "Plus échangées" },
+  { value: "prix-croissant", label: "Prix croissant" },
+  { value: "prix-decroissant", label: "Prix décroissant" },
+  { value: "hausse", label: "Hausse" },
+  { value: "baisse", label: "Baisse" },
+] as const;
+type Sort = (typeof SORTS)[number]["value"];
+
+function sortStocks(stocks: StockLine[], sort: Sort) {
+  // "echanges" : ordre reçu du serveur (albums les plus vendus d'abord)
+  if (sort === "echanges") return stocks;
+  const change = (stock: StockLine) => stock.change ?? 0;
+  const compare: Record<Exclude<Sort, "echanges">, (a: StockLine, b: StockLine) => number> = {
+    "prix-croissant": (a, b) => a.last - b.last,
+    "prix-decroissant": (a, b) => b.last - a.last,
+    hausse: (a, b) => change(b) - change(a),
+    baisse: (a, b) => change(a) - change(b),
+  };
+  return [...stocks].sort(compare[sort]);
+}
+
+// Lignes affichées d'abord, puis par tranches quand on arrive en bas : la page reste légère
+// même avec des centaines de cotes (chaque ligne a une pochette et une mini-courbe).
+const STEP = 30;
+
+// Grand graphique en haut (indice du marché ou album choisi), puis toutes les cotes avec recherche et tri
 export function StockBrowser({ stocks }: { stocks: StockLine[] }) {
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<Sort>("echanges");
   const [selected, setSelected] = useState<string | null>(null);
   const current = stocks.find((stock) => stock.slug === selected) ?? null;
-  const visible = useMemo(() => stocks.filter((stock) => matchesSearch(query, stock.title, stock.artist)), [stocks, query]);
+  const visible = useMemo(
+    () => sortStocks(stocks.filter((stock) => matchesSearch(query, stock.title, stock.artist)), sort),
+    [stocks, query, sort],
+  );
+
+  // Nombre de lignes affichées, remis à zéro quand la recherche ou le tri change
+  const listKey = `${query}|${sort}`;
+  const [shown, setShown] = useState({ key: listKey, count: STEP });
+  const count = shown.key === listKey ? shown.count : STEP;
+  const showMore = () => setShown({ key: listKey, count: count + STEP });
+  const sentinel = useRef<HTMLDivElement>(null);
+  const hasMore = count < visible.length;
+  useEffect(() => {
+    const target = sentinel.current;
+    if (!target || !hasMore) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) setShown({ key: listKey, count: count + STEP });
+    }, { rootMargin: "400px" });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, listKey, count]);
 
   return (
     <>
@@ -73,13 +120,21 @@ export function StockBrowser({ stocks }: { stocks: StockLine[] }) {
 
       <div className="label">Toutes les cotes</div>
       <SearchBar id="q-bourse" value={query} onChange={setQuery} placeholder="Rechercher une cote" />
+      <div className="sortbar" role="group" aria-label="Trier">
+        <span>Trier</span>
+        {SORTS.map((option) => (
+          <button key={option.value} type="button" aria-pressed={sort === option.value} onClick={() => setSort(option.value)}>
+            {option.label}
+          </button>
+        ))}
+      </div>
       <div className="stack two">
         {stocks.length === 0 ? (
           <p className="empty">Aucune vente sur les 30 derniers jours : les cotes apparaîtront avec les premiers achats au marché.</p>
         ) : visible.length === 0 ? (
           <p className="empty">Aucune cote ne correspond à « {query} ».</p>
         ) : (
-          visible.map((stock) => (
+          visible.slice(0, count).map((stock) => (
             <button
               key={stock.slug}
               type="button"
@@ -105,6 +160,13 @@ export function StockBrowser({ stocks }: { stocks: StockLine[] }) {
           ))
         )}
       </div>
+      {hasMore && (
+        <div ref={sentinel} className="more">
+          <button type="button" className="btn" onClick={showMore}>
+            Afficher plus ({visible.length - count} restantes)
+          </button>
+        </div>
+      )}
     </>
   );
 }
