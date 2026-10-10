@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { PriceChart } from "@/components/price-chart";
 import { SiteNav } from "@/components/site-nav";
 import { findAlbumBySlug, type AlbumLinks } from "@/lib/catalog";
@@ -43,7 +43,7 @@ export default async function AlbumPage({ params }: Props) {
   const album = await findAlbumBySlug(slug);
   if (!album) notFound();
 
-  const session = await auth();
+  const session = await getSession();
   const owned = session?.user?.id ? await getOwnedCount(session.user.id, album.id) : null;
   const playcount = album.lastfm_playcount ? Number(album.lastfm_playcount) : null;
 

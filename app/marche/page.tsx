@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { SiteNav } from "@/components/site-nav";
 import { getCollection } from "@/lib/collection";
 import { listActiveListings, type ListingView } from "@/lib/market";
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default async function MarchePage({ searchParams }: Props) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) redirect("/connexion");
   const userId = session.user.id;
 

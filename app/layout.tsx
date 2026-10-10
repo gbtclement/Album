@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
       <body>
-        <Suspense fallback={null}>
+        <Suspense fallback={<p role="status" className="p-8 text-center text-zinc-500">Chargement...</p>}>
           <RequestTime />
           {children}
         </Suspense>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { SiteNav } from "@/components/site-nav";
 import { listTrades, type TradeView } from "@/lib/trades";
 import { respondTradeAction } from "./actions";
@@ -23,7 +23,7 @@ function describe(title: string | null, coins: number) {
 }
 
 export default async function EchangesPage({ searchParams }: Props) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) redirect("/connexion");
   const userId = session.user.id;
 

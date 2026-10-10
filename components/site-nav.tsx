@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 
 // Barre de navigation commune aux pages du site
 export async function SiteNav() {
-  const session = await auth();
+  const session = await getSession();
 
   return (
     <header className="border-b border-zinc-200">

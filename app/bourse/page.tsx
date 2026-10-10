@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { getSession } from "@/lib/session";
 import { SiteNav } from "@/components/site-nav";
 import { PriceChart } from "@/components/price-chart";
 import { getMovers, type Mover } from "@/lib/market-stats";
 
 export default async function BoursePage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) redirect("/connexion");
 
   const { rises, falls } = await getMovers(30, 5);
