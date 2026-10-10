@@ -47,7 +47,7 @@ export default async function AlbumPage({ params }: Props) {
     session?.user?.id ? getOwnedCount(session.user.id, album.id) : Promise.resolve(null),
     getAlbumCote(album.id),
   ]);
-  const listens = album.listen_count ? Number(album.listen_count) : null;
+  const listeners = album.listener_count ? Number(album.listener_count) : null;
 
   // Données structurées (schema.org) : aident les moteurs à comprendre la fiche
   const structuredData = {
@@ -83,11 +83,11 @@ export default async function AlbumPage({ params }: Props) {
         </div>
 
         <div className="facts" style={{ marginTop: 14 }}>
-          <div className="fact"><b>{listens !== null ? listens.toLocaleString("fr-FR") : "—"}</b><small>Écoutes</small></div>
+          <div className="fact"><b>{listeners !== null ? listeners.toLocaleString("fr-FR") : "—"}</b><small>Auditeurs</small></div>
           <div className="fact"><b><i className="coin-i" aria-hidden="true" />{cote.cote ? Number(cote.cote).toLocaleString("fr-FR") : "—"}</b><small>Cote</small></div>
           <div className="fact"><b>{RARITY_POINTS[album.rarity_tier]}</b><small>Points</small></div>
         </div>
-        <p className="sub" style={{ marginTop: 6 }}>Écoutes ListenBrainz : plus un album est écouté, plus sa carte est rare.</p>
+        <p className="sub" style={{ marginTop: 6 }}>Auditeurs ListenBrainz : plus un album est écouté par de personnes différentes, plus sa carte est rare.</p>
 
         <div className="listen" style={{ marginTop: 8 }}>
           {PLATFORMS.map(({ key, label }) => {

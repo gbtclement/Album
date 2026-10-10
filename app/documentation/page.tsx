@@ -211,8 +211,9 @@ export default function DocumentationPage() {
             </li>
             <li>
               <strong>Raretés :</strong> Commun 65 %, Peu commun 25 %, Rare 8 %, Épique 1,5 %, Légendaire 0,5 % (par carte tirée).
-              Le palier d&apos;un album dépend de son rang d&apos;écoutes ListenBrainz dans le catalogue : les 0,5 % les plus écoutés sont
-              légendaires, les 2 % suivants épiques, puis 10 % rares, 35 % peu communs, le reste commun.
+              Le palier d&apos;un album dépend de son rang dans le catalogue selon son nombre d&apos;auditeurs ListenBrainz (personnes
+              différentes, et non écoutes : quelques fans qui écoutent en boucle gonflent les écoutes) : les 0,5 % les plus écoutés
+              sont légendaires, les 2 % suivants épiques, puis 10 % rares, 35 % peu communs, le reste commun.
             </li>
             <li>
               <strong>Doublons :</strong> conservés. La carte affiche un badge xN quand le joueur en possède plusieurs.
