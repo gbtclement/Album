@@ -42,6 +42,22 @@ describe("rareté selon les écoutes ListenBrainz", () => {
     expect(rows[0]).toEqual({ listen_count: "10000", listener_count: "100" });
   });
 
+  it("classe selon le nombre d'auditeurs, pas les écoutes en boucle d'une poignée de fans", async () => {
+    const popular = await createAlbum();
+    const looped = await createAlbum();
+    await saveListens(
+      new Map([
+        [await mbidOf(popular.id), { listens: 1_800_000, listeners: 25_000 }],
+        [await mbidOf(looped.id), { listens: 48_000_000, listeners: 4_800 }],
+      ]),
+    );
+
+    await recomputeRarity();
+
+    expect(await tierOf(popular.id)).toBe("legendaire");
+    expect(await tierOf(looped.id)).not.toBe("legendaire");
+  });
+
   it("laisse commun un album sans écoutes connues", async () => {
     const known = await createAlbum();
     const unknown = await createAlbum("epique");
