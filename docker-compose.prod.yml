@@ -9,6 +9,11 @@ services:
   app:
     build: .
     env_file: .env
+    # Dans Docker, la base et Redis s'appellent "db" et "redis" (et non localhost comme en dev).
+    # Le mot de passe doit rester sans caractères spéciaux d'URL (@, :, /, #).
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
     ports:
       - "3000:3000"
     depends_on:

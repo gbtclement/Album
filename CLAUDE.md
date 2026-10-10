@@ -13,20 +13,19 @@ Next.js 16 a des changements par rapport aux versions habituelles : lire le guid
 
 ## Commandes
 
-- Lancer le projet : `docker compose watch` (puis http://localhost:3000). Laisser le terminal ouvert : il recopie chaque fichier modifié dans le conteneur. `docker compose up -d` lance aussi la stack mais sans synchronisation du code.
-- Voir les logs : `docker compose logs -f app`
-- Arrêter : `docker compose down`
+Toutes les commandes se lancent dans WSL (Ubuntu-24.04), depuis `~/Album`.
+- Lancer PostgreSQL et Redis : `docker compose up -d` (ils redémarrent ensuite seuls avec Docker Desktop)
+- Lancer le site : `npm run dev` (puis http://localhost:3000). Le terminal affiche les logs. Rechargement à chaud natif.
+- Arrêter : Ctrl+C pour le site, `docker compose down` pour la base et Redis
 - Vérifier la santé : http://localhost:3000/api/health (200 si la base et Redis répondent)
-- E-mails en développement : sans `SMTP_URL`, ils ne sont pas envoyés mais affichés dans `docker compose logs app` (lien de vérification à copier).
-- Migrations : appliquées automatiquement au démarrage de l'app par `scripts/migrate.mjs` (suivi dans la table `schema_migrations`). Pour les relancer à la main : `docker compose exec app npm run migrate`. Ne jamais modifier une migration déjà appliquée : ajouter un nouveau fichier numéroté.
-- Tests : `docker compose exec app npm test` (Vitest). `tests/unit/` sans base ; `tests/integration/` sur la base `album_test` et Redis n°15, vidés à chaque test.
+- E-mails en développement : sans `SMTP_URL`, ils ne sont pas envoyés mais affichés dans le terminal de `npm run dev` (lien de vérification à copier).
+- Migrations : appliquées automatiquement par `npm run dev` (et au démarrage du conteneur en production) par `scripts/migrate.mjs` (suivi dans la table `schema_migrations`). À la main : `npm run migrate`. Ne jamais modifier une migration déjà appliquée : ajouter un nouveau fichier numéroté.
+- Tests : `npm test` (Vitest). `tests/unit/` sans base ; `tests/integration/` sur la base `album_test` et Redis n°15, vidés à chaque test.
 - CI : `.github/workflows/ci.yml` (lint, typage, tests, build) à chaque push et PR.
 
-Le projet tourne uniquement dans Docker : Node n'est pas installé sur la machine Windows.
-- Production (test local) : `docker compose -f docker-compose.prod.yml up -d --build`. Arrêter la dev avant (`docker compose down`), les ports sont les mêmes. Le fichier `.env` n'est jamais copié dans l'image.
-- Le code n'est pas monté depuis Windows (un dossier monté provoquait des rechargements en boucle) : l'image `Dockerfile.dev` contient code et dépendances, `docker compose watch` synchronise. Modifier `package.json` reconstruit l'image, modifier `next.config.ts` redémarre le serveur.
-- Un fichier créé dans le conteneur (par `next dev`, un script...) ne revient pas sous Windows : la synchronisation va de Windows vers le conteneur seulement.
-Après un changement dans `.env`, relancer avec `docker compose up -d app` (et non `restart`) pour que le conteneur relise les variables.
+Environnement : le dépôt vit dans WSL (`~/Album`, jamais sous `C:\`, les accès disque Windows y sont lents et Turbopack y voit de faux changements). Node 22 est installé dans WSL par nvm ; seuls PostgreSQL et Redis tournent dans Docker. En dev, `.env` pointe vers `localhost` ; `docker-compose.prod.yml` remplace ces adresses par `db` et `redis`. Les scripts (`migrate`, `import:catalog`, tests) lisent `.env` eux-mêmes.
+- Production (test local) : `docker compose -f docker-compose.prod.yml up -d --build`. Arrêter `npm run dev` et la dev avant (`docker compose down`), les ports sont les mêmes. Le fichier `.env` n'est jamais copié dans l'image.
+Après un changement dans `.env`, relancer `npm run dev`.
 Next.js 16 sans `cacheComponents` (désactivé : trop de contournements). Le layout racine déclare `export const dynamic = "force-dynamic"` : tout le site est rendu à chaque requête, les variables de `.env` sont lues au lancement et non au build. La session se lit avec `await auth()` (`@/auth`).
 
 ## Branches

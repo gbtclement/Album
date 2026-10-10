@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "npm run migrate && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "import:catalog": "tsx scripts/import-catalog.ts",
-    "migrate": "node scripts/migrate.mjs",
+    "import:catalog": "tsx --env-file-if-exists=.env scripts/import-catalog.ts",
+    "migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

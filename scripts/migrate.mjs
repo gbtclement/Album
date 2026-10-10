@@ -2,7 +2,7 @@
 // La table schema_migrations garde la liste des fichiers déjà appliqués.
 //
 // Lancé automatiquement au démarrage de l'application (développement et production).
-// À la main : docker compose exec app npm run migrate
+// À la main : npm run migrate
 //
 // Écrit en JavaScript (et non en TypeScript) pour tourner tel quel dans l'image de production,
 // qui ne contient ni tsx ni le code source.

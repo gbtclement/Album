@@ -67,10 +67,11 @@ const ENV_VARS = [
 ];
 
 const COMMANDS = [
-  { command: "docker compose watch", description: "Lancer l'application, PostgreSQL et Redis, et recopier dans le conteneur chaque fichier modifié (laisser le terminal ouvert)" },
-  { command: "docker compose up -d", description: "Lancer les conteneurs sans synchronisation (les modifications du code ne sont pas vues)" },
-  { command: "docker compose logs -f app", description: "Suivre les logs de l'application" },
-  { command: "docker compose down", description: "Arrêter les conteneurs" },
+  { command: "docker compose up -d", description: "Lancer PostgreSQL et Redis (dans Docker)" },
+  { command: "npm run dev", description: "Appliquer les migrations puis lancer le site en développement (logs et e-mails affichés dans le terminal)" },
+  { command: "npm test", description: "Lancer les tests (Vitest)" },
+  { command: "npm run migrate", description: "Appliquer à la main les migrations en attente" },
+  { command: "docker compose down", description: "Arrêter PostgreSQL et Redis" },
   { command: "docker compose -f docker-compose.prod.yml up -d --build", description: "Lancer la version de production (image construite à partir du Dockerfile)" },
   { command: "npm run import:catalog", description: "Importer le catalogue de test (data/seed-albums.json)" },
   { command: "npm run import:catalog -- --lastfm 3000", description: "Importer les 3000 albums les plus écoutés (clé Last.fm requise)" },
@@ -94,6 +95,7 @@ const LOTS = [
   { lot: "C4", name: "Correctif : erreurs d'échange conservées, annonces en double, callbackUrl, pages de connexion quand on est connecté, quêtes d'échange", status: "Terminé", branch: "correctif4-bugs-fonctionnels" },
   { lot: "C5", name: "Correctif : vérification de l'e-mail, reprise d'un compte non vérifié par Google, limitation des tentatives (connexion, inscription, e-mails)", status: "Terminé", branch: "correctif5-email-limites" },
   { lot: "C6", name: "Correctif : outil de migration automatique, tests automatiques (Vitest, base de test séparée) et intégration continue GitHub Actions", status: "Terminé", branch: "correctif6-tests-ci" },
+  { lot: "C7", name: "Correctif : environnement de dev dans WSL (Node natif, seuls PostgreSQL et Redis dans Docker)", status: "Terminé", branch: "correctif7-wsl" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -155,11 +157,13 @@ export default function DocumentationPage() {
         <Section title="Lancer le projet en local">
           <ol className="list-decimal space-y-1 pl-6">
             <li>Copier <code>.env.example</code> en <code>.env</code> et remplir les valeurs.</li>
-            <li>Lancer <code>docker compose watch</code> et laisser le terminal ouvert : chaque fichier modifié est recopié dans le conteneur.</li>
+            <li>Installer les dépendances : <code>npm ci</code>.</li>
+            <li>Lancer PostgreSQL et Redis : <code>docker compose up -d</code>.</li>
+            <li>Lancer le site : <code>npm run dev</code> (applique les migrations, puis démarre Next.js).</li>
             <li>Ouvrir http://localhost:3000 et vérifier http://localhost:3000/api/health.</li>
           </ol>
-          <p className="mt-3">Node n&apos;est pas installé sur la machine : toutes les commandes passent par Docker.</p>
-          <p className="mt-3">Le code n&apos;est pas monté depuis Windows : l&apos;image de dev (<code>Dockerfile.dev</code>) contient les dépendances et le code, et <code>docker compose watch</code> recopie les fichiers modifiés. Un dossier Windows monté faisait détecter de faux changements à Turbopack (pages rechargées en boucle). Une modification de <code>package.json</code> reconstruit l&apos;image ; une modification de <code>next.config.ts</code> redémarre le serveur.</p>
+          <p className="mt-3">Sous Windows, le projet vit dans WSL (Ubuntu), dans le dossier Linux <code>~/Album</code>, avec Node 22 installé par nvm. Seuls PostgreSQL et Redis tournent dans Docker. Le site tourne directement dans Linux : le rechargement à chaud est immédiat. Un dossier sous <code>C:\</code> est à éviter : les accès y sont lents et Turbopack y voyait de faux changements (pages rechargées en boucle).</p>
+          <p className="mt-3">En développement, <code>.env</code> pointe vers <code>localhost</code>. En production (<code>docker-compose.prod.yml</code>), l&apos;application est dans Docker et ces adresses sont remplacées par <code>db</code> et <code>redis</code>.</p>
         </Section>
 
         <Section title="Commandes utiles">
@@ -260,7 +264,7 @@ export default function DocumentationPage() {
         <Section title="Tests et intégration continue">
           <ul className="list-disc space-y-2 pl-6">
             <li>
-              <strong>Lancer les tests :</strong> <code>docker compose exec app npm test</code> (Vitest). Les tests unitaires
+              <strong>Lancer les tests :</strong> <code>npm test</code> (Vitest). Les tests unitaires
               (<code>tests/unit/</code>) vérifient les règles pures : tirage des packs, raretés, périodes des quêtes, liens de
               redirection, adresses IP. Les tests d&apos;intégration (<code>tests/integration/</code>) utilisent une vraie base et
               un vrai Redis : migrations, vérification d&apos;e-mail, reprise de compte Google, limites de tentatives, packs,

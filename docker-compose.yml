@@ -1,37 +1,11 @@
-services:
-  app:
-    # Le code est copié dans l'image puis synchronisé par `docker compose watch`.
-    # Monter le dossier Windows provoquait des rechargements en boucle (faux changements vus par Turbopack).
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    env_file: .env
-    ports:
-      - "3000:3000"
-    develop:
-      watch:
-        # Chaque fichier modifié sur Windows est recopié dans le conteneur, Next.js recharge à chaud
-        - action: sync
-          path: .
-          target: /app
-          ignore:
-            - node_modules/
-            - .next/
-        # Une nouvelle dépendance demande de reconstruire l'image (npm ci)
-        - action: rebuild
-          path: package.json
-        - action: rebuild
-          path: package-lock.json
-        # La configuration Next.js n'est lue qu'au démarrage du serveur
-        - action: sync+restart
-          path: next.config.ts
-          target: /app/next.config.ts
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+# Développement : seuls PostgreSQL et Redis tournent dans Docker.
+# L'application tourne directement dans WSL (Ubuntu) avec `npm run dev`.
+#
+#   docker compose up -d
+#
+# Les ports ne sont ouverts que sur la machine (127.0.0.1), pas sur le réseau.
 
+services:
   db:
     image: postgres:16-alpine
     environment:
@@ -39,7 +13,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
@@ -47,13 +21,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
 volumes:
   db_data:
