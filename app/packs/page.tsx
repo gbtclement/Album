@@ -1,24 +1,27 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { SiteNav } from "@/components/site-nav";
+import { db } from "@/lib/db";
 import { getPackState } from "@/lib/packs";
-import { PackOpener } from "./pack-opener";
+import { PackRoom } from "./pack-opener";
+
+export const metadata: Metadata = { title: "Packs" };
 
 export default async function PacksPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
 
-  const state = await getPackState(session.user.id);
+  const [state, settings] = await Promise.all([
+    getPackState(session.user.id),
+    db.query<{ auto_reveal: boolean }>("select auto_reveal from users where id = $1", [session.user.id]),
+  ]);
 
   return (
     <>
       <SiteNav />
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <h1 className="mb-6 text-2xl font-semibold">Packs</h1>
-        <PackOpener
-          initialStock={state.stock}
-          initialNextPackAt={state.nextPackAt ? state.nextPackAt.toISOString() : null}
-        />
+      <main className="game-page">
+        <PackRoom stock={state.stock} autoReveal={settings.rows[0]?.auto_reveal ?? false} />
       </main>
     </>
   );

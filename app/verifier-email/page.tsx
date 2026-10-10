@@ -16,16 +16,14 @@ export default async function VerifierEmailPage({ searchParams }: { searchParams
   return (
     <>
       <SiteNav />
-      <main className="flex flex-col items-center justify-center gap-4 p-8 pt-16 text-center">
-        <h1 className="text-3xl font-semibold">{verified ? "Adresse e-mail confirmée" : "Lien invalide ou expiré"}</h1>
-        <p className="text-zinc-600">
+      <main className="game-page narrow" style={{ textAlign: "center", display: "grid", justifyItems: "center", gap: 12 }}>
+        <h1>{verified ? "Adresse e-mail confirmée" : "Lien invalide ou expiré"}</h1>
+        <p className="sub">
           {verified
             ? "Merci ! Ton adresse est vérifiée."
             : "Ce lien a déjà servi ou n'est plus valable. Tu peux en demander un nouveau depuis ton profil."}
         </p>
-        <Link href="/profil" className="rounded-lg border border-zinc-300 px-4 py-2 hover:bg-zinc-100">
-          Aller à mon profil
-        </Link>
+        <Link href="/profil" className="btn gold">Aller à mon profil</Link>
       </main>
     </>
   );

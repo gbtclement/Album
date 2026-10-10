@@ -12,20 +12,20 @@ export const metadata: Metadata = {
 // Route publique pour l'instant (pas de protection).
 
 const ROUTES = [
-  { path: "/", description: "Accueil" },
+  { path: "/", description: "Accueil (un joueur connecté est envoyé vers sa collection)" },
   { path: "/connexion", description: "Connexion (e-mail/mot de passe, Google si configuré)" },
   { path: "/inscription", description: "Création de compte" },
-  { path: "/profil", description: "Profil du joueur (protégée)" },
-  { path: "/packs", description: "Ouverture des packs et stock (protégée)" },
-  { path: "/collection", description: "Collection du joueur, filtrable par rareté (protégée)" },
+  { path: "/profil", description: "Profil : statistiques, vitrine, répartition par rareté, réglages du jeu, compte (protégée)" },
+  { path: "/packs", description: "Ouverture d'un pack ou de tous les packs, animation de révélation, chances par rareté (protégée)" },
+  { path: "/collection", description: "Cartes possédées uniquement, recherche, filtre de rareté, fiche qui glisse depuis le bas (protégée)" },
   { path: "/amis", description: "Demandes d'amis, liste d'amis (protégée)" },
   { path: "/echanges", description: "Propositions reçues, envoyées et historique (protégée)" },
   { path: "/echanges/nouveau", description: "Création d'une proposition d'échange avec un ami (protégée)" },
   { path: "/marche", description: "Annonces actives : achat en pièces ou troc contre un album (protégée)" },
   { path: "/marche/vendre", description: "Mise en vente d'un album, contre des pièces ou un autre album (protégée)" },
-  { path: "/bourse", description: "Indice du marché, plus fortes hausses et baisses sur 30 jours (protégée)" },
+  { path: "/bourse", description: "Indice du marché et cotes de tous les albums vendus sur 30 jours (mini-courbes, recherche, graphique par album) (protégée)" },
   { path: "/api/market/history", description: "Historique des prix : ?album=<slug> et ?jours=<n> (30 par défaut, 365 max)" },
-  { path: "/classement", description: "Top 100 des joueurs par score de rareté, et position du joueur connecté (protégée)" },
+  { path: "/classement", description: "Podium et top 100 par score de rareté, onglet Amis (?vue=amis), position du joueur connecté (protégée)" },
   { path: "/quetes", description: "Quêtes journalières, hebdomadaires et mensuelles, avec récupération des récompenses (protégée)" },
   { path: "/album/[slug]", description: "Fiche d'un album : pochette, rareté, liens d'écoute" },
   { path: "/verifier-email", description: "Validation de l'adresse e-mail depuis le lien reçu (lien à usage unique, valable 24 h)" },
@@ -37,7 +37,7 @@ const ROUTES = [
 ];
 
 const TABLES = [
-  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions" },
+  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement)" },
   { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
   { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
   { name: "albums", description: "Catalogue : identifiant MusicBrainz, titre, artiste, pochette, écoutes et auditeurs ListenBrainz, palier de rareté, liens d'écoute" },
@@ -76,6 +76,7 @@ const COMMANDS = [
   { command: "npm run import:catalog -- --listenbrainz", description: "Importer les albums les plus écoutés sur ListenBrainz (sans clé)" },
   { command: "npm run import:catalog -- --listenbrainz --artists 300", description: "Ajouter aussi les albums studio des 300 artistes les plus écoutés (long : une requête MusicBrainz par seconde)" },
   { command: "npm run import:catalog -- --listens", description: "Mettre à jour les écoutes et recalculer la rareté de tout le catalogue" },
+  { command: "npm run seed:demo", description: "Créer des données de démonstration (compte demo@demo.invalid / demo-album, 8 autres joueurs, marché, bourse, échanges). Refusé en production" },
 ];
 
 const LOTS = [
@@ -98,6 +99,7 @@ const LOTS = [
   { lot: "C6", name: "Correctif : outil de migration automatique, tests automatiques (Vitest, base de test séparée) et intégration continue GitHub Actions", status: "Terminé", branch: "correctif6-tests-ci" },
   { lot: "C7", name: "Correctif : environnement de dev dans WSL (Node natif, seuls PostgreSQL et Redis dans Docker)", status: "Terminé", branch: "correctif7-wsl" },
   { lot: "C8", name: "Correctif : catalogue depuis ListenBrainz et MusicBrainz (sans clé), rareté selon les écoutes réelles, Last.fm retiré", status: "Terminé", branch: "correctif8-catalogue" },
+  { lot: "D1", name: "Design « version jeu » : barre de jeu en bas, barre d'infos en haut, toutes les pages restylées, animation d'ouverture des packs", status: "Terminé", branch: "design1-version-jeu" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -138,7 +140,9 @@ export default function DocumentationPage() {
   return (
     <>
       <SiteNav />
-      <main className="mx-auto max-w-4xl px-4 py-8 leading-relaxed">
+      {/* Page technique : garde un fond clair, plus lisible pour de longs textes et des tableaux */}
+      <main className="game-page">
+        <div className="mx-auto max-w-4xl rounded-2xl bg-white px-5 py-8 leading-relaxed text-zinc-900">
         <h1 className="text-3xl font-semibold">Documentation technique</h1>
         <p className="mt-2 text-zinc-600">
           Album est un jeu de collection de cartes d&apos;albums de musique, inspiré de Wikimaster. Les cartes sont
@@ -166,6 +170,17 @@ export default function DocumentationPage() {
           </ol>
           <p className="mt-3">Sous Windows, le projet vit dans WSL (Ubuntu), dans le dossier Linux <code>~/Album</code>, avec Node 22 installé par nvm. Seuls PostgreSQL et Redis tournent dans Docker. Le site tourne directement dans Linux : le rechargement à chaud est immédiat. Un dossier sous <code>C:\</code> est à éviter : les accès y sont lents et Turbopack y voyait de faux changements (pages rechargées en boucle).</p>
           <p className="mt-3">En développement, <code>.env</code> pointe vers <code>localhost</code>. En production (<code>docker-compose.prod.yml</code>), l&apos;application est dans Docker et ces adresses sont remplacées par <code>db</code> et <code>redis</code>.</p>
+        </Section>
+
+        <Section title="Interface (version jeu)">
+          <ul className="list-disc space-y-1 pl-6">
+            <li>Styles dans <code>app/globals.css</code> : couleurs (fond aubergine nuit, or pour packs et pièces, corail pour les notifications, une couleur par rareté), polices Lilita One (titres, chiffres), Chakra Petch (interface) et Nunito (texte), éléments en relief avec une tranche 3D.</li>
+            <li><code>components/site-nav.tsx</code> : barre d&apos;infos en haut (avatar et pseudo vers le profil, pièces, packs et minuteur du prochain pack) et barre de jeu en bas (<code>components/game-nav.tsx</code>) : Collection, Marché (plateau Marché / Bourse / Échanges), vinyle central des Packs (pastille = packs prêts, anneau = progression du suivant), Quêtes (pastille = récompenses à réclamer), Social (plateau Amis / Classement, pastille = demandes d&apos;ami et échanges reçus).</li>
+            <li>Messages de retour : les actions redirigent avec <code>?message=</code>, affiché en haut puis retiré de l&apos;adresse.</li>
+            <li>Ouverture des packs : par défaut le joueur retourne lui-même chaque carte (« tout révéler » possible) ; le réglage « Révéler automatiquement » (Profil ou page Packs) les retourne une à une. Halo de couleur pour rare et plus, reflet pour épique et plus, et pour une légendaire : carte qui se soulève, ondes sonores, notes de musique et léger flash doré.</li>
+            <li>Animations coupées quand l&apos;appareil demande moins d&apos;animations (<code>prefers-reduced-motion</code>).</li>
+            <li>La documentation et les pages de connexion gardent leur propre style.</li>
+          </ul>
         </Section>
 
         <Section title="Commandes utiles">
@@ -309,6 +324,7 @@ export default function DocumentationPage() {
             rows={LOTS.map((item) => [item.lot, item.name, item.status, item.branch])}
           />
         </Section>
+        </div>
       </main>
     </>
   );

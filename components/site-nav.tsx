@@ -1,37 +1,57 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { Dock, PackTimer, Toast } from "@/components/game-nav";
+import { Avatar, formatNumber } from "@/components/game-ui";
+import { MAX_STOCK } from "@/lib/pack-rules";
+import { getHudData } from "@/lib/hud";
 
-// Barre de navigation commune aux pages du site
-export async function SiteNav() {
+// Habillage commun des pages : barre d'infos en haut (profil, pièces, packs), barre de jeu en bas,
+// et message de retour éventuel (?message=...). Un visiteur voit seulement Connexion et Inscription.
+export async function SiteNav({ message }: { message?: string } = {}) {
   const session = await auth();
 
+  if (!session?.user?.id) {
+    return (
+      <>
+        <header className="hud">
+          <Link href="/" className="player"><span className="avatar" aria-hidden="true">A</span><strong>Album</strong></Link>
+          <div className="guest-links">
+            <Link href="/connexion" className="btn">Connexion</Link>
+            <Link href="/inscription" className="btn gold">Inscription</Link>
+          </div>
+        </header>
+        <Toast key={message} message={message} />
+      </>
+    );
+  }
+
+  const hud = await getHudData(session.user.id);
+  const pseudo = session.user.pseudo;
+
   return (
-    <header className="border-b border-zinc-200">
-      <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="font-semibold">
-          Album
+    <>
+      <header className="hud">
+        <Link href="/profil" className="player" aria-label="Profil">
+          <Avatar name={pseudo} />
+          <span>
+            <strong>{pseudo}</strong>
+            <small>{formatNumber(hud.cards)} carte{hud.cards > 1 ? "s" : ""}</small>
+          </span>
         </Link>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          {session?.user ? (
-            <>
-              <Link href="/packs" className="hover:underline">Packs</Link>
-              <Link href="/collection" className="hover:underline">Collection</Link>
-              <Link href="/amis" className="hover:underline">Amis</Link>
-              <Link href="/echanges" className="hover:underline">Échanges</Link>
-              <Link href="/marche" className="hover:underline">Marché</Link>
-              <Link href="/bourse" className="hover:underline">Bourse</Link>
-              <Link href="/classement" className="hover:underline">Classement</Link>
-              <Link href="/quetes" className="hover:underline">Quêtes</Link>
-              <Link href="/profil" className="hover:underline">{session.user.pseudo}</Link>
-            </>
-          ) : (
-            <>
-              <Link href="/connexion" className="hover:underline">Connexion</Link>
-              <Link href="/inscription" className="hover:underline">Inscription</Link>
-            </>
-          )}
+        <div className="resources">
+          <span className="res" title="Pièces">
+            <i className="coin" aria-hidden="true" />
+            {formatNumber(hud.coins)}
+          </span>
+          <Link href="/packs" className="res" title="Packs disponibles">
+            <i className="mini-vinyl" aria-hidden="true" />
+            {hud.stock}/{MAX_STOCK}
+            <PackTimer nextPackAt={hud.nextPackAt} />
+          </Link>
         </div>
-      </nav>
-    </header>
+      </header>
+      <Dock stock={hud.stock} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} />
+      <Toast key={message} message={message} />
+    </>
   );
 }

@@ -1,13 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { SiteNav } from "@/components/site-nav";
 import { db } from "@/lib/db";
 import { getCollection } from "@/lib/collection";
+import { RARITY_LABELS } from "@/lib/rarity";
 import { createListingAction } from "../actions";
 
+export const metadata: Metadata = { title: "Vendre un album" };
+
 type Props = {
-  searchParams: Promise<{ message?: string }>;
+  searchParams: Promise<{ message?: string; album?: string }>;
 };
 
 export default async function VendrePage({ searchParams }: Props) {
@@ -15,56 +19,62 @@ export default async function VendrePage({ searchParams }: Props) {
   if (!session?.user?.id) redirect("/connexion");
   const userId = session.user.id;
 
-  const { message } = await searchParams;
+  const { message, album } = await searchParams;
   const [mine, catalogue] = await Promise.all([
     getCollection(userId, null),
     db.query<{ slug: string; title: string; artist: string }>("select slug, title, artist from albums order by lower(title)"),
   ]);
+  // Album choisi depuis la fiche de la collection (?album=...)
+  const preselected = mine.some((item) => item.slug === album) ? album : "";
 
   return (
     <>
-      <SiteNav />
-      <main className="mx-auto max-w-2xl px-4 py-8">
-        <h1 className="text-2xl font-semibold">Mettre un album en vente</h1>
-        <p className="mt-1 text-sm text-zinc-500">Tu peux vendre contre des pièces, ou échanger contre un autre album.</p>
-
-        {message && <p role="alert" className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{message}</p>}
+      <SiteNav message={message} />
+      <main className="game-page narrow">
+        <h1>Vendre un album</h1>
+        <p className="sub">Contre des pièces, ou en troc contre un autre album.</p>
 
         {mine.length === 0 ? (
-          <p className="mt-8 text-zinc-600">Tu n&apos;as aucun album à vendre. <Link href="/packs" className="underline">Ouvre un pack</Link> pour commencer.</p>
+          <p className="empty">
+            Tu n&apos;as aucun album à vendre. <Link href="/packs" className="btn-link">Ouvre un pack</Link> pour commencer.
+          </p>
         ) : (
-          <form action={createListingAction} className="mt-8 flex flex-col gap-5">
-            <label className="flex flex-col gap-1 text-sm">
-              Album
-              <select name="albumSlug" required defaultValue="" className="rounded-lg border border-zinc-300 px-3 py-2">
+          <form action={createListingAction} className="form-grid">
+            <label className="field-label">
+              Album à vendre
+              <select name="albumSlug" required defaultValue={preselected}>
                 <option value="" disabled>Choisis un album</option>
                 {mine.map((item) => (
-                  <option key={item.slug} value={item.slug}>{item.title} (x{item.count})</option>
+                  <option key={item.slug} value={item.slug}>
+                    {item.title} — {RARITY_LABELS[item.rarity_tier]} (x{item.count})
+                  </option>
                 ))}
               </select>
             </label>
 
-            <fieldset className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4">
-              <legend className="px-1 text-sm font-semibold">Contre quoi ?</legend>
-              <label className="flex items-center gap-2 text-sm">
+            <fieldset className="form-card">
+              <legend>Contre quoi ?</legend>
+              <label className="radio">
                 <input type="radio" name="mode" value="coins" defaultChecked />
                 Des pièces
               </label>
-              <input name="price" type="number" min={1} max={100000} placeholder="Prix en pièces" className="rounded-lg border border-zinc-300 px-3 py-2" />
-
-              <label className="flex items-center gap-2 text-sm">
+              <input name="price" type="number" min={1} max={100000} placeholder="Prix en pièces" />
+              <label className="radio">
                 <input type="radio" name="mode" value="swap" />
                 Un autre album
               </label>
-              <select name="wantedSlug" defaultValue="" className="rounded-lg border border-zinc-300 px-3 py-2">
+              <select name="wantedSlug" defaultValue="">
                 <option value="">Choisis l&apos;album demandé</option>
-                {catalogue.rows.map((album) => (
-                  <option key={album.slug} value={album.slug}>{album.title} — {album.artist}</option>
+                {catalogue.rows.map((row) => (
+                  <option key={row.slug} value={row.slug}>{row.title} — {row.artist}</option>
                 ))}
               </select>
             </fieldset>
 
-            <button type="submit" className="self-start rounded-lg bg-zinc-900 px-5 py-2.5 font-medium text-white hover:bg-zinc-700">Publier l&apos;annonce</button>
+            <div className="row-between">
+              <Link href="/marche" className="btn">Retour au marché</Link>
+              <button type="submit" className="btn gold lg">Publier l&apos;annonce</button>
+            </div>
           </form>
         )}
       </main>

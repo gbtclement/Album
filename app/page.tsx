@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 
 export const metadata: Metadata = {
   title: "Accueil",
@@ -7,14 +9,26 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default function Home() {
+export default async function Home() {
+  // Un joueur connecté arrive directement dans sa collection
+  const session = await auth();
+  if (session?.user?.id) redirect("/collection");
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
-      <h1 className="text-3xl font-semibold">Album</h1>
-      <p className="text-zinc-600">Le jeu de collection d&apos;albums de musique.</p>
-      <div className="flex gap-4">
-        <Link href="/connexion" className="rounded-lg border border-zinc-300 px-4 py-2 hover:bg-zinc-100">Se connecter</Link>
-        <Link href="/inscription" className="rounded-lg bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700">Créer un compte</Link>
+    <main className="landing">
+      <div>
+        <div className="big-pack">
+          <div className="disc">
+            <div className="disc-rot"><span className="hub" /></div>
+            <span className="sheen" />
+          </div>
+        </div>
+        <h1>Album</h1>
+        <p>Ouvre des packs, collectionne les albums qui ont marqué la musique, échange-les avec tes amis et grimpe au classement.</p>
+        <div className="pack-actions">
+          <Link href="/inscription" className="btn lg gold">Créer un compte</Link>
+          <Link href="/connexion" className="btn lg alt">Se connecter</Link>
+        </div>
       </div>
     </main>
   );

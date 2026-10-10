@@ -47,6 +47,19 @@ export async function getTopPlayers(limit: number): Promise<LeaderRow[]> {
   });
 }
 
+// Classement restreint à quelques joueurs (onglet Amis) : rangs recalculés entre eux
+export async function getRankingAmong(userIds: string[]): Promise<LeaderRow[]> {
+  if (userIds.length === 0) return [];
+  const result = await db.query<LeaderRow>(
+    `select ranked.*, (rank() over (order by ranked.score desc, ranked.albums desc, lower(ranked.pseudo)))::int as rank
+     from (${SCORES_SQL}) ranked
+     where ranked.user_id = any($1::uuid[])
+     order by rank, lower(ranked.pseudo)`,
+    [userIds],
+  );
+  return result.rows;
+}
+
 // Position d'un joueur, même s'il n'est pas dans le top. Null s'il ne possède aucun album.
 export async function getPlayerRank(userId: string): Promise<LeaderRow | null> {
   const result = await db.query<LeaderRow>(

@@ -1,11 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { Avatar } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
 import { db } from "@/lib/db";
 import { getCollection } from "@/lib/collection";
 import { listFriends } from "@/lib/friends";
+import { RARITY_LABELS } from "@/lib/rarity";
 import { createTradeAction } from "../actions";
+
+export const metadata: Metadata = { title: "Proposer un échange" };
 
 type Props = {
   searchParams: Promise<{ avec?: string; message?: string }>;
@@ -29,53 +34,56 @@ export default async function NouveauEchangePage({ searchParams }: Props) {
 
   return (
     <>
-      <SiteNav />
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="text-2xl font-semibold">Proposer un échange à {friend.pseudo}</h1>
-        <p className="mt-1 text-sm text-zinc-500">Tu as {balance.rows[0].coins} pièces.</p>
+      <SiteNav message={message} />
+      <main className="game-page narrow">
+        <div className="trade-head" style={{ marginTop: 6 }}>
+          <Avatar name={friend.pseudo} />
+          <h1 style={{ margin: 0 }}>Échange avec {friend.pseudo}</h1>
+        </div>
+        <p className="sub" style={{ marginTop: 8 }}>Tu as {balance.rows[0].coins.toLocaleString("fr-FR")} pièces. Ajoute au moins un album ou des pièces de chaque côté.</p>
 
-        {message && <p role="alert" className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{message}</p>}
-
-        <form action={createTradeAction} className="mt-8 grid gap-8 md:grid-cols-2">
+        <form action={createTradeAction} className="form-grid">
           <input type="hidden" name="receiverId" value={friend.id} />
 
-          <fieldset className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4">
-            <legend className="px-1 font-semibold">Tu donnes</legend>
-            <label className="flex flex-col gap-1 text-sm">
-              Album
-              <select name="offerSlug" defaultValue="" className="rounded-lg border border-zinc-300 px-3 py-2">
-                <option value="">Aucun album</option>
-                {mine.map((item) => (
-                  <option key={item.slug} value={item.slug}>{item.title} (x{item.count})</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Pièces
-              <input name="offerCoins" type="number" min={0} max={100000} defaultValue={0} className="rounded-lg border border-zinc-300 px-3 py-2" />
-            </label>
-          </fieldset>
+          <div className="stack two">
+            <fieldset className="form-card">
+              <legend>Tu donnes</legend>
+              <label className="field-label">
+                Album
+                <select name="offerSlug" defaultValue="">
+                  <option value="">Aucun album</option>
+                  {mine.map((item) => (
+                    <option key={item.slug} value={item.slug}>{item.title} — {RARITY_LABELS[item.rarity_tier]} (x{item.count})</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-label">
+                Pièces
+                <input name="offerCoins" type="number" min={0} max={100000} defaultValue={0} />
+              </label>
+            </fieldset>
 
-          <fieldset className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4">
-            <legend className="px-1 font-semibold">Tu demandes</legend>
-            <label className="flex flex-col gap-1 text-sm">
-              Album de {friend.pseudo}
-              <select name="requestSlug" defaultValue="" className="rounded-lg border border-zinc-300 px-3 py-2">
-                <option value="">Aucun album</option>
-                {theirs.map((item) => (
-                  <option key={item.slug} value={item.slug}>{item.title}</option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Pièces
-              <input name="requestCoins" type="number" min={0} max={100000} defaultValue={0} className="rounded-lg border border-zinc-300 px-3 py-2" />
-            </label>
-          </fieldset>
+            <fieldset className="form-card">
+              <legend>Tu demandes</legend>
+              <label className="field-label">
+                Album de {friend.pseudo}
+                <select name="requestSlug" defaultValue="">
+                  <option value="">Aucun album</option>
+                  {theirs.map((item) => (
+                    <option key={item.slug} value={item.slug}>{item.title} — {RARITY_LABELS[item.rarity_tier]}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-label">
+                Pièces
+                <input name="requestCoins" type="number" min={0} max={100000} defaultValue={0} />
+              </label>
+            </fieldset>
+          </div>
 
-          <div className="flex items-center gap-4 md:col-span-2">
-            <button type="submit" className="rounded-lg bg-zinc-900 px-5 py-2.5 font-medium text-white hover:bg-zinc-700">Envoyer la proposition</button>
-            <Link href="/amis" className="text-sm underline">Retour aux amis</Link>
+          <div className="row-between">
+            <Link href="/amis" className="btn">Retour aux amis</Link>
+            <button type="submit" className="btn gold lg">Envoyer la proposition</button>
           </div>
         </form>
       </main>

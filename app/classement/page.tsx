@@ -1,76 +1,99 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { CrownIcon } from "@/components/icons";
+import { Avatar } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
-import { getPlayerRank, getTopPlayers } from "@/lib/leaderboard";
+import { listFriends } from "@/lib/friends";
+import { getPlayerRank, getRankingAmong, getTopPlayers, type LeaderRow } from "@/lib/leaderboard";
 
-export default async function ClassementPage() {
+export const metadata: Metadata = { title: "Classement" };
+
+type Props = {
+  searchParams: Promise<{ vue?: string }>;
+};
+
+function PodiumStep({ row, place, isMe }: { row: LeaderRow | undefined; place: 1 | 2 | 3; isMe: boolean }) {
+  if (!row) return <div />;
+  const cls = place === 1 ? "first" : place === 2 ? "second" : "third";
+  return (
+    <div className={`step ${cls}`}>
+      {place === 1 && <CrownIcon className="crown" />}
+      <Avatar name={row.pseudo} />
+      <span className="n">{row.pseudo}{isMe ? " (toi)" : ""}</span>
+      <span className="price">{row.score.toLocaleString("fr-FR")}</span>
+      <div className="block">{place}</div>
+    </div>
+  );
+}
+
+function LeaderLine({ row, isMe }: { row: LeaderRow; isMe: boolean }) {
+  return (
+    <div className={`item${isMe ? " me" : ""}`}>
+      <span className="rank">{row.rank}</span>
+      <Avatar name={row.pseudo} />
+      <div className="l">
+        <strong>{row.pseudo}{isMe ? " (toi)" : ""}</strong>
+        <small>{row.albums} album{row.albums > 1 ? "s" : ""} · {row.rares} épique{row.rares > 1 ? "s" : ""} ou légendaire{row.rares > 1 ? "s" : ""}</small>
+      </div>
+      <span className="price">{row.score.toLocaleString("fr-FR")}</span>
+    </div>
+  );
+}
+
+export default async function ClassementPage({ searchParams }: Props) {
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
   const userId = session.user.id;
+  const { vue } = await searchParams;
+  const friendsView = vue === "amis";
 
-  const [top, me] = await Promise.all([getTopPlayers(100), getPlayerRank(userId)]);
-  const inTop = top.some((row) => row.user_id === userId);
+  const rows = friendsView
+    ? await getRankingAmong([userId, ...(await listFriends(userId)).map((friend) => friend.id)])
+    : await getTopPlayers(100);
+  const me = friendsView ? null : await getPlayerRank(userId);
+  const meShown = rows.some((row) => row.user_id === userId);
+  const [first, second, third] = rows;
 
   return (
     <>
       <SiteNav />
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="text-2xl font-semibold">Classement</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Score = somme des points de rareté des albums possédés (Commun 1, Peu commun 2, Rare 5, Épique 10, Légendaire 25).
-          Un album compte une seule fois, les doublons ne rapportent rien de plus.
-        </p>
+      <main className="game-page">
+        <h1>Classement</h1>
+        <p className="sub">Score = albums différents pondérés par rareté (1 / 2 / 5 / 10 / 25). Les doublons ne comptent qu&apos;une fois.</p>
 
-        {top.length === 0 ? (
-          <p className="mt-8 text-zinc-600">Personne n&apos;a encore d&apos;album. Ouvre un pack pour apparaître ici.</p>
+        <nav className="seg" aria-label="Classement global ou entre amis">
+          <Link href="/classement" aria-current={friendsView ? undefined : "page"}>Global</Link>
+          <Link href="/classement?vue=amis" aria-current={friendsView ? "page" : undefined}>Amis</Link>
+        </nav>
+
+        {rows.length === 0 ? (
+          <p className="empty">
+            {friendsView ? "Ni toi ni tes amis n'avez encore d'album. Ouvre un pack pour commencer." : "Personne n'a encore d'album. Ouvre un pack pour apparaître ici."}
+          </p>
         ) : (
-          <table className="mt-8 w-full border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-300">
-                <th className="py-2 pr-4">Rang</th>
-                <th className="py-2 pr-4">Joueur</th>
-                <th className="py-2 pr-4 text-right">Score</th>
-                <th className="py-2 pr-4 text-right">Albums</th>
-                <th className="py-2 pr-4 text-right">Épiques et légendaires</th>
-              </tr>
-            </thead>
-            <tbody>
-              {top.map((row) => (
+          <>
+            <div className="podium">
+              <PodiumStep row={second} place={2} isMe={second?.user_id === userId} />
+              <PodiumStep row={first} place={1} isMe={first?.user_id === userId} />
+              <PodiumStep row={third} place={3} isMe={third?.user_id === userId} />
+            </div>
+            <div className="stack">
+              {rows.slice(3).map((row) => (
                 <LeaderLine key={row.user_id} row={row} isMe={row.user_id === userId} />
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
 
-        {me && !inTop && (
-          <div className="mt-6 border-t border-zinc-200 pt-4">
-            <p className="mb-2 text-sm text-zinc-500">Ta position</p>
-            <table className="w-full border-collapse text-left text-sm">
-              <tbody>
-                <LeaderLine row={me} isMe />
-              </tbody>
-            </table>
-          </div>
+        {me && !meShown && (
+          <>
+            <div className="label">Ta position</div>
+            <LeaderLine row={me} isMe />
+          </>
         )}
       </main>
     </>
-  );
-}
-
-function LeaderLine({
-  row,
-  isMe,
-}: {
-  row: { rank: number; pseudo: string; score: number; albums: number; rares: number };
-  isMe: boolean;
-}) {
-  return (
-    <tr className={`border-b border-zinc-100 ${isMe ? "bg-amber-50 font-medium" : ""}`}>
-      <td className="py-2 pr-4">{row.rank}</td>
-      <td className="py-2 pr-4">{row.pseudo}</td>
-      <td className="py-2 pr-4 text-right">{row.score}</td>
-      <td className="py-2 pr-4 text-right">{row.albums}</td>
-      <td className="py-2 pr-4 text-right">{row.rares}</td>
-    </tr>
   );
 }

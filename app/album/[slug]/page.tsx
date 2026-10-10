@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { PriceChart } from "@/components/price-chart";
 import { SiteNav } from "@/components/site-nav";
 import { findAlbumBySlug, type AlbumLinks } from "@/lib/catalog";
 import { getOwnedCount } from "@/lib/collection";
-import { RARITY_LABELS } from "@/lib/rarity";
+import { getAlbumCote } from "@/lib/market";
+import { RARITY_LABELS, RARITY_POINTS } from "@/lib/rarity";
 import { absoluteUrl, jsonLd } from "@/lib/seo";
 
 type Props = {
@@ -41,7 +43,10 @@ export default async function AlbumPage({ params }: Props) {
   if (!album) notFound();
 
   const session = await auth();
-  const owned = session?.user?.id ? await getOwnedCount(session.user.id, album.id) : null;
+  const [owned, cote] = await Promise.all([
+    session?.user?.id ? getOwnedCount(session.user.id, album.id) : Promise.resolve(null),
+    getAlbumCote(album.id),
+  ]);
   const listens = album.listen_count ? Number(album.listen_count) : null;
 
   // Données structurées (schema.org) : aident les moteurs à comprendre la fiche
@@ -59,57 +64,54 @@ export default async function AlbumPage({ params }: Props) {
     <>
       <SiteNav />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
-      <main className="mx-auto grid max-w-4xl gap-8 px-4 py-8 md:grid-cols-[18rem_1fr]">
-        <div className="aspect-square w-full overflow-hidden rounded-lg bg-zinc-100">
-          {album.cover_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={album.cover_url} alt={`Pochette de ${album.title}`} className="h-full w-full object-cover" />
-          )}
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold">{album.title}</h1>
-            <p className="text-lg text-zinc-600">{album.artist}</p>
-            {album.release_year && <p className="text-sm text-zinc-500">Sorti en {album.release_year}</p>}
-          </div>
-
-          <p>
-            Rareté : <span className="font-medium">{RARITY_LABELS[album.rarity_tier]}</span>
-          </p>
-
-          {listens !== null && (
-            <p className="text-sm text-zinc-600">Écoutes ListenBrainz : {listens.toLocaleString("fr-FR")}</p>
-          )}
-
-          {owned !== null && (
-            <p className="text-sm text-zinc-600">
-              {owned > 0 ? `Tu possèdes ${owned} exemplaire${owned > 1 ? "s" : ""}` : "Tu ne possèdes pas encore cet album"}
-            </p>
-          )}
-
-          <div className="mt-2 flex flex-wrap gap-3">
-            {PLATFORMS.map(({ key, label }) => {
-              const link = album.links[key];
-              if (!link) return null;
-              return (
-                <a
-                  key={key}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-100"
-                >
-                  {link.exact ? `Écouter sur ${label}` : `Chercher sur ${label}`}
-                </a>
-              );
-            })}
+      <main className={`game-page narrow tier-${album.rarity_tier}`}>
+        <div className="sheet-top" style={{ alignItems: "flex-start", marginTop: 8 }}>
+          <span className="cover" style={{ width: "min(220px, 42vw)" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- pochettes servies par Cover Art Archive */}
+            {album.cover_url && <img src={album.cover_url} alt={`Pochette de ${album.title}`} />}
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <span className="tier-tag">{RARITY_LABELS[album.rarity_tier]}</span>
+            <h1>{album.title}</h1>
+            <p className="sub">{album.artist}{album.release_year ? ` · ${album.release_year}` : ""}</p>
+            {owned !== null && (
+              <p className="sub">
+                {owned > 0 ? `Tu possèdes ${owned} exemplaire${owned > 1 ? "s" : ""}` : "Pas encore dans ta collection"}
+              </p>
+            )}
           </div>
         </div>
-        <section className="md:col-span-2">
-          <h2 className="mb-3 font-semibold">Historique des ventes (90 jours)</h2>
+
+        <div className="facts" style={{ marginTop: 14 }}>
+          <div className="fact"><b>{listens !== null ? listens.toLocaleString("fr-FR") : "—"}</b><small>Écoutes</small></div>
+          <div className="fact"><b><i className="coin-i" aria-hidden="true" />{cote.cote ? Number(cote.cote).toLocaleString("fr-FR") : "—"}</b><small>Cote</small></div>
+          <div className="fact"><b>{RARITY_POINTS[album.rarity_tier]}</b><small>Points</small></div>
+        </div>
+        <p className="sub" style={{ marginTop: 6 }}>Écoutes ListenBrainz : plus un album est écouté, plus sa carte est rare.</p>
+
+        <div className="listen" style={{ marginTop: 8 }}>
+          {PLATFORMS.map(({ key, label }) => {
+            const link = album.links[key];
+            if (!link) return null;
+            return (
+              <a key={key} href={link.url} target="_blank" rel="noopener noreferrer" className={link.exact ? "" : "search"}>
+                {link.exact ? `Écouter sur ${label}` : `Chercher sur ${label}`}
+              </a>
+            );
+          })}
+        </div>
+
+        {owned !== null && owned > 0 && (
+          <div className="sheet-actions" style={{ marginTop: 14 }}>
+            <Link href={`/marche/vendre?album=${album.slug}`} className="btn gold">Mettre en vente</Link>
+            <Link href="/amis" className="btn">Proposer en échange</Link>
+          </div>
+        )}
+
+        <div className="label">Historique des ventes (90 jours)</div>
+        <div className="chart-card">
           <PriceChart endpoint={`/api/market/history?album=${album.slug}&jours=90`} label={album.title} />
-        </section>
+        </div>
       </main>
     </>
   );

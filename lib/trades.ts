@@ -2,6 +2,7 @@ import type { PoolClient } from "pg";
 import { db, withTransaction } from "@/lib/db";
 import { areFriends } from "@/lib/friends";
 import { recordEvent } from "@/lib/quests";
+import type { RarityTier } from "@/lib/rarity";
 
 export class TradeError extends Error {}
 
@@ -19,9 +20,13 @@ export type TradeView = {
   receiver_pseudo: string;
   offer_slug: string | null;
   offer_title: string | null;
+  offer_cover: string | null;
+  offer_tier: RarityTier | null;
   offer_coins: number;
   request_slug: string | null;
   request_title: string | null;
+  request_cover: string | null;
+  request_tier: RarityTier | null;
   request_coins: number;
   created_at: Date;
   resolved_at: Date | null;
@@ -30,8 +35,8 @@ export type TradeView = {
 const TRADE_SELECT = `
   select t.id, t.status, t.proposer_id, p.pseudo as proposer_pseudo,
          t.receiver_id, r.pseudo as receiver_pseudo,
-         oa.slug as offer_slug, oa.title as offer_title, t.offer_coins,
-         ra.slug as request_slug, ra.title as request_title, t.request_coins,
+         oa.slug as offer_slug, oa.title as offer_title, oa.cover_url as offer_cover, oa.rarity_tier as offer_tier, t.offer_coins,
+         ra.slug as request_slug, ra.title as request_title, ra.cover_url as request_cover, ra.rarity_tier as request_tier, t.request_coins,
          t.created_at, t.resolved_at
   from trades t
   join users p on p.id = t.proposer_id

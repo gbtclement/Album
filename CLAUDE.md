@@ -8,6 +8,7 @@ Jeu de collection de cartes d'albums de musique, inspiré de Wikimaster. Interfa
 - PostgreSQL (`lib/db.ts`) et Redis (`lib/redis.ts`), tous deux dans Docker
 - Tailwind CSS 4
 - Auth.js (e-mail/mot de passe ; Google seulement si `AUTH_GOOGLE_ID` et `AUTH_GOOGLE_SECRET` sont renseignés), Lightweight Charts (lot 6)
+- Catalogue : ListenBrainz (albums les plus écoutés, écoutes = rareté) et MusicBrainz, sans clé (`lib/listenbrainz.ts`, `lib/musicbrainz.ts`)
 
 Next.js 16 a des changements par rapport aux versions habituelles : lire le guide correspondant dans `node_modules/next/dist/docs/` avant d'écrire du code.
 
@@ -22,6 +23,9 @@ Toutes les commandes se lancent dans WSL (Ubuntu-24.04), depuis `~/Album`.
 - Migrations : appliquées automatiquement par `npm run dev` (et au démarrage du conteneur en production) par `scripts/migrate.mjs` (suivi dans la table `schema_migrations`). À la main : `npm run migrate`. Ne jamais modifier une migration déjà appliquée : ajouter un nouveau fichier numéroté.
 - Tests : `npm test` (Vitest). `tests/unit/` sans base ; `tests/integration/` sur la base `album_test` et Redis n°15, vidés à chaque test.
 - CI : `.github/workflows/ci.yml` (lint, typage, tests, build) à chaque push et PR.
+- Catalogue (sans clé) : `npm run import:catalog -- --listenbrainz` (albums les plus écoutés), `-- --listenbrainz --artists 300` (plus les discographies, long), `-- --listens` (écoutes et rareté à jour). Un album déjà présent n'est pas réimporté.
+- Données de démonstration : `npm run seed:demo` (compte `demo@demo.invalid` / `demo-album` et 8 autres joueurs en `@demo.invalid`, recréés à chaque lancement, refusé en production).
+- Si le site se recharge en boucle dans le navigateur (cache Turbopack incohérent, vu après un `npm run build`) : arrêter `npm run dev`, supprimer `.next`, relancer.
 
 Environnement : le dépôt vit dans WSL (`~/Album`, jamais sous `C:\`, les accès disque Windows y sont lents et Turbopack y voit de faux changements). Node 22 est installé dans WSL par nvm ; seuls PostgreSQL et Redis tournent dans Docker. En dev, `.env` pointe vers `localhost` ; `docker-compose.prod.yml` remplace ces adresses par `db` et `redis`. Les scripts (`migrate`, `import:catalog`, tests) lisent `.env` eux-mêmes.
 - Production (test local) : `docker compose -f docker-compose.prod.yml up -d --build`. Arrêter `npm run dev` et la dev avant (`docker compose down`), les ports sont les mêmes. Le fichier `.env` n'est jamais copié dans l'image.
@@ -39,6 +43,6 @@ Next.js 16 sans `cacheComponents` (désactivé : trop de contournements). Le lay
 
 - Ne jamais versionner `.env`. Les variables sont décrites dans `.env.example`.
 - Ne jamais afficher les secrets (`.env`, mots de passe, clés API) dans une réponse.
-- Style : rester sobre pour l'instant. Le seul design travaillé est la page de connexion/inscription (lot 1) ; on répliquera ce style sur le reste du site une fois validé.
+- Style « version jeu » (lot D1), validé par l'utilisateur sur une maquette : styles communs dans `app/globals.css` (couleurs en variables, classes `.btn`, `.item`, `.card`, `.cover`, `.chip`, `.seg`, `.tier-<rareté>`...), barre d'infos et barre de jeu dans `components/site-nav.tsx` et `components/game-nav.tsx`. Réutiliser ces classes plutôt que des utilitaires Tailwind. Pas de barre de navigation de site ni de menu latéral ; animations sobres. Les pages de connexion/inscription et `/documentation` gardent leur propre style.
 - SEO : chaque page publique définit son titre, sa description et son URL canonique (à partir de `PUBLIC_BASE_URL`).
 - Documentation : la page `/documentation` (`app/documentation/page.tsx`) décrit le site techniquement (routes, tables, variables d'environnement, règles, avancement des lots). Elle est mise à jour à chaque lot. Elle n'est pas protégée pour l'instant.

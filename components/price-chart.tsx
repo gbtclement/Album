@@ -36,14 +36,19 @@ export function PriceChart({ endpoint, label }: { endpoint: string; label: strin
     const container = containerRef.current;
     if (!container || !data || data.points.length === 0) return;
 
+    // Couleurs du thème du jeu (voir app/globals.css) : la bibliothèque ne lit pas les variables CSS
     const chart = createChart(container, {
-      height: 260,
-      layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#52525b" },
-      grid: { vertLines: { color: "#f4f4f5" }, horzLines: { color: "#f4f4f5" } },
+      height: 220,
+      layout: { background: { type: ColorType.Solid, color: "transparent" }, textColor: "#9a94c2", fontFamily: "Chakra Petch, system-ui, sans-serif" },
+      grid: { vertLines: { visible: false }, horzLines: { color: "#2a2550" } },
       rightPriceScale: { borderVisible: false },
       timeScale: { borderVisible: false },
+      crosshair: { horzLine: { color: "#3a3466" }, vertLine: { color: "#3a3466" } },
+      // Langue fixée : sinon la bibliothèque lit celle du navigateur, qu'elle ne sait pas toujours interpréter
+      localization: { locale: "fr-FR", priceFormatter: (price: number) => Math.round(price).toLocaleString("fr-FR") },
     });
-    const series = chart.addSeries(LineSeries, { color: "#b45309", lineWidth: 2, title: label });
+    // Pas de titre sur la courbe : le nom est déjà affiché au-dessus du graphique
+    const series = chart.addSeries(LineSeries, { color: "#f4b740", lineWidth: 3 });
     series.setData(data.points.map((point) => ({ time: point.time, value: point.value })));
     chart.timeScale().fitContent();
 
@@ -54,22 +59,22 @@ export function PriceChart({ endpoint, label }: { endpoint: string; label: strin
       window.removeEventListener("resize", resize);
       chart.remove();
     };
-  }, [data, label]);
+  }, [data]);
 
-  if (error) return <p className="text-sm text-red-600">{error}</p>;
-  if (!data) return <p className="text-sm text-zinc-500">Chargement du graphique...</p>;
-  if (data.points.length === 0) return <p className="text-sm text-zinc-500">Aucune vente sur cette période.</p>;
+  if (error) return <p className="empty">{error}</p>;
+  if (!data) return <p className="empty">Chargement du graphique...</p>;
+  if (data.points.length === 0) return <p className="empty">Aucune vente sur cette période.</p>;
 
   const variation = data.variation;
   return (
     <div>
-      <p className="mb-2 text-sm">
+      <p className="sub" style={{ margin: "8px 0 4px" }}>
         Variation sur la période :{" "}
-        <strong className={variation !== null && variation < 0 ? "text-red-600" : "text-emerald-700"}>
-          {variation === null ? "—" : `${variation > 0 ? "+" : ""}${variation} %`}
+        <strong className={variation !== null && variation < 0 ? "down" : "up"}>
+          {variation === null ? "—" : `${variation > 0 ? "+" : ""}${variation.toLocaleString("fr-FR")} %`}
         </strong>
       </p>
-      <div ref={containerRef} className="w-full" />
+      <div ref={containerRef} style={{ width: "100%" }} role="img" aria-label={`Graphique des prix : ${label}`} />
     </div>
   );
 }

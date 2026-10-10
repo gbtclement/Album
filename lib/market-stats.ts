@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import type { RarityTier } from "@/lib/rarity";
 
 // Statistiques de la bourse : prix moyens quotidiens des ventes en pièces.
 
@@ -37,56 +38,48 @@ export function variationPercent(points: SeriesPoint[]): number | null {
   return Math.round(((last - first) / first) * 1000) / 10;
 }
 
-export type Mover = {
+export type StockLine = {
   slug: string;
   title: string;
   artist: string;
-  firstPrice: number;
-  lastPrice: number;
-  change: number;
-  sales: number;
+  cover: string | null;
+  tier: RarityTier;
+  // Prix moyen de chaque jour avec au moins une vente, du plus ancien au plus récent
+  points: number[];
+  last: number;
+  // Variation entre le premier et le dernier jour de vente de la période (null avec un seul jour)
+  change: number | null;
 };
 
-// Albums avec au moins deux ventes sur la période, classés par variation
-export async function getMovers(days: number, limit: number) {
-  const result = await db.query<{
-    slug: string;
-    title: string;
-    artist: string;
-    sales: number;
-    first_price: number;
-    last_price: number;
-  }>(
-    `with recent as (
-       select album_id, price_coins, created_at, id,
-              row_number() over (partition by album_id order by created_at asc, id asc) as first_rank,
-              row_number() over (partition by album_id order by created_at desc, id desc) as last_rank,
-              count(*) over (partition by album_id) as sales
+// Cotes de la bourse : albums vendus sur la période, les plus échangés d'abord
+export async function getStockList(days: number, limit: number): Promise<StockLine[]> {
+  const result = await db.query<{ slug: string; title: string; artist: string; cover_url: string | null; rarity_tier: RarityTier; points: number[] }>(
+    `with daily as (
+       select album_id, date_trunc('day', created_at) as day, round(avg(price_coins))::int as value, count(*) as sales
        from market_sales
        where created_at > now() - make_interval(days => $1)
+       group by 1, 2
      )
-     select a.slug, a.title, a.artist, f.sales,
-            f.price_coins as first_price, l.price_coins as last_price
-     from recent f
-     join recent l on l.album_id = f.album_id and l.last_rank = 1
-     join albums a on a.id = f.album_id
-     where f.first_rank = 1 and f.sales >= 2`,
-    [days],
+     select a.slug, a.title, a.artist, a.cover_url, a.rarity_tier, array_agg(d.value order by d.day) as points
+     from daily d
+     join albums a on a.id = d.album_id
+     group by a.id
+     order by sum(d.sales) desc, max(d.day) desc
+     limit $2`,
+    [days, limit],
   );
-
-  const movers: Mover[] = result.rows.map((row) => ({
-    slug: row.slug,
-    title: row.title,
-    artist: row.artist,
-    firstPrice: row.first_price,
-    lastPrice: row.last_price,
-    change: Math.round(((row.last_price - row.first_price) / row.first_price) * 1000) / 10,
-    sales: row.sales,
-  }));
-
-  movers.sort((a, b) => b.change - a.change);
-  return {
-    rises: movers.filter((mover) => mover.change > 0).slice(0, limit),
-    falls: movers.filter((mover) => mover.change < 0).reverse().slice(0, limit),
-  };
+  return result.rows.map((row) => {
+    const first = row.points[0];
+    const last = row.points[row.points.length - 1];
+    return {
+      slug: row.slug,
+      title: row.title,
+      artist: row.artist,
+      cover: row.cover_url,
+      tier: row.rarity_tier,
+      points: row.points,
+      last,
+      change: row.points.length > 1 && first > 0 ? Math.round(((last - first) / first) * 1000) / 10 : null,
+    };
+  });
 }

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import type { AlbumRow } from "@/lib/catalog";
-import type { RarityTier } from "@/lib/rarity";
+import type { AlbumLinks, AlbumRow } from "@/lib/catalog";
+import { RARITY_POINTS, type RarityTier } from "@/lib/rarity";
 
 export type CollectionItem = {
   slug: string;
@@ -11,17 +11,45 @@ export type CollectionItem = {
   count: number;
 };
 
+export type CollectionCard = CollectionItem & {
+  release_year: number | null;
+  links: AlbumLinks;
+  // Cote : moyenne des 10 dernières ventes en pièces (null sans vente)
+  cote: number | null;
+};
+
 // Albums possédés par le joueur, éventuellement filtrés par palier
 export async function getCollection(userId: string, tier: RarityTier | null): Promise<CollectionItem[]> {
   const result = await db.query<CollectionItem>(
     `select a.slug, a.title, a.artist, a.cover_url, a.rarity_tier, ua.count
      from user_albums ua
      join albums a on a.id = ua.album_id
-     where ua.user_id = $1 and ($2::text is null or a.rarity_tier = $2)
+     where ua.user_id = $1 and ua.count > 0 and ($2::text is null or a.rarity_tier = $2)
      order by ua.first_obtained_at desc`,
     [userId, tier],
   );
   return result.rows;
+}
+
+// Collection complète pour la page Collection : de quoi remplir la fiche de chaque carte
+export async function getCollectionCards(userId: string): Promise<CollectionCard[]> {
+  const result = await db.query<CollectionCard>(
+    `select a.slug, a.title, a.artist, a.cover_url, a.rarity_tier, ua.count, a.release_year, a.links,
+            (select round(avg(x.price_coins))::int
+               from (select price_coins from market_sales ms where ms.album_id = a.id
+                     order by ms.created_at desc limit 10) x) as cote
+     from user_albums ua
+     join albums a on a.id = ua.album_id
+     where ua.user_id = $1 and ua.count > 0
+     order by ua.first_obtained_at desc`,
+    [userId],
+  );
+  return result.rows;
+}
+
+// Score du classement : chaque album distinct possédé vaut les points de sa rareté
+export function collectionScore(items: Array<{ rarity_tier: RarityTier }>) {
+  return items.reduce((sum, item) => sum + RARITY_POINTS[item.rarity_tier], 0);
 }
 
 // Nombre d'exemplaires d'un album pour un joueur (0 si absent)

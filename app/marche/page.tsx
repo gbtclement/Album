@@ -1,13 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { CSSProperties, ReactNode } from "react";
 import { auth } from "@/auth";
+import { Price, Thumb } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
+import { db } from "@/lib/db";
 import { getCollection } from "@/lib/collection";
 import { listActiveListings, type ListingView } from "@/lib/market";
+import { RARITY_LABELS, RARITY_TIERS, type RarityTier } from "@/lib/rarity";
 import { buyListingAction, cancelListingAction } from "./actions";
 
+export const metadata: Metadata = { title: "Marché" };
+
 type Props = {
-  searchParams: Promise<{ message?: string }>;
+  searchParams: Promise<{ message?: string; onglet?: string; rarete?: string }>;
 };
 
 export default async function MarchePage({ searchParams }: Props) {
@@ -15,90 +22,119 @@ export default async function MarchePage({ searchParams }: Props) {
   if (!session?.user?.id) redirect("/connexion");
   const userId = session.user.id;
 
-  const { message } = await searchParams;
-  const [listings, mine] = await Promise.all([listActiveListings(), getCollection(userId, null)]);
+  const { message, onglet, rarete } = await searchParams;
+  const tab = onglet === "mes-annonces" ? "mine" : "buy";
+  const tier = RARITY_TIERS.find((value) => value === rarete) ?? null;
+
+  const [listings, mine, balance] = await Promise.all([
+    listActiveListings(),
+    getCollection(userId, null),
+    db.query<{ coins: number }>("select coins from users where id = $1", [userId]),
+  ]);
+  const coins = balance.rows[0]?.coins ?? 0;
+  const owned = new Set(mine.map((item) => item.slug));
+  const myListings = listings.filter((listing) => listing.seller_id === userId);
+  const others = listings.filter((listing) => listing.seller_id !== userId && (!tier || listing.album_tier === tier));
 
   return (
     <>
-      <SiteNav />
-      <main className="mx-auto max-w-4xl space-y-8 px-4 py-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold">Marché</h1>
-          <Link href="/marche/vendre" className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white">Mettre un album en vente</Link>
+      <SiteNav message={message} />
+      <main className="game-page">
+        <div className="row-between">
+          <h1>Marché</h1>
+          <Link href="/marche/vendre" className="btn gold">Vendre un album</Link>
         </div>
+        <p className="sub">{listings.length - myListings.length} annonce{listings.length - myListings.length > 1 ? "s" : ""} · ventes en pièces ou troc d&apos;albums</p>
 
-        {message && <p role="status" className="rounded-lg bg-zinc-100 px-4 py-3 text-sm">{message}</p>}
+        <nav className="seg" aria-label="Onglets du marché">
+          <Link href="/marche" aria-current={tab === "buy" ? "page" : undefined}>Acheter</Link>
+          <Link href="/marche?onglet=mes-annonces" aria-current={tab === "mine" ? "page" : undefined}>
+            Mes annonces{myListings.length > 0 && <b>{myListings.length}</b>}
+          </Link>
+        </nav>
 
-        {listings.length === 0 && <p className="text-zinc-500">Aucune annonce pour l&apos;instant.</p>}
-
-        <ul className="space-y-4">
-          {listings.map((listing) => (
-            <li key={listing.id} className="flex flex-col gap-4 rounded-lg border border-zinc-200 p-4 sm:flex-row">
-              <div className="h-24 w-24 shrink-0 overflow-hidden rounded bg-zinc-100">
-                {listing.album_cover && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={listing.album_cover} alt={`Pochette de ${listing.album_title}`} loading="lazy" className="h-full w-full object-cover" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <Link href={`/album/${listing.album_slug}`} className="font-medium hover:underline">{listing.album_title}</Link>
-                <p className="text-sm text-zinc-500">{listing.album_artist} · vendu par {listing.seller_pseudo}</p>
-                <p className="mt-1 text-sm">
-                  {listing.price_coins !== null
-                    ? <>Prix : <strong>{listing.price_coins} pièces</strong></>
-                    : <>Échange contre : <strong>{listing.wanted_title}</strong></>}
-                </p>
-                <p className="text-xs text-zinc-500">
-                  Cote : {listing.cote ? `${listing.cote} pièces` : "pas encore de vente"}
-                </p>
-              </div>
-              <ListingAction listing={listing} myAlbums={mine.map((item) => ({ slug: item.slug, title: item.title }))} viewerId={userId} />
-            </li>
-          ))}
-        </ul>
+        {tab === "mine" ? (
+          <div className="stack two">
+            {myListings.length === 0 ? (
+              <p className="empty">Aucune annonce. Touche une carte de ta collection pour la mettre en vente.</p>
+            ) : (
+              myListings.map((listing) => (
+                <ListingRow key={listing.id} listing={listing}>
+                  {listing.price_coins !== null && <Price value={listing.price_coins} />}
+                  <form action={cancelListingAction}>
+                    <input type="hidden" name="listingId" value={listing.id} />
+                    <button type="submit" className="btn red">Retirer</button>
+                  </form>
+                </ListingRow>
+              ))
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="chips">
+              <Link href="/marche" className="chip" aria-current={tier === null ? "page" : undefined}>Toutes</Link>
+              {[...RARITY_TIERS].reverse().map((value: RarityTier) => (
+                <Link key={value} href={`/marche?rarete=${value}`} className="chip" style={{ "--c": `var(--r-${value})` } as CSSProperties} aria-current={tier === value ? "page" : undefined}>
+                  <i />
+                  {RARITY_LABELS[value]}
+                </Link>
+              ))}
+            </div>
+            <div className="stack two">
+              {others.length === 0 ? (
+                <p className="empty">{tier ? "Aucune annonce pour cette rareté." : "Aucune annonce pour l'instant."}</p>
+              ) : (
+                others.map((listing) => (
+                  <ListingRow key={listing.id} listing={listing}>
+                    {listing.price_coins !== null ? (
+                      <>
+                        <Price value={listing.price_coins} />
+                        <form action={buyListingAction}>
+                          <input type="hidden" name="listingId" value={listing.id} />
+                          <button type="submit" className="btn green" disabled={coins < listing.price_coins}>Acheter</button>
+                        </form>
+                      </>
+                    ) : (
+                      <form action={buyListingAction}>
+                        <input type="hidden" name="listingId" value={listing.id} />
+                        <input type="hidden" name="offeredSlug" value={listing.wanted_slug ?? ""} />
+                        <button
+                          type="submit"
+                          className="btn"
+                          disabled={!listing.wanted_slug || !owned.has(listing.wanted_slug)}
+                          title={listing.wanted_slug && owned.has(listing.wanted_slug) ? undefined : "Il te faut l'album demandé"}
+                        >
+                          Troquer
+                        </button>
+                      </form>
+                    )}
+                  </ListingRow>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </main>
     </>
   );
 }
 
-function ListingAction({
-  listing,
-  myAlbums,
-  viewerId,
-}: {
-  listing: ListingView;
-  myAlbums: Array<{ slug: string; title: string }>;
-  viewerId: string;
-}) {
-  if (listing.seller_id === viewerId) {
-    return (
-      <form action={cancelListingAction} className="flex items-center">
-        <input type="hidden" name="listingId" value={listing.id} />
-        <button type="submit" className="rounded-lg border border-zinc-300 px-3 py-2 text-sm">Retirer mon annonce</button>
-      </form>
-    );
-  }
-
-  if (listing.price_coins !== null) {
-    return (
-      <form action={buyListingAction} className="flex items-center">
-        <input type="hidden" name="listingId" value={listing.id} />
-        <button type="submit" className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white">Acheter</button>
-      </form>
-    );
-  }
-
-  const candidates = myAlbums.filter((album) => album.slug !== listing.album_slug);
+function ListingRow({ listing, children }: { listing: ListingView; children: ReactNode }) {
   return (
-    <form action={buyListingAction} className="flex flex-col gap-2 text-sm">
-      <input type="hidden" name="listingId" value={listing.id} />
-      <select name="offeredSlug" required defaultValue="" className="rounded-lg border border-zinc-300 px-2 py-2">
-        <option value="" disabled>Ton album à échanger</option>
-        {candidates.map((album) => (
-          <option key={album.slug} value={album.slug}>{album.title}</option>
-        ))}
-      </select>
-      <button type="submit" disabled={candidates.length === 0} className="rounded-lg bg-zinc-900 px-4 py-2 text-white disabled:opacity-50">Proposer l&apos;échange</button>
-    </form>
+    <div className="item">
+      <Link href={`/album/${listing.album_slug}`} aria-label={listing.album_title}>
+        <Thumb cover={listing.album_cover} tier={listing.album_tier} title={listing.album_title} />
+      </Link>
+      <div className="l">
+        <strong>{listing.album_title}</strong>
+        <small>
+          <span className={`tier-tag tier-${listing.album_tier}`}>{RARITY_LABELS[listing.album_tier]}</span>
+          {" · "}
+          {listing.price_coins !== null ? `par ${listing.seller_pseudo}` : `contre ${listing.wanted_title}`}
+          {listing.cote ? ` · cote ${Number(listing.cote).toLocaleString("fr-FR")}` : ""}
+        </small>
+      </div>
+      <div className="r">{children}</div>
+    </div>
   );
 }

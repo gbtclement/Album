@@ -95,6 +95,16 @@ export async function listOutgoingRequests(userId: string): Promise<FriendRow[]>
   return result.rows;
 }
 
+// Nombre de cartes de chaque joueur de la liste (pour l'affichage de la page Amis)
+export async function countCards(userIds: string[]): Promise<Map<string, number>> {
+  if (userIds.length === 0) return new Map();
+  const result = await db.query<{ user_id: string; cards: number }>(
+    "select user_id, sum(count)::int as cards from user_albums where user_id = any($1::uuid[]) group by user_id",
+    [userIds],
+  );
+  return new Map(result.rows.map((row) => [row.user_id, row.cards]));
+}
+
 export async function areFriends(userId: string, otherId: string) {
   const result = await db.query(
     `select 1 from friendships

@@ -1,13 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { Avatar } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
-import { listFriends, listIncomingRequests, listOutgoingRequests } from "@/lib/friends";
+import { countCards, listFriends, listIncomingRequests, listOutgoingRequests } from "@/lib/friends";
 import { removeFriendAction, respondFriendRequestAction, sendFriendRequestAction } from "./actions";
+
+export const metadata: Metadata = { title: "Amis" };
 
 type Props = {
   searchParams: Promise<{ message?: string }>;
 };
+
+const cardsLabel = (count: number) => `${count.toLocaleString("fr-FR")} carte${count > 1 ? "s" : ""}`;
 
 export default async function AmisPage({ searchParams }: Props) {
   const session = await auth();
@@ -20,75 +26,84 @@ export default async function AmisPage({ searchParams }: Props) {
     listIncomingRequests(userId),
     listOutgoingRequests(userId),
   ]);
+  const cards = await countCards([...friends, ...incoming].map((user) => user.id));
 
   return (
     <>
-      <SiteNav />
-      <main className="mx-auto max-w-3xl space-y-10 px-4 py-8">
-        <h1 className="text-2xl font-semibold">Amis</h1>
+      <SiteNav message={message} />
+      <main className="game-page">
+        <h1>Amis</h1>
+        <p className="sub">{friends.length} ami{friends.length > 1 ? "s" : ""} · échange tes cartes avec eux</p>
 
-        {message && <p role="status" className="rounded-lg bg-zinc-100 px-4 py-3 text-sm">{message}</p>}
+        <form action={sendFriendRequestAction} className="inline-form">
+          <input name="pseudo" type="text" required minLength={3} placeholder="Ajouter un ami par pseudo" aria-label="Pseudo du joueur" autoComplete="off" />
+          <button type="submit" className="btn gold">Ajouter</button>
+        </form>
 
-        <section>
-          <h2 className="mb-3 font-semibold">Ajouter un ami</h2>
-          <form action={sendFriendRequestAction} className="flex flex-wrap gap-2">
-            <input name="pseudo" required minLength={3} placeholder="Pseudo du joueur" className="rounded-lg border border-zinc-300 px-3 py-2" />
-            <button type="submit" className="rounded-lg bg-zinc-900 px-4 py-2 text-white hover:bg-zinc-700">Envoyer la demande</button>
-          </form>
-        </section>
-
-        <section>
-          <h2 className="mb-3 font-semibold">Demandes reçues ({incoming.length})</h2>
-          {incoming.length === 0 && <p className="text-sm text-zinc-500">Aucune demande en attente.</p>}
-          <ul className="space-y-2">
-            {incoming.map((request) => (
-              <li key={request.id} className="flex items-center justify-between gap-4 rounded-lg border border-zinc-200 px-4 py-3">
-                <span className="font-medium">{request.pseudo}</span>
-                <div className="flex gap-2">
-                  <form action={respondFriendRequestAction}>
-                    <input type="hidden" name="requesterId" value={request.id} />
-                    <button name="decision" value="accept" className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white">Accepter</button>
-                  </form>
-                  <form action={respondFriendRequestAction}>
-                    <input type="hidden" name="requesterId" value={request.id} />
-                    <button name="decision" value="decline" className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm">Refuser</button>
-                  </form>
+        {incoming.length > 0 && (
+          <>
+            <div className="label">Demandes reçues</div>
+            <div className="stack two">
+              {incoming.map((request) => (
+                <div key={request.id} className="item">
+                  <Avatar name={request.pseudo} />
+                  <div className="l">
+                    <strong>{request.pseudo}</strong>
+                    <small>{cardsLabel(cards.get(request.id) ?? 0)}</small>
+                  </div>
+                  <div className="r">
+                    <form action={respondFriendRequestAction}>
+                      <input type="hidden" name="requesterId" value={request.id} />
+                      <button name="decision" value="decline" className="btn red">Non</button>
+                    </form>
+                    <form action={respondFriendRequestAction}>
+                      <input type="hidden" name="requesterId" value={request.id} />
+                      <button name="decision" value="accept" className="btn green">Accepter</button>
+                    </form>
+                  </div>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+              ))}
+            </div>
+          </>
+        )}
 
-        <section>
-          <h2 className="mb-3 font-semibold">Demandes envoyées ({outgoing.length})</h2>
-          {outgoing.length === 0 && <p className="text-sm text-zinc-500">Aucune demande envoyée.</p>}
-          <ul className="space-y-2">
-            {outgoing.map((request) => (
-              <li key={request.id} className="rounded-lg border border-zinc-200 px-4 py-3 text-zinc-600">{request.pseudo}</li>
-            ))}
-          </ul>
-        </section>
+        <div className="label">Tes amis</div>
+        <div className="stack two">
+          {friends.length === 0 && <p className="empty">Tu n&apos;as pas encore d&apos;amis. Ajoute un joueur avec son pseudo.</p>}
+          {friends.map((friend) => (
+            <div key={friend.id} className="item">
+              <Avatar name={friend.pseudo} />
+              <div className="l">
+                <strong>{friend.pseudo}</strong>
+                <small>{cardsLabel(cards.get(friend.id) ?? 0)}</small>
+              </div>
+              <div className="r">
+                <Link href={`/echanges/nouveau?avec=${friend.id}`} className="btn">Échanger</Link>
+                <form action={removeFriendAction}>
+                  <input type="hidden" name="friendId" value={friend.id} />
+                  <button type="submit" className="btn red" aria-label={`Retirer ${friend.pseudo} de tes amis`}>Retirer</button>
+                </form>
+              </div>
+            </div>
+          ))}
+        </div>
 
-        <section>
-          <h2 className="mb-3 font-semibold">Mes amis ({friends.length})</h2>
-          {friends.length === 0 && <p className="text-sm text-zinc-500">Tu n&apos;as pas encore d&apos;amis.</p>}
-          <ul className="space-y-2">
-            {friends.map((friend) => (
-              <li key={friend.id} className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-zinc-200 px-4 py-3">
-                <span className="font-medium">{friend.pseudo}</span>
-                <div className="flex gap-3 text-sm">
-                  <Link href={`/echanges/nouveau?avec=${friend.id}`} className="rounded-lg bg-zinc-900 px-3 py-1.5 text-white">
-                    Proposer un échange
-                  </Link>
-                  <form action={removeFriendAction}>
-                    <input type="hidden" name="friendId" value={friend.id} />
-                    <button type="submit" className="rounded-lg border border-zinc-300 px-3 py-1.5">Retirer</button>
-                  </form>
+        {outgoing.length > 0 && (
+          <>
+            <div className="label">Demandes envoyées</div>
+            <div className="stack two">
+              {outgoing.map((request) => (
+                <div key={request.id} className="item">
+                  <Avatar name={request.pseudo} />
+                  <div className="l">
+                    <strong>{request.pseudo}</strong>
+                    <small>En attente de sa réponse</small>
+                  </div>
                 </div>
-              </li>
-            ))}
-          </ul>
-        </section>
+              ))}
+            </div>
+          </>
+        )}
       </main>
     </>
   );

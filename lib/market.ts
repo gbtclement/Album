@@ -1,5 +1,6 @@
 import type { PoolClient } from "pg";
 import { db, withTransaction } from "@/lib/db";
+import type { RarityTier } from "@/lib/rarity";
 import { moveAlbum } from "@/lib/trades";
 import { recordEvent } from "@/lib/quests";
 
@@ -13,9 +14,11 @@ export type ListingView = {
   album_title: string;
   album_artist: string;
   album_cover: string | null;
+  album_tier: RarityTier;
   price_coins: number | null;
   wanted_slug: string | null;
   wanted_title: string | null;
+  wanted_tier: RarityTier | null;
   // Cote : moyenne des 10 dernières ventes en pièces (null si aucune vente)
   cote: string | null;
   created_at: Date;
@@ -26,7 +29,8 @@ const MAX_PRICE = 100000;
 const LISTING_SELECT = `
   select l.id, l.seller_id, s.pseudo as seller_pseudo,
          a.slug as album_slug, a.title as album_title, a.artist as album_artist, a.cover_url as album_cover,
-         l.price_coins, w.slug as wanted_slug, w.title as wanted_title,
+         a.rarity_tier as album_tier,
+         l.price_coins, w.slug as wanted_slug, w.title as wanted_title, w.rarity_tier as wanted_tier,
          (select round(avg(x.price_coins))::text
             from (select price_coins from market_sales ms where ms.album_id = a.id
                   order by ms.created_at desc limit 10) x) as cote,
