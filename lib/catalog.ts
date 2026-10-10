@@ -12,8 +12,9 @@ export type AlbumRow = {
   artist: string;
   release_year: number | null;
   cover_url: string | null;
-  lastfm_playcount: string | null;
-  lastfm_listeners: string | null;
+  // Écoutes ListenBrainz (bigint : renvoyé en texte par PostgreSQL)
+  listen_count: string | null;
+  listener_count: string | null;
   rarity_tier: RarityTier;
   links: AlbumLinks;
 };
@@ -24,7 +25,7 @@ export type AlbumInput = {
   artist: string;
   releaseYear: number | null;
   coverUrl: string;
-  playcount: number | null;
+  listens: number | null;
   listeners: number | null;
   links: AlbumLinks;
 };
@@ -48,15 +49,15 @@ export function slugFor(artist: string, title: string, mbid: string) {
 export async function upsertAlbum(input: AlbumInput) {
   await db.query(
     `insert into albums
-       (mbid, slug, title, artist, release_year, cover_url, lastfm_playcount, lastfm_listeners, links)
+       (mbid, slug, title, artist, release_year, cover_url, listen_count, listener_count, links)
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      on conflict (mbid) do update set
        title = excluded.title,
        artist = excluded.artist,
-       release_year = excluded.release_year,
+       release_year = coalesce(excluded.release_year, albums.release_year),
        cover_url = excluded.cover_url,
-       lastfm_playcount = coalesce(excluded.lastfm_playcount, albums.lastfm_playcount),
-       lastfm_listeners = coalesce(excluded.lastfm_listeners, albums.lastfm_listeners),
+       listen_count = coalesce(excluded.listen_count, albums.listen_count),
+       listener_count = coalesce(excluded.listener_count, albums.listener_count),
        links = excluded.links,
        updated_at = now()`,
     [
@@ -66,18 +67,37 @@ export async function upsertAlbum(input: AlbumInput) {
       input.artist,
       input.releaseYear,
       input.coverUrl,
-      input.playcount,
+      input.listens,
       input.listeners,
       JSON.stringify(input.links),
     ],
   );
 }
 
-// Recalcule les paliers de rareté de tout le catalogue, à partir des écoutes Last.fm.
-// Les albums sans statistique restent "commun".
+// Identifiants MusicBrainz déjà présents : l'import ne refait pas le travail pour eux
+export async function existingMbids() {
+  const { rows } = await db.query<{ mbid: string }>("select mbid from albums");
+  return new Set(rows.map((row) => row.mbid));
+}
+
+// Met à jour les écoutes de tout le catalogue d'un coup
+export async function saveListens(listens: Map<string, { listens: number; listeners: number }>) {
+  const mbids = [...listens.keys()];
+  if (mbids.length === 0) return 0;
+  const result = await db.query(
+    `update albums set listen_count = data.listens, listener_count = data.listeners, updated_at = now()
+     from (select unnest($1::uuid[]) as mbid, unnest($2::bigint[]) as listens, unnest($3::bigint[]) as listeners) as data
+     where albums.mbid = data.mbid`,
+    [mbids, mbids.map((mbid) => listens.get(mbid)!.listens), mbids.map((mbid) => listens.get(mbid)!.listeners)],
+  );
+  return result.rowCount ?? 0;
+}
+
+// Recalcule les paliers de rareté de tout le catalogue, à partir des écoutes ListenBrainz :
+// les albums les plus écoutés sont les plus rares. Les albums sans statistique restent "commun".
 export async function recomputeRarity() {
   const ranked = await db.query<{ id: string }>(
-    "select id from albums where lastfm_playcount is not null order by lastfm_playcount desc, id",
+    "select id from albums where listen_count is not null order by listen_count desc, id",
   );
   const total = ranked.rows.length;
   const ids = ranked.rows.map((row) => row.id);
@@ -91,7 +111,7 @@ export async function recomputeRarity() {
       [ids, tiers],
     );
   }
-  await db.query("update albums set rarity_tier = 'commun' where lastfm_playcount is null");
+  await db.query("update albums set rarity_tier = 'commun' where listen_count is null");
   return total;
 }
 

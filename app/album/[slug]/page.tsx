@@ -42,7 +42,7 @@ export default async function AlbumPage({ params }: Props) {
 
   const session = await auth();
   const owned = session?.user?.id ? await getOwnedCount(session.user.id, album.id) : null;
-  const playcount = album.lastfm_playcount ? Number(album.lastfm_playcount) : null;
+  const listens = album.listen_count ? Number(album.listen_count) : null;
 
   // Données structurées (schema.org) : aident les moteurs à comprendre la fiche
   const structuredData = {
@@ -78,8 +78,8 @@ export default async function AlbumPage({ params }: Props) {
             Rareté : <span className="font-medium">{RARITY_LABELS[album.rarity_tier]}</span>
           </p>
 
-          {playcount !== null && (
-            <p className="text-sm text-zinc-600">Écoutes Last.fm : {playcount.toLocaleString("fr-FR")}</p>
+          {listens !== null && (
+            <p className="text-sm text-zinc-600">Écoutes ListenBrainz : {listens.toLocaleString("fr-FR")}</p>
           )}
 
           {owned !== null && (

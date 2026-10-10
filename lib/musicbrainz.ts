@@ -8,16 +8,23 @@ const MIN_DELAY_MS = 1100;
 
 let lastRequestAt = 0;
 
-async function mbGet<T>(path: string): Promise<T> {
-  const wait = lastRequestAt + MIN_DELAY_MS - Date.now();
-  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
-  lastRequestAt = Date.now();
+// MusicBrainz répond souvent "occupé" (503) aux heures chargées : on insiste jusqu'à 8 fois (environ 2 minutes)
+const MAX_ATTEMPTS = 8;
 
-  const res = await fetch(`${MB_BASE}${path}`, {
-    headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
-  });
-  if (!res.ok) throw new Error(`MusicBrainz a répondu ${res.status}`);
-  return (await res.json()) as T;
+async function mbGet<T>(path: string): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    const wait = lastRequestAt + MIN_DELAY_MS - Date.now();
+    if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+    lastRequestAt = Date.now();
+
+    const res = await fetch(`${MB_BASE}${path}`, {
+      headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+    });
+    if (res.ok) return (await res.json()) as T;
+    // 503 : MusicBrainz est surchargé ou nous demande de ralentir. On patiente de plus en plus, puis on réessaie.
+    if (res.status !== 503 || attempt === MAX_ATTEMPTS) throw new Error(`MusicBrainz a répondu ${res.status}`);
+    await new Promise((resolve) => setTimeout(resolve, 3000 * attempt));
+  }
 }
 
 // Caractères spéciaux de la syntaxe de recherche Lucene
@@ -52,13 +59,81 @@ export async function searchReleaseGroup(artist: string, title: string): Promise
   const best = data["release-groups"].find((group) => group.score >= 90);
   if (!best) return null;
 
-  const year = best["first-release-date"] ? parseInt(best["first-release-date"].slice(0, 4), 10) : NaN;
   return {
     mbid: best.id,
     title: best.title,
     artist: best["artist-credit"]?.[0]?.name ?? artist,
-    releaseYear: Number.isNaN(year) ? null : year,
+    releaseYear: yearOf(best["first-release-date"]),
   };
+}
+
+type ReleaseGroupDetails = {
+  id: string;
+  title: string;
+  "primary-type"?: string | null;
+  "secondary-types"?: string[];
+  "first-release-date"?: string;
+  "artist-credit"?: Array<{ name: string; joinphrase?: string }>;
+};
+
+export type ReleaseGroupInfo = ReleaseGroupMatch & { studioAlbum: boolean };
+
+// Un album studio : type principal "Album", sans type secondaire (Live, Compilation, Soundtrack, Remix...)
+export function isStudioAlbum(primaryType: string | null | undefined, secondaryTypes: string[] | undefined) {
+  return primaryType === "Album" && (secondaryTypes ?? []).length === 0;
+}
+
+function yearOf(date: string | undefined) {
+  const year = date ? parseInt(date.slice(0, 4), 10) : NaN;
+  return Number.isNaN(year) ? null : year;
+}
+
+// "Daft Punk" ou "Jay-Z & Kanye West" : le crédit complet tel qu'affiché sur la pochette
+function creditName(credit: ReleaseGroupDetails["artist-credit"], fallback: string) {
+  if (!credit?.length) return fallback;
+  return credit.map((part) => part.name + (part.joinphrase ?? "")).join("").trim();
+}
+
+function toInfo(group: ReleaseGroupDetails, artistFallback = ""): ReleaseGroupInfo {
+  return {
+    mbid: group.id,
+    title: group.title,
+    artist: creditName(group["artist-credit"], artistFallback),
+    releaseYear: yearOf(group["first-release-date"]),
+    studioAlbum: isStudioAlbum(group["primary-type"], group["secondary-types"]),
+  };
+}
+
+// Détails de plusieurs albums, 50 identifiants par requête. Un lot en échec est signalé puis sauté.
+export async function lookupReleaseGroups(mbids: string[], batchSize = 50): Promise<ReleaseGroupInfo[]> {
+  const infos: ReleaseGroupInfo[] = [];
+  for (let start = 0; start < mbids.length; start += batchSize) {
+    const batch = mbids.slice(start, start + batchSize);
+    const query = `rgid:(${batch.join(" OR ")})`;
+    try {
+      const data = await mbGet<{ "release-groups": ReleaseGroupDetails[] }>(
+        `/release-group/?query=${encodeURIComponent(query)}&fmt=json&limit=${batchSize}`,
+      );
+      infos.push(...data["release-groups"].map((group) => toInfo(group)));
+    } catch (error) {
+      console.log(`Détails MusicBrainz indisponibles pour ${batch.length} albums : ${(error as Error).message}`);
+    }
+  }
+  return infos;
+}
+
+// Albums studio d'un artiste. Les sorties officielles sont rangées avec les concerts pirates et
+// les compilations : on ne garde que les albums studio, triés ensuite par écoutes.
+export async function browseArtistAlbums(artistMbid: string, artistName: string, maxPages = 2) {
+  const albums: ReleaseGroupInfo[] = [];
+  for (let page = 0; page < maxPages; page++) {
+    const data = await mbGet<{ "release-groups": ReleaseGroupDetails[]; "release-group-count": number }>(
+      `/release-group?artist=${artistMbid}&type=album&fmt=json&limit=100&offset=${page * 100}`,
+    );
+    albums.push(...data["release-groups"].map((group) => toInfo(group, artistName)).filter((info) => info.studioAlbum));
+    if ((page + 1) * 100 >= data["release-group-count"]) break;
+  }
+  return albums;
 }
 
 type LookupResponse = {

@@ -40,7 +40,7 @@ const TABLES = [
   { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions" },
   { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
   { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
-  { name: "albums", description: "Catalogue : identifiant MusicBrainz, titre, artiste, pochette, écoutes Last.fm, palier de rareté, liens d'écoute" },
+  { name: "albums", description: "Catalogue : identifiant MusicBrainz, titre, artiste, pochette, écoutes et auditeurs ListenBrainz, palier de rareté, liens d'écoute" },
   { name: "pack_stocks", description: "Stock de packs par joueur et date de la dernière recharge" },
   { name: "user_albums", description: "Collection : une ligne par album possédé, avec le nombre d'exemplaires" },
   { name: "pack_openings", description: "Historique des ouvertures de packs" },
@@ -62,7 +62,6 @@ const ENV_VARS = [
   { name: "MAIL_FROM", description: "Expéditeur des e-mails (ex. Album <no-reply@domaine>)" },
   { name: "PUBLIC_BASE_URL", description: "Adresse publique pour les URLs canoniques et le sitemap" },
   { name: "SEO_INDEXING", description: "\"true\" pour autoriser l'indexation par les moteurs de recherche. Désactivé tant que le domaine n'est pas en ligne" },
-  { name: "LASTFM_API_KEY", description: "Clé Last.fm pour le classement des albums écoutés (optionnelle)" },
   { name: "MUSICBRAINZ_CONTACT", description: "Contact envoyé à MusicBrainz dans le User-Agent (optionnel)" },
 ];
 
@@ -74,7 +73,9 @@ const COMMANDS = [
   { command: "docker compose down", description: "Arrêter PostgreSQL et Redis" },
   { command: "docker compose -f docker-compose.prod.yml up -d --build", description: "Lancer la version de production (image construite à partir du Dockerfile)" },
   { command: "npm run import:catalog", description: "Importer le catalogue de test (data/seed-albums.json)" },
-  { command: "npm run import:catalog -- --lastfm 3000", description: "Importer les 3000 albums les plus écoutés (clé Last.fm requise)" },
+  { command: "npm run import:catalog -- --listenbrainz", description: "Importer les albums les plus écoutés sur ListenBrainz (sans clé)" },
+  { command: "npm run import:catalog -- --listenbrainz --artists 300", description: "Ajouter aussi les albums studio des 300 artistes les plus écoutés (long : une requête MusicBrainz par seconde)" },
+  { command: "npm run import:catalog -- --listens", description: "Mettre à jour les écoutes et recalculer la rareté de tout le catalogue" },
 ];
 
 const LOTS = [
@@ -96,6 +97,7 @@ const LOTS = [
   { lot: "C5", name: "Correctif : vérification de l'e-mail, reprise d'un compte non vérifié par Google, limitation des tentatives (connexion, inscription, e-mails)", status: "Terminé", branch: "correctif5-email-limites" },
   { lot: "C6", name: "Correctif : outil de migration automatique, tests automatiques (Vitest, base de test séparée) et intégration continue GitHub Actions", status: "Terminé", branch: "correctif6-tests-ci" },
   { lot: "C7", name: "Correctif : environnement de dev dans WSL (Node natif, seuls PostgreSQL et Redis dans Docker)", status: "Terminé", branch: "correctif7-wsl" },
+  { lot: "C8", name: "Correctif : catalogue depuis ListenBrainz et MusicBrainz (sans clé), rareté selon les écoutes réelles, Last.fm retiré", status: "Terminé", branch: "correctif8-catalogue" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -194,7 +196,8 @@ export default function DocumentationPage() {
             </li>
             <li>
               <strong>Raretés :</strong> Commun 65 %, Peu commun 25 %, Rare 8 %, Épique 1,5 %, Légendaire 0,5 % (par carte tirée).
-              Les paliers des albums sont calculés selon leur rang d&apos;écoutes Last.fm.
+              Le palier d&apos;un album dépend de son rang d&apos;écoutes ListenBrainz dans le catalogue : les 0,5 % les plus écoutés sont
+              légendaires, les 2 % suivants épiques, puis 10 % rares, 35 % peu communs, le reste commun.
             </li>
             <li>
               <strong>Doublons :</strong> conservés. La carte affiche un badge xN quand le joueur en possède plusieurs.
@@ -216,10 +219,17 @@ export default function DocumentationPage() {
 
         <Section title="Catalogue">
           <p>
-            Les albums sont importés depuis MusicBrainz (métadonnées et identifiants), Cover Art Archive (pochettes),
-            Last.fm (écoutes) et les liens d&apos;écoute (Spotify, Deezer, YouTube). Quand un lien exact n&apos;est pas
-            trouvé, un lien de recherche est proposé à la place.
+            Sources, toutes sans clé : ListenBrainz (albums et artistes les plus écoutés, nombre d&apos;écoutes de chaque album),
+            MusicBrainz (identifiants, type d&apos;album, année ; une requête par seconde), Cover Art Archive (pochettes) et
+            Deezer (liens d&apos;écoute exacts). Quand un lien exact n&apos;est pas trouvé, un lien de recherche est proposé.
           </p>
+          <ul className="mt-3 list-disc space-y-1 pl-6">
+            <li>ListenBrainz ne publie que les 1 000 albums les plus écoutés par période : l&apos;import combine six périodes (tous temps, année, semestre, trimestre, mois, semaine), puis peut ajouter les albums studio des artistes les plus écoutés (<code>--artists</code>).</li>
+            <li>Seuls les albums studio sont gardés (pas de live, compilation, single ni bande originale), avec au moins 2 000 écoutes par défaut (<code>--min-listens</code>) et une pochette.</li>
+            <li>Un album déjà présent n&apos;est pas réimporté : relancer l&apos;import reprend là où il s&apos;était arrêté.</li>
+            <li>La rareté est recalculée à la fin de chaque import, et à la demande avec <code>npm run import:catalog -- --listens</code> (écoutes remises à jour).</li>
+            <li>Last.fm n&apos;est plus utilisé : son API ne permet pas de lister les albums les plus écoutés.</li>
+          </ul>
         </Section>
 
         <Section title="Mise en production">
