@@ -19,5 +19,9 @@ declare module "next-auth/jwt" {
   interface JWT {
     uid?: string;
     pseudo?: string;
+    // Version des sessions du joueur au moment de la connexion (voir users.session_version)
+    sv?: number;
+    // Date (ms) de la dernière vérification en base
+    checkedAt?: number;
   }
 }

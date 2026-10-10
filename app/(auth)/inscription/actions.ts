@@ -2,8 +2,11 @@
 
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
+import { headers } from "next/headers";
 import { signIn } from "@/auth";
 import { safeCallbackUrl } from "@/lib/callback-url";
+import { sendVerificationEmail } from "@/lib/email-verification";
+import { clientIp, HOUR, isRateLimited } from "@/lib/rate-limit";
 import { createUser, findUserByEmail, isPseudoTaken, isUniqueViolation, isValidPseudo } from "@/lib/users";
 
 export type FormState = { error?: string };
@@ -25,6 +28,11 @@ export async function signUpAction(_previous: FormState, formData: FormData): Pr
     return { error: "Le mot de passe doit faire au moins 8 caractères." };
   }
 
+  // Limite les créations de comptes en masse depuis une même adresse IP
+  if (await isRateLimited(`signup:ip:${clientIp(await headers())}`, 10, HOUR)) {
+    return { error: "Trop de comptes créés depuis cette connexion. Réessaie dans une heure." };
+  }
+
   if (await findUserByEmail(email)) {
     return { error: "Un compte existe déjà avec cette adresse e-mail." };
   }
@@ -33,14 +41,23 @@ export async function signUpAction(_previous: FormState, formData: FormData): Pr
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
+  let userId: string;
   try {
-    await createUser({ email, pseudo, passwordHash });
+    userId = (await createUser({ email, pseudo, passwordHash })).id;
   } catch (error) {
     // Deux inscriptions simultanées avec le même pseudo
     if (isUniqueViolation(error)) {
       return { error: "Ce pseudo ou cette adresse e-mail est déjà utilisé." };
     }
     throw error;
+  }
+
+  // Le compte est utilisable tout de suite ; un e-mail permet de prouver que l'adresse est bien la sienne.
+  // Un échec d'envoi ne bloque pas l'inscription : le joueur pourra redemander le lien depuis son profil.
+  try {
+    await sendVerificationEmail(userId, email);
+  } catch (error) {
+    console.error("Envoi de l'e-mail de vérification impossible", error);
   }
 
   try {

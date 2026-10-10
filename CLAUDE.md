@@ -17,6 +17,7 @@ Next.js 16 a des changements par rapport aux versions habituelles : lire le guid
 - Voir les logs : `docker compose logs -f app`
 - Arrêter : `docker compose down`
 - Vérifier la santé : http://localhost:3000/api/health (200 si la base et Redis répondent)
+- E-mails en développement : sans `SMTP_URL`, ils ne sont pas envoyés mais affichés dans `docker compose logs app` (lien de vérification à copier).
 - Appliquer les migrations sur une base existante (le dossier `db/migrations` n'est lu automatiquement que sur une base neuve) :
   `Get-Content db/migrations/001_users.sql | docker compose exec -T db psql -U album -d album`
 

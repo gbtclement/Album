@@ -1,7 +1,7 @@
 "use server";
 
-import { AuthError } from "next-auth";
-import { signIn } from "@/auth";
+import { AuthError, CredentialsSignin } from "next-auth";
+import { signIn, TOO_MANY_ATTEMPTS } from "@/auth";
 import { safeCallbackUrl } from "@/lib/callback-url";
 
 export type FormState = { error?: string };
@@ -14,6 +14,9 @@ export async function loginAction(_previous: FormState, formData: FormData): Pro
   try {
     await signIn("credentials", { email, password, redirectTo });
   } catch (error) {
+    if (error instanceof CredentialsSignin && error.code === TOO_MANY_ATTEMPTS) {
+      return { error: "Trop de tentatives de connexion. Réessaie dans 15 minutes." };
+    }
     if (error instanceof AuthError) {
       return { error: "E-mail ou mot de passe incorrect." };
     }

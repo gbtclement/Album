@@ -28,6 +28,7 @@ const ROUTES = [
   { path: "/classement", description: "Top 100 des joueurs par score de rareté, et position du joueur connecté (protégée)" },
   { path: "/quetes", description: "Quêtes journalières, hebdomadaires et mensuelles, avec récupération des récompenses (protégée)" },
   { path: "/album/[slug]", description: "Fiche d'un album : pochette, rareté, liens d'écoute" },
+  { path: "/verifier-email", description: "Validation de l'adresse e-mail depuis le lien reçu (lien à usage unique, valable 24 h)" },
   { path: "/documentation", description: "Cette page" },
   { path: "/sitemap.xml", description: "Plan du site : pages publiques et fiches d'albums (SEO)" },
   { path: "/robots.txt", description: "Règles pour les robots d'indexation (bloqué tant que SEO_INDEXING n'est pas true)" },
@@ -36,7 +37,8 @@ const ROUTES = [
 ];
 
 const TABLES = [
-  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins)" },
+  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions" },
+  { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
   { name: "albums", description: "Catalogue : identifiant MusicBrainz, titre, artiste, pochette, écoutes Last.fm, palier de rareté, liens d'écoute" },
   { name: "pack_stocks", description: "Stock de packs par joueur et date de la dernière recharge" },
   { name: "user_albums", description: "Collection : une ligne par album possédé, avec le nombre d'exemplaires" },
@@ -51,10 +53,12 @@ const TABLES = [
 const ENV_VARS = [
   { name: "POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB", description: "Identifiants de la base PostgreSQL (conteneur db)" },
   { name: "DATABASE_URL", description: "Adresse de connexion à PostgreSQL utilisée par l'application" },
-  { name: "REDIS_URL", description: "Adresse de Redis (cache des API externes)" },
+  { name: "REDIS_URL", description: "Adresse de Redis (cache des API externes, compteurs de tentatives)" },
   { name: "AUTH_SECRET", description: "Clé de signature des sessions Auth.js (obligatoire)" },
   { name: "AUTH_URL", description: "Adresse publique du site, utilisée par Auth.js" },
   { name: "AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET", description: "Identifiants OAuth Google (optionnels)" },
+  { name: "SMTP_URL", description: "Serveur d'envoi des e-mails (smtp://utilisateur:motdepasse@serveur:587). Vide en développement : les e-mails sont affichés dans les logs" },
+  { name: "MAIL_FROM", description: "Expéditeur des e-mails (ex. Album <no-reply@domaine>)" },
   { name: "PUBLIC_BASE_URL", description: "Adresse publique pour les URLs canoniques et le sitemap" },
   { name: "SEO_INDEXING", description: "\"true\" pour autoriser l'indexation par les moteurs de recherche. Désactivé tant que le domaine n'est pas en ligne" },
   { name: "LASTFM_API_KEY", description: "Clé Last.fm pour le classement des albums écoutés (optionnelle)" },
@@ -87,6 +91,7 @@ const LOTS = [
   { lot: "C2", name: "Correctif : options avancées de Next 16 désactivées, contournements retirés", status: "Terminé", branch: "correctif2-next-options" },
   { lot: "C3", name: "Correctif : proxy.ts lit la session via Auth.js (cookie __Secure- reconnu en HTTPS)", status: "Terminé", branch: "correctif3-proxy-cookie" },
   { lot: "C4", name: "Correctif : erreurs d'échange conservées, annonces en double, callbackUrl, pages de connexion quand on est connecté, quêtes d'échange", status: "Terminé", branch: "correctif4-bugs-fonctionnels" },
+  { lot: "C5", name: "Correctif : vérification de l'e-mail, reprise d'un compte non vérifié par Google, limitation des tentatives (connexion, inscription, e-mails)", status: "Terminé", branch: "correctif5-email-limites" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -216,10 +221,28 @@ export default function DocumentationPage() {
             <li>Remplir le fichier <code>.env</code> du serveur, avec <code>PUBLIC_BASE_URL</code> et <code>AUTH_URL</code> sur l&apos;adresse publique (https).</li>
             <li>Lancer <code>docker compose -f docker-compose.prod.yml up -d --build</code>. L&apos;image ne contient pas le <code>.env</code> et tourne en utilisateur non root.</li>
             <li>Sur une base existante, appliquer les nouvelles migrations de <code>db/migrations/</code> dans l&apos;ordre.</li>
-            <li>Mettre un reverse proxy avec HTTPS devant le port 3000, sans l&apos;exposer directement.</li>
+            <li>Mettre un reverse proxy avec HTTPS devant le port 3000, sans l&apos;exposer directement. Le reverse proxy doit ajouter l&apos;adresse du visiteur à la fin de <code>X-Forwarded-For</code> (par exemple <code>proxy_add_x_forwarded_for</code> avec nginx) : les limites par adresse IP lisent la dernière valeur.</li>
+            <li>Renseigner <code>SMTP_URL</code> et <code>MAIL_FROM</code> pour que les liens de vérification soient réellement envoyés.</li>
             <li>Passer <code>SEO_INDEXING</code> à <code>true</code> une fois le domaine en ligne, puis soumettre le sitemap.</li>
           </ol>
           <p className="mt-3">Les pages joueurs redirigent vers la connexion au niveau du serveur (<code>proxy.ts</code>), avant tout rendu. La session y est lue par <code>auth()</code> d&apos;Auth.js, qui choisit le nom du cookie selon le protocole d&apos;<code>AUTH_URL</code> (préfixe <code>__Secure-</code> en HTTPS) : <code>AUTH_URL</code> doit donc être l&apos;adresse publique en https. Le proxy renvoie aussi un joueur déjà connecté qui ouvre <code>/connexion</code> ou <code>/inscription</code> vers sa destination. Après la connexion, le joueur revient sur la page demandée (<code>callbackUrl</code>), uniquement si c&apos;est un chemin interne au site (<code>lib/callback-url.ts</code>) : une adresse externe est ignorée.</p>
+        </Section>
+
+        <Section title="Comptes et sécurité">
+          <ul className="list-disc space-y-2 pl-6">
+            <li>
+              <strong>Vérification de l&apos;e-mail :</strong> à l&apos;inscription, un lien (valable 24 h, utilisable une fois) est envoyé. Le compte est jouable tout de suite ; le profil affiche un bandeau tant que l&apos;adresse n&apos;est pas vérifiée, avec un bouton pour renvoyer le lien. Les comptes Google sont vérifiés d&apos;office (Google ne transmet que des adresses qu&apos;il a vérifiées, les autres sont refusées).
+            </li>
+            <li>
+              <strong>Connexion Google sur un compte existant :</strong> si l&apos;adresse du compte est vérifiée, Google se connecte au même compte. Sinon, rien ne prouve que le mot de passe a été choisi par le titulaire de l&apos;adresse (n&apos;importe qui peut s&apos;inscrire avec l&apos;e-mail d&apos;un autre) : le titulaire, prouvé par Google, récupère le compte. Le mot de passe est supprimé et toutes les sessions ouvertes sont coupées.
+            </li>
+            <li>
+              <strong>Sessions :</strong> toutes les minutes, la session est revérifiée en base. Si le compte a disparu ou si <code>users.session_version</code> a changé, le joueur est déconnecté.
+            </li>
+            <li>
+              <strong>Limites de tentatives</strong> (<code>lib/rate-limit.ts</code>, compteurs dans Redis) : connexion 10 essais par compte et 50 par adresse IP sur 15 minutes (appliqué aussi aux appels directs à <code>/api/auth/callback/credentials</code>) ; inscription 10 comptes par heure et par adresse IP ; renvoi du lien de vérification 3 fois par heure. Si Redis ne répond pas, les limites sont suspendues plutôt que de bloquer le site.
+            </li>
+          </ul>
         </Section>
 
         <Section title="Référencement (SEO)">
