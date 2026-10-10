@@ -91,7 +91,7 @@ export async function createTrade(proposerId: string, receiverId: string, offer:
 }
 
 // Déplace un exemplaire d'album d'un joueur à un autre
-async function moveAlbum(client: PoolClient, fromId: string, toId: string, albumId: string) {
+export async function moveAlbum(client: PoolClient, fromId: string, toId: string, albumId: string) {
   // Dernier exemplaire : la ligne disparaît. Sinon on décrémente (count doit rester >= 1).
   const removed = await client.query(
     "delete from user_albums where user_id = $1 and album_id = $2 and count = 1",

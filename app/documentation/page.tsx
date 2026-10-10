@@ -14,6 +14,8 @@ const ROUTES = [
   { path: "/amis", description: "Demandes d'amis, liste d'amis (protégée)" },
   { path: "/echanges", description: "Propositions reçues, envoyées et historique (protégée)" },
   { path: "/echanges/nouveau", description: "Création d'une proposition d'échange avec un ami (protégée)" },
+  { path: "/marche", description: "Annonces actives : achat en pièces ou troc contre un album (protégée)" },
+  { path: "/marche/vendre", description: "Mise en vente d'un album, contre des pièces ou un autre album (protégée)" },
   { path: "/album/[slug]", description: "Fiche d'un album : pochette, rareté, liens d'écoute" },
   { path: "/documentation", description: "Cette page" },
   { path: "/api/health", description: "État de l'application, de PostgreSQL et de Redis" },
@@ -28,6 +30,8 @@ const TABLES = [
   { name: "pack_openings", description: "Historique des ouvertures de packs" },
   { name: "friendships", description: "Amitiés et demandes d'amis, une ligne par paire de joueurs" },
   { name: "trades", description: "Propositions d'échange : album et/ou pièces de chaque côté, statut" },
+  { name: "listings", description: "Annonces du marché : vente en pièces ou troc contre un album" },
+  { name: "market_sales", description: "Ventes en pièces sur le marché, base de la cote des albums" },
 ];
 
 const ENV_VARS = [
@@ -56,7 +60,7 @@ const LOTS = [
   { lot: "2", name: "Catalogue d'albums", status: "Terminé", branch: "lot2-catalogue" },
   { lot: "3", name: "Packs, collection et fiche album", status: "Terminé", branch: "lot3-packs" },
   { lot: "4", name: "Amis et échanges directs", status: "Terminé", branch: "lot4-amis" },
-  { lot: "5", name: "Marché", status: "À faire", branch: "lot5-marche" },
+  { lot: "5", name: "Marché", status: "Terminé", branch: "lot5-marche" },
   { lot: "6", name: "Bourse (Lightweight Charts)", status: "À faire", branch: "lot6-bourse" },
   { lot: "7", name: "Classement", status: "À faire", branch: "lot7-classement" },
   { lot: "8", name: "Quêtes", status: "À faire", branch: "lot8-quetes" },
