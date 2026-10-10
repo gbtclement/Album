@@ -93,11 +93,13 @@ export async function saveListens(listens: Map<string, { listens: number; listen
   return result.rowCount ?? 0;
 }
 
-// Recalcule les paliers de rareté de tout le catalogue, à partir des écoutes ListenBrainz :
-// les albums les plus écoutés sont les plus rares. Les albums sans statistique restent "commun".
+// Recalcule les paliers de rareté de tout le catalogue, à partir des auditeurs ListenBrainz :
+// les albums écoutés par le plus de personnes différentes sont les plus rares. Le nombre total d'écoutes
+// ne sert qu'à départager : quelques fans qui écoutent un album en boucle le gonflent énormément
+// (un album à 48 millions d'écoutes pour moins de 5 000 auditeurs). Sans statistique : "commun".
 export async function recomputeRarity() {
   const ranked = await db.query<{ id: string }>(
-    "select id from albums where listen_count is not null order by listen_count desc, id",
+    "select id from albums where listener_count is not null order by listener_count desc, listen_count desc nulls last, id",
   );
   const total = ranked.rows.length;
   const ids = ranked.rows.map((row) => row.id);
@@ -111,7 +113,7 @@ export async function recomputeRarity() {
       [ids, tiers],
     );
   }
-  await db.query("update albums set rarity_tier = 'commun' where listen_count is null");
+  await db.query("update albums set rarity_tier = 'commun' where listener_count is null");
   return total;
 }
 
