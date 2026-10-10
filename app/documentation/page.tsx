@@ -62,7 +62,8 @@ const ENV_VARS = [
 ];
 
 const COMMANDS = [
-  { command: "docker compose up -d", description: "Lancer l'application, PostgreSQL et Redis" },
+  { command: "docker compose watch", description: "Lancer l'application, PostgreSQL et Redis, et recopier dans le conteneur chaque fichier modifié (laisser le terminal ouvert)" },
+  { command: "docker compose up -d", description: "Lancer les conteneurs sans synchronisation (les modifications du code ne sont pas vues)" },
   { command: "docker compose logs -f app", description: "Suivre les logs de l'application" },
   { command: "docker compose down", description: "Arrêter les conteneurs" },
   { command: "docker compose -f docker-compose.prod.yml up -d --build", description: "Lancer la version de production (image construite à partir du Dockerfile)" },
@@ -82,6 +83,7 @@ const LOTS = [
   { lot: "8", name: "Quêtes", status: "Terminé", branch: "lot8-quetes" },
   { lot: "9", name: "SEO", status: "Terminé", branch: "lot9-seo" },
   { lot: "10", name: "Mise en production", status: "Préparé, pas encore déployé", branch: "lot10-prod" },
+  { lot: "C1", name: "Correctif : environnement de dev (docker compose watch)", status: "Terminé", branch: "correctif1-env-dev" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -143,10 +145,11 @@ export default function DocumentationPage() {
         <Section title="Lancer le projet en local">
           <ol className="list-decimal space-y-1 pl-6">
             <li>Copier <code>.env.example</code> en <code>.env</code> et remplir les valeurs.</li>
-            <li>Lancer les conteneurs avec <code>docker compose up -d</code>.</li>
+            <li>Lancer <code>docker compose watch</code> et laisser le terminal ouvert : chaque fichier modifié est recopié dans le conteneur.</li>
             <li>Ouvrir http://localhost:3000 et vérifier http://localhost:3000/api/health.</li>
           </ol>
           <p className="mt-3">Node n&apos;est pas installé sur la machine : toutes les commandes passent par Docker.</p>
+          <p className="mt-3">Le code n&apos;est pas monté depuis Windows : l&apos;image de dev (<code>Dockerfile.dev</code>) contient les dépendances et le code, et <code>docker compose watch</code> recopie les fichiers modifiés. Un dossier Windows monté faisait détecter de faux changements à Turbopack (pages rechargées en boucle). Une modification de <code>package.json</code> reconstruit l&apos;image ; une modification de <code>next.config.ts</code> redémarre le serveur.</p>
         </Section>
 
         <Section title="Commandes utiles">

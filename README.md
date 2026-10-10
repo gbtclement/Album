@@ -7,7 +7,7 @@ Jeu de collection de cartes d'albums de musique, inspiré de Wikimaster. Ouvre d
 Prérequis : Docker Desktop.
 
 1. Copier `.env.example` en `.env` et remplir les valeurs.
-2. Lancer les conteneurs : `docker compose up -d`
+2. Lancer les conteneurs : `docker compose watch` (laisser le terminal ouvert, il recopie le code modifié dans le conteneur)
 3. Ouvrir http://localhost:3000
 4. Vérifier les services : http://localhost:3000/api/health
 

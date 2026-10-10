@@ -13,7 +13,7 @@ Next.js 16 a des changements par rapport aux versions habituelles : lire le guid
 
 ## Commandes
 
-- Lancer le projet : `docker compose up -d` (puis http://localhost:3000)
+- Lancer le projet : `docker compose watch` (puis http://localhost:3000). Laisser le terminal ouvert : il recopie chaque fichier modifié dans le conteneur. `docker compose up -d` lance aussi la stack mais sans synchronisation du code.
 - Voir les logs : `docker compose logs -f app`
 - Arrêter : `docker compose down`
 - Vérifier la santé : http://localhost:3000/api/health (200 si la base et Redis répondent)
@@ -22,7 +22,8 @@ Next.js 16 a des changements par rapport aux versions habituelles : lire le guid
 
 Le projet tourne uniquement dans Docker : Node n'est pas installé sur la machine Windows.
 - Production (test local) : `docker compose -f docker-compose.prod.yml up -d --build`. Arrêter la dev avant (`docker compose down`), les ports sont les mêmes. Le fichier `.env` n'est jamais copié dans l'image.
-- Attention : le serveur de dev ne voit pas toujours les nouveaux dossiers (404 sur une nouvelle route) : `docker compose restart app` règle le problème.
+- Le code n'est pas monté depuis Windows (un dossier monté provoquait des rechargements en boucle) : l'image `Dockerfile.dev` contient code et dépendances, `docker compose watch` synchronise. Modifier `package.json` reconstruit l'image, modifier `next.config.ts` redémarre le serveur.
+- Un fichier créé dans le conteneur (par `next dev`, un script...) ne revient pas sous Windows : la synchronisation va de Windows vers le conteneur seulement.
 Après un changement dans `.env`, relancer avec `docker compose up -d app` (et non `restart`) pour que le conteneur relise les variables.
 Next.js 16 avec `cacheComponents` : pas de `export const dynamic`. Une page qui lit la configuration à chaque requête appelle `await connection()` dans un composant enveloppé dans `<Suspense>`.
 

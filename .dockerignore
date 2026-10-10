@@ -9,3 +9,5 @@ coverage
 *.log
 postgres-data
 redis-data
+tsconfig.tsbuildinfo
+next-env.d.ts

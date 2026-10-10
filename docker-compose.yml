@@ -1,19 +1,31 @@
 services:
   app:
-    image: node:22-alpine
-    working_dir: /app
-    command: sh -c "npm install && npm run dev -- -H 0.0.0.0"
+    # Le code est copié dans l'image puis synchronisé par `docker compose watch`.
+    # Monter le dossier Windows provoquait des rechargements en boucle (faux changements vus par Turbopack).
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     env_file: .env
-    environment:
-      # Nécessaire pour que le rechargement à chaud fonctionne avec les fichiers montés depuis Windows
-      WATCHPACK_POLLING: "true"
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
-      # Les dépendances restent dans le conteneur, pas sur le disque Windows
-      - app_node_modules:/app/node_modules
-      - app_next:/app/.next
+    develop:
+      watch:
+        # Chaque fichier modifié sur Windows est recopié dans le conteneur, Next.js recharge à chaud
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - node_modules/
+            - .next/
+        # Une nouvelle dépendance demande de reconstruire l'image (npm ci)
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: package-lock.json
+        # La configuration Next.js n'est lue qu'au démarrage du serveur
+        - action: sync+restart
+          path: next.config.ts
+          target: /app/next.config.ts
     depends_on:
       db:
         condition: service_healthy
@@ -46,7 +58,5 @@ services:
       - redis_data:/data
 
 volumes:
-  app_node_modules:
-  app_next:
   db_data:
   redis_data:
