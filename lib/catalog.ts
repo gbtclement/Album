@@ -93,13 +93,18 @@ export async function saveListens(listens: Map<string, { listens: number; listen
   return result.rowCount ?? 0;
 }
 
-// Recalcule les paliers de rareté de tout le catalogue, à partir des auditeurs ListenBrainz :
-// les albums écoutés par le plus de personnes différentes sont les plus rares. Le nombre total d'écoutes
-// ne sert qu'à départager : quelques fans qui écoutent un album en boucle le gonflent énormément
-// (un album à 48 millions d'écoutes pour moins de 5 000 auditeurs). Sans statistique : "commun".
+// Écoutes comptées au plus par auditeur : un auditeur écoute un album environ 23 fois (médiane),
+// 99 % des albums restent sous 100. Au-delà, ce sont quelques fans qui le font tourner en boucle
+// (un album à 48 millions d'écoutes pour moins de 5 000 auditeurs, soit 10 000 écoutes chacun).
+export const MAX_LISTENS_PER_LISTENER = 100;
+
+// Recalcule les paliers de rareté de tout le catalogue, à partir des écoutes ListenBrainz plafonnées
+// (voir MAX_LISTENS_PER_LISTENER) : les albums les plus écoutés sont les plus rares. Sans statistique : "commun".
 export async function recomputeRarity() {
   const ranked = await db.query<{ id: string }>(
-    "select id from albums where listener_count is not null order by listener_count desc, listen_count desc nulls last, id",
+    `select id from albums where listener_count is not null
+     order by least(listen_count, listener_count * $1) desc nulls last, listener_count desc, id`,
+    [MAX_LISTENS_PER_LISTENER],
   );
   const total = ranked.rows.length;
   const ids = ranked.rows.map((row) => row.id);

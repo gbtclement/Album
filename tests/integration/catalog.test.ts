@@ -17,7 +17,7 @@ async function tierOf(id: string) {
   return rows[0].rarity_tier;
 }
 
-describe("rareté selon les écoutes ListenBrainz", () => {
+describe("rareté selon les écoutes ListenBrainz (plafonnées par auditeur)", () => {
   it("rend les albums les plus écoutés les plus rares", async () => {
     // 10 albums : chaque palier rare garde au moins un album (voir tierForRank)
     const albums = [];
@@ -42,7 +42,23 @@ describe("rareté selon les écoutes ListenBrainz", () => {
     expect(rows[0]).toEqual({ listen_count: "10000", listener_count: "100" });
   });
 
-  it("classe selon le nombre d'auditeurs, pas les écoutes en boucle d'une poignée de fans", async () => {
+  it("classe selon les écoutes totales, même avec moins d'auditeurs", async () => {
+    const listened = await createAlbum();
+    const wide = await createAlbum();
+    await saveListens(
+      new Map([
+        [await mbidOf(listened.id), { listens: 1_000_000, listeners: 20_000 }],
+        [await mbidOf(wide.id), { listens: 500_000, listeners: 40_000 }],
+      ]),
+    );
+
+    await recomputeRarity();
+
+    expect(await tierOf(listened.id)).toBe("legendaire");
+    expect(await tierOf(wide.id)).not.toBe("legendaire");
+  });
+
+  it("plafonne les écoutes en boucle d'une poignée de fans", async () => {
     const popular = await createAlbum();
     const looped = await createAlbum();
     await saveListens(

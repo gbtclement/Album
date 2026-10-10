@@ -102,6 +102,7 @@ const LOTS = [
   { lot: "C8", name: "Correctif : catalogue depuis ListenBrainz et MusicBrainz (sans clé), rareté selon les écoutes réelles, Last.fm retiré", status: "Terminé", branch: "correctif8-catalogue" },
   { lot: "D1", name: "Design « version jeu » : barre de jeu en bas, barre d'infos en haut, toutes les pages restylées, animation d'ouverture des packs", status: "Terminé", branch: "design1-version-jeu" },
   { lot: "D2", name: "Design : connexion et inscription au thème du jeu, pochettes de secours (vinyle à la place d'une image en panne, script de réparation, pochette Deezer à l'import)", status: "Terminé", branch: "design2-auth-pochettes" },
+  { lot: "C9", name: "Correctif : rareté selon les écoutes totales, plafonnées à 100 par auditeur (au lieu du nombre d'auditeurs)", status: "Terminé", branch: "correctif9-rarete-ecoutes" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -215,8 +216,8 @@ export default function DocumentationPage() {
             </li>
             <li>
               <strong>Raretés :</strong> Commun 65 %, Peu commun 25 %, Rare 8 %, Épique 1,5 %, Légendaire 0,5 % (par carte tirée).
-              Le palier d&apos;un album dépend de son rang dans le catalogue selon son nombre d&apos;auditeurs ListenBrainz (personnes
-              différentes, et non écoutes : quelques fans qui écoutent en boucle gonflent les écoutes) : les 0,5 % les plus écoutés
+              Le palier d&apos;un album dépend de son rang dans le catalogue selon ses écoutes ListenBrainz, plafonnées à 100 par
+              auditeur (un auditeur écoute un album environ 23 fois ; au-delà, ce sont quelques fans qui le font tourner en boucle) : les 0,5 % les plus écoutés
               sont légendaires, les 2 % suivants épiques, puis 10 % rares, 35 % peu communs, le reste commun.
             </li>
             <li>
