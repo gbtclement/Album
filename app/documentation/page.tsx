@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { SiteNav } from "@/components/site-nav";
+
+export const metadata: Metadata = {
+  title: "Documentation technique",
+  description: "Documentation technique du site Album : stack, routes, base de données, règles du jeu et avancement.",
+  alternates: { canonical: "/documentation" },
+};
 
 // Documentation technique du site. À mettre à jour à chaque lot.
 // Route publique pour l'instant (pas de protection).
@@ -22,6 +29,8 @@ const ROUTES = [
   { path: "/quetes", description: "Quêtes journalières, hebdomadaires et mensuelles, avec récupération des récompenses (protégée)" },
   { path: "/album/[slug]", description: "Fiche d'un album : pochette, rareté, liens d'écoute" },
   { path: "/documentation", description: "Cette page" },
+  { path: "/sitemap.xml", description: "Plan du site : pages publiques et fiches d'albums (SEO)" },
+  { path: "/robots.txt", description: "Règles pour les robots d'indexation (bloqué tant que SEO_INDEXING n'est pas true)" },
   { path: "/api/health", description: "État de l'application, de PostgreSQL et de Redis" },
   { path: "/api/auth/*", description: "Routes Auth.js (connexion, déconnexion, callbacks)" },
 ];
@@ -46,6 +55,7 @@ const ENV_VARS = [
   { name: "AUTH_URL", description: "Adresse publique du site, utilisée par Auth.js" },
   { name: "AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET", description: "Identifiants OAuth Google (optionnels)" },
   { name: "PUBLIC_BASE_URL", description: "Adresse publique pour les URLs canoniques et le sitemap" },
+  { name: "SEO_INDEXING", description: "\"true\" pour autoriser l'indexation par les moteurs de recherche. Désactivé tant que le domaine n'est pas en ligne" },
   { name: "LASTFM_API_KEY", description: "Clé Last.fm pour le classement des albums écoutés (optionnelle)" },
   { name: "MUSICBRAINZ_CONTACT", description: "Contact envoyé à MusicBrainz dans le User-Agent (optionnel)" },
 ];
@@ -68,7 +78,7 @@ const LOTS = [
   { lot: "6", name: "Bourse (Lightweight Charts)", status: "Terminé", branch: "lot6-bourse" },
   { lot: "7", name: "Classement", status: "Terminé", branch: "lot7-classement" },
   { lot: "8", name: "Quêtes", status: "Terminé", branch: "lot8-quetes" },
-  { lot: "9", name: "SEO", status: "À faire", branch: "lot9-seo" },
+  { lot: "9", name: "SEO", status: "Terminé", branch: "lot9-seo" },
   { lot: "10", name: "Mise en production", status: "À faire", branch: "lot10-prod" },
 ];
 
@@ -185,6 +195,16 @@ export default function DocumentationPage() {
             Last.fm (écoutes) et les liens d&apos;écoute (Spotify, Deezer, YouTube). Quand un lien exact n&apos;est pas
             trouvé, un lien de recherche est proposé à la place.
           </p>
+        </Section>
+
+        <Section title="Référencement (SEO)">
+          <ul className="list-disc space-y-1 pl-6">
+            <li>Chaque page publique a son titre, sa description et son URL canonique. La page d&apos;accueil, les fiches d&apos;albums et cette documentation sont publiques.</li>
+            <li>Les fiches d&apos;albums ont des balises Open Graph (pochette) et des données structurées schema.org de type MusicAlbum.</li>
+            <li>Le plan du site (<code>/sitemap.xml</code>) liste les pages publiques et toutes les fiches d&apos;albums avec pochette.</li>
+            <li>Les pages réservées aux joueurs ne sont pas indexées (exclues du <code>robots.txt</code>).</li>
+            <li>Tant que <code>SEO_INDEXING</code> n&apos;est pas <code>true</code>, le site demande aux moteurs de ne rien indexer : c&apos;est le cas en local.</li>
+          </ul>
         </Section>
 
         <Section title="Branches et workflow">

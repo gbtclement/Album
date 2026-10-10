@@ -7,6 +7,7 @@ import { SiteNav } from "@/components/site-nav";
 import { findAlbumBySlug, type AlbumLinks } from "@/lib/catalog";
 import { getOwnedCount } from "@/lib/collection";
 import { RARITY_LABELS } from "@/lib/rarity";
+import { absoluteUrl, jsonLd } from "@/lib/seo";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -26,8 +27,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${album.title} — ${album.artist}`,
-    description: `${album.title} de ${album.artist} : découvre cet album dans Album, le jeu de collection d'albums.`,
-    openGraph: album.cover_url ? { images: [album.cover_url] } : undefined,
+    description: `${album.title} de ${album.artist}${album.release_year ? ` (${album.release_year})` : ""} : découvre cet album dans Album, le jeu de collection d'albums.`,
+    alternates: { canonical: `/album/${album.slug}` },
+    openGraph: {
+      type: "music.album",
+      title: `${album.title} — ${album.artist}`,
+      images: album.cover_url ? [album.cover_url] : undefined,
+    },
   };
 }
 
@@ -41,9 +47,21 @@ export default async function AlbumPage({ params }: Props) {
   const owned = session?.user?.id ? await getOwnedCount(session.user.id, album.id) : null;
   const playcount = album.lastfm_playcount ? Number(album.lastfm_playcount) : null;
 
+  // Données structurées (schema.org) : aident les moteurs à comprendre la fiche
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "MusicAlbum",
+    name: album.title,
+    byArtist: { "@type": "MusicGroup", name: album.artist },
+    ...(album.release_year ? { datePublished: String(album.release_year) } : {}),
+    ...(album.cover_url ? { image: album.cover_url } : {}),
+    url: absoluteUrl(`/album/${album.slug}`),
+  };
+
   return (
     <>
       <SiteNav />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
       <main className="mx-auto grid max-w-4xl gap-8 px-4 py-8 md:grid-cols-[18rem_1fr]">
         <div className="aspect-square w-full overflow-hidden rounded-lg bg-zinc-100">
           {album.cover_url && (
