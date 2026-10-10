@@ -1,13 +1,6 @@
-import { Fraunces } from "next/font/google";
 import type { ReactNode } from "react";
 
-// Police d'affichage réservée aux pages d'authentification
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-fraunces",
-  display: "swap",
-});
-
+// Pages connexion et inscription : pas de barre de jeu, le joueur n'est pas encore connecté
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  return <div className={fraunces.variable}>{children}</div>;
+  return children;
 }

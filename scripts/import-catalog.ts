@@ -10,6 +10,7 @@
 // Options : --min-listens 2000 (écoutes minimum d'un album pour entrer au catalogue), --max 500 (nombre maximum
 // de nouveaux albums par lancement). Un album déjà présent n'est pas réimporté : relancer reprend où on s'est arrêté.
 // Sources sans clé : ListenBrainz et MusicBrainz (une requête par seconde), Cover Art Archive, Deezer.
+// Pochettes en panne après coup : npm run check:covers (scripts/check-covers.ts).
 
 import { readFile } from "node:fs/promises";
 import { db } from "@/lib/db";
@@ -17,7 +18,7 @@ import { existingMbids, recomputeRarity, saveListens, upsertAlbum } from "@/lib/
 import { fetchPopularity, fetchTopArtists, fetchTopReleaseGroups, STAT_RANGES } from "@/lib/listenbrainz";
 import { browseArtistAlbums, fetchCoverUrl, lookupReleaseGroups, searchReleaseGroup } from "@/lib/musicbrainz";
 import { redis } from "@/lib/redis";
-import { buildLinks } from "@/lib/streaming";
+import { buildLinks, findDeezerCover } from "@/lib/streaming";
 
 type Candidate = {
   mbid: string;
@@ -87,7 +88,11 @@ async function listenbrainzCandidates(artistCount: number, known: Set<string>): 
 }
 
 async function importCandidate(candidate: Candidate, listens: { listens: number; listeners: number } | undefined) {
-  const coverUrl = candidate.coverUrl ?? (await fetchCoverUrl(candidate.mbid));
+  // Pochette : celle de ListenBrainz, sinon Cover Art Archive, sinon Deezer
+  const coverUrl =
+    candidate.coverUrl ??
+    (await fetchCoverUrl(candidate.mbid).catch(() => null)) ??
+    (await findDeezerCover(candidate.artist, candidate.title));
   if (!coverUrl) return "pas de pochette";
 
   const links = await buildLinks(candidate.artist, candidate.title, []);

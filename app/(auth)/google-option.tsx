@@ -1,4 +1,4 @@
-import { Divider, secondaryButtonClass } from "./auth-ui";
+import { Divider } from "./auth-ui";
 import { googleLoginAction } from "./connexion/actions";
 
 // Bouton Google : affiché seulement si les clés sont renseignées dans .env.
@@ -11,7 +11,7 @@ export async function GoogleOption({ callbackUrl }: { callbackUrl: string }) {
     <>
       <form action={googleLoginAction}>
         <input type="hidden" name="callbackUrl" value={callbackUrl} />
-        <button type="submit" className={secondaryButtonClass}>
+        <button type="submit" className="btn block">
           Continuer avec Google
         </button>
       </form>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { ErrorMessage, inputClass } from "../auth-ui";
+import { ErrorMessage } from "../auth-ui";
 import { SubmitButton } from "../submit-button";
 import { signUpAction, type FormState } from "./actions";
 
@@ -11,28 +11,26 @@ export function SignupForm({ callbackUrl }: { callbackUrl: string }) {
   const [state, formAction] = useActionState(signUpAction, initialState);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} className="auth-form">
       <input type="hidden" name="callbackUrl" value={callbackUrl} />
       <ErrorMessage message={state.error} />
 
-      <label className="flex flex-col gap-2 text-sm text-zinc-300">
+      <label className="field-label">
         Pseudo
-        <input name="pseudo" type="text" required minLength={3} maxLength={20} autoComplete="username" className={inputClass} placeholder="ClementDisc" />
+        <input name="pseudo" type="text" required minLength={3} maxLength={20} autoComplete="username" defaultValue={state.values?.pseudo} className="field" placeholder="ClementDisc" />
       </label>
 
-      <label className="flex flex-col gap-2 text-sm text-zinc-300">
+      <label className="field-label">
         Adresse e-mail
-        <input name="email" type="email" required autoComplete="email" className={inputClass} placeholder="toi@exemple.fr" />
+        <input name="email" type="email" required autoComplete="email" defaultValue={state.values?.email} className="field" placeholder="toi@exemple.fr" />
       </label>
 
-      <label className="flex flex-col gap-2 text-sm text-zinc-300">
+      <label className="field-label">
         Mot de passe
-        <input name="password" type="password" required minLength={8} autoComplete="new-password" className={inputClass} placeholder="8 caractères minimum" />
+        <input name="password" type="password" required minLength={8} autoComplete="new-password" className="field" placeholder="8 caractères minimum" />
       </label>
 
-      <div className="mt-2">
-        <SubmitButton label="Créer mon compte" pendingLabel="Création..." />
-      </div>
+      <SubmitButton label="Créer mon compte" pendingLabel="Création..." />
     </form>
   );
 }

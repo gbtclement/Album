@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { matchesSearch, SearchBar, TierChips } from "@/components/game-controls";
+import { CoverImage } from "@/components/cover-image";
 import { smallCover } from "@/components/game-ui";
 import type { CollectionCard } from "@/lib/collection";
 import { RARITY_LABELS, RARITY_POINTS, RARITY_TIERS, type RarityTier } from "@/lib/rarity";
@@ -51,8 +52,7 @@ export function CollectionBrowser({ cards }: { cards: CollectionCard[] }) {
           visible.map((card) => (
             <button key={card.slug} type="button" className={`card tier-${card.rarity_tier}`} onClick={() => setSelected(card)}>
               <span className="cover">
-                {/* eslint-disable-next-line @next/next/no-img-element -- pochettes servies par Cover Art Archive */}
-                {card.cover_url && <img src={smallCover(card.cover_url)!} alt="" loading="lazy" />}
+                <CoverImage src={smallCover(card.cover_url)} fallback={card.cover_url} title={card.title} lazy />
                 {card.count > 1 && <b>x{card.count}</b>}
               </span>
               <span className="t">{card.title}</span>
@@ -75,8 +75,7 @@ function AlbumSheet({ card, onClose }: { card: CollectionCard; onClose: () => vo
         <span className="grab" />
         <div className="sheet-top">
           <span className="cover">
-            {/* eslint-disable-next-line @next/next/no-img-element -- pochettes servies par Cover Art Archive */}
-            {card.cover_url && <img src={card.cover_url} alt={`Pochette de ${card.title}`} />}
+            <CoverImage src={card.cover_url} title={card.title} alt={`Pochette de ${card.title}`} />
           </span>
           <div>
             <span className="tier-tag">{RARITY_LABELS[card.rarity_tier]}</span>

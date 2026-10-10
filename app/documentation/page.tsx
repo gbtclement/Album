@@ -76,6 +76,7 @@ const COMMANDS = [
   { command: "npm run import:catalog -- --listenbrainz", description: "Importer les albums les plus écoutés sur ListenBrainz (sans clé)" },
   { command: "npm run import:catalog -- --listenbrainz --artists 300", description: "Ajouter aussi les albums studio des 300 artistes les plus écoutés (long : une requête MusicBrainz par seconde)" },
   { command: "npm run import:catalog -- --listens", description: "Mettre à jour les écoutes et recalculer la rareté de tout le catalogue" },
+  { command: "npm run check:covers", description: "Vérifier que chaque pochette s'affiche encore et remplacer celles en panne (Cover Art Archive, sinon Deezer). Option --max 200 pour un essai" },
   { command: "npm run seed:demo", description: "Créer des données de démonstration (compte demo@demo.invalid / demo-album, 8 autres joueurs, marché, bourse, échanges). Refusé en production" },
 ];
 
@@ -100,6 +101,7 @@ const LOTS = [
   { lot: "C7", name: "Correctif : environnement de dev dans WSL (Node natif, seuls PostgreSQL et Redis dans Docker)", status: "Terminé", branch: "correctif7-wsl" },
   { lot: "C8", name: "Correctif : catalogue depuis ListenBrainz et MusicBrainz (sans clé), rareté selon les écoutes réelles, Last.fm retiré", status: "Terminé", branch: "correctif8-catalogue" },
   { lot: "D1", name: "Design « version jeu » : barre de jeu en bas, barre d'infos en haut, toutes les pages restylées, animation d'ouverture des packs", status: "Terminé", branch: "design1-version-jeu" },
+  { lot: "D2", name: "Design : connexion et inscription au thème du jeu, pochettes de secours (vinyle à la place d'une image en panne, script de réparation, pochette Deezer à l'import)", status: "Terminé", branch: "design2-auth-pochettes" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -179,7 +181,9 @@ export default function DocumentationPage() {
             <li>Messages de retour : les actions redirigent avec <code>?message=</code>, affiché en haut puis retiré de l&apos;adresse.</li>
             <li>Ouverture des packs : par défaut le joueur retourne lui-même chaque carte (« tout révéler » possible) ; le réglage « Révéler automatiquement » (Profil ou page Packs) les retourne une à une. Halo de couleur pour rare et plus, reflet pour épique et plus, et pour une légendaire : carte qui se soulève, ondes sonores, notes de musique et léger flash doré.</li>
             <li>Animations coupées quand l&apos;appareil demande moins d&apos;animations (<code>prefers-reduced-motion</code>).</li>
-            <li>La documentation et les pages de connexion gardent leur propre style.</li>
+            <li>Connexion et inscription (<code>app/(auth)/</code>) : même thème, sans barre de jeu (logo vinyle, carte en relief, bouton doré). Après une erreur, l&apos;e-mail et le pseudo saisis restent dans le formulaire (jamais le mot de passe).</li>
+            <li>Pochettes (<code>components/cover-image.tsx</code>) : si l&apos;image ne répond pas, la grande version est essayée, puis un vinyle aux couleurs de la rareté avec le titre de l&apos;album s&apos;affiche à la place.</li>
+            <li>La documentation garde son propre style.</li>
           </ul>
         </Section>
 
@@ -237,13 +241,14 @@ export default function DocumentationPage() {
           <p>
             Sources, toutes sans clé : ListenBrainz (albums et artistes les plus écoutés, nombre d&apos;écoutes de chaque album),
             MusicBrainz (identifiants, type d&apos;album, année ; une requête par seconde), Cover Art Archive (pochettes) et
-            Deezer (liens d&apos;écoute exacts). Quand un lien exact n&apos;est pas trouvé, un lien de recherche est proposé.
+            Deezer (liens d&apos;écoute exacts, pochette de secours). Quand un lien exact n&apos;est pas trouvé, un lien de recherche est proposé.
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-6">
             <li>ListenBrainz ne publie que les 1 000 albums les plus écoutés par période : l&apos;import combine six périodes (tous temps, année, semestre, trimestre, mois, semaine), puis peut ajouter les albums studio des artistes les plus écoutés (<code>--artists</code>).</li>
             <li>Seuls les albums studio sont gardés (pas de live, compilation, single ni bande originale), avec au moins 2 000 écoutes par défaut (<code>--min-listens</code>) et une pochette.</li>
             <li>Un album déjà présent n&apos;est pas réimporté : relancer l&apos;import reprend là où il s&apos;était arrêté.</li>
             <li>La rareté est recalculée à la fin de chaque import, et à la demande avec <code>npm run import:catalog -- --listens</code> (écoutes remises à jour).</li>
+            <li>Pochettes : celle choisie par ListenBrainz, sinon l&apos;image principale sur Cover Art Archive, sinon celle de Deezer (même titre et même artiste). Une pochette peut tomber en panne après l&apos;import (image retirée, serveur en erreur) : <code>npm run check:covers</code> les vérifie toutes et remplace celles qui ne répondent plus.</li>
             <li>Last.fm n&apos;est plus utilisé : son API ne permet pas de lister les albums les plus écoutés.</li>
           </ul>
         </Section>

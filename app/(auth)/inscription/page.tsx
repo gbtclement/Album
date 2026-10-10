@@ -25,7 +25,7 @@ export default async function InscriptionPage({ searchParams }: Props) {
       footer={
         <>
           Déjà inscrit ?{" "}
-          <Link href={`/connexion${suffix}`} className="font-medium text-amber-300 hover:text-amber-200">
+          <Link href={`/connexion${suffix}`}>
             Se connecter
           </Link>
         </>

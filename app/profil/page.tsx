@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { auth, signOut } from "@/auth";
+import { CoverImage } from "@/components/cover-image";
 import { Avatar, smallCover } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
 import { collectionScore, getCollectionCards } from "@/lib/collection";
@@ -68,8 +69,7 @@ export default async function ProfilPage({ searchParams }: Props) {
               {showcase.map((card) => (
                 <Link key={card.slug} href={`/album/${card.slug}`} className={`card tier-${card.rarity_tier}`}>
                   <span className="cover">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- pochettes servies par Cover Art Archive */}
-                    {card.cover_url && <img src={smallCover(card.cover_url)!} alt="" loading="lazy" />}
+                    <CoverImage src={smallCover(card.cover_url)} fallback={card.cover_url} title={card.title} lazy />
                   </span>
                   <span className="t">{card.title}</span>
                   <span className="a">{RARITY_LABELS[card.rarity_tier]}</span>

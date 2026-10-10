@@ -26,11 +26,12 @@ export function linksFromUrls(urls: string[]): AlbumLinks {
 }
 
 type DeezerSearchResponse = {
-  data?: Array<{ title: string; link: string; artist: { name: string } }>;
+  data?: Array<{ title: string; link: string; cover_big?: string; artist: { name: string } }>;
 };
 
-// Deezer ne demande pas de clé pour la recherche publique
-async function findDeezerAlbum(artist: string, title: string): Promise<string | null> {
+// Deezer ne demande pas de clé pour la recherche publique.
+// Seul un album au titre et à l'artiste identiques compte (pas le premier résultat venu).
+async function searchDeezerAlbum(artist: string, title: string) {
   const query = `artist:"${artist}" album:"${title}"`;
   const data = await cached(`deezer:search:${query}`, WEEK, async () => {
     const res = await fetch(`https://api.deezer.com/search/album?q=${encodeURIComponent(query)}`);
@@ -38,10 +39,20 @@ async function findDeezerAlbum(artist: string, title: string): Promise<string | 
     return (await res.json()) as DeezerSearchResponse;
   });
 
-  const match = data.data?.find(
-    (album) => normalize(album.title) === normalize(title) && normalize(album.artist.name) === normalize(artist),
+  return (
+    data.data?.find(
+      (album) => normalize(album.title) === normalize(title) && normalize(album.artist.name) === normalize(artist),
+    ) ?? null
   );
-  return match ? match.link : null;
+}
+
+async function findDeezerAlbum(artist: string, title: string): Promise<string | null> {
+  return (await searchDeezerAlbum(artist, title))?.link ?? null;
+}
+
+// Pochette Deezer (500 x 500) : plan B quand Cover Art Archive n'en a pas, ou plus
+export async function findDeezerCover(artist: string, title: string): Promise<string | null> {
+  return (await searchDeezerAlbum(artist, title))?.cover_big ?? null;
 }
 
 // Assemble les liens d'écoute : liens exacts quand ils existent, sinon recherche.

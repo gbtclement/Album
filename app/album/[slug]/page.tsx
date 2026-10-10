@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
+import { CoverImage } from "@/components/cover-image";
 import { PriceChart } from "@/components/price-chart";
 import { SiteNav } from "@/components/site-nav";
 import { findAlbumBySlug, type AlbumLinks } from "@/lib/catalog";
@@ -67,8 +68,7 @@ export default async function AlbumPage({ params }: Props) {
       <main className={`game-page narrow tier-${album.rarity_tier}`}>
         <div className="sheet-top" style={{ alignItems: "flex-start", marginTop: 8 }}>
           <span className="cover" style={{ width: "min(220px, 42vw)" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- pochettes servies par Cover Art Archive */}
-            {album.cover_url && <img src={album.cover_url} alt={`Pochette de ${album.title}`} />}
+            <CoverImage src={album.cover_url} title={album.title} alt={`Pochette de ${album.title}`} />
           </span>
           <div style={{ minWidth: 0 }}>
             <span className="tier-tag">{RARITY_LABELS[album.rarity_tier]}</span>

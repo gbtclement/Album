@@ -1,5 +1,6 @@
 // Petits éléments d'interface partagés par les pages du jeu (rendus côté serveur ou client)
 import type { CSSProperties } from "react";
+import { CoverImage } from "@/components/cover-image";
 import type { RarityTier } from "@/lib/rarity";
 
 const AVATAR_HUES = [12, 160, 210, 280, 330, 40, 190, 100];
@@ -35,11 +36,9 @@ export function smallCover(url: string | null) {
 
 // Vignette de pochette avec le contour de sa rareté
 export function Thumb({ cover, tier, title }: { cover: string | null; tier: RarityTier; title: string }) {
-  const src = smallCover(cover);
   return (
     <span className={`thumb tier-${tier}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element -- pochettes servies par Cover Art Archive */}
-      {src && <img src={src} alt={`Pochette de ${title}`} loading="lazy" />}
+      <CoverImage src={smallCover(cover)} fallback={cover} title={title} alt={`Pochette de ${title}`} lazy />
     </span>
   );
 }

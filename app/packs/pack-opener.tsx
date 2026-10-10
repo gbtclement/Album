@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { CoverImage } from "@/components/cover-image";
 import { smallCover } from "@/components/game-ui";
 import { useCallback, useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
 import { MAX_STOCK, PACK_RATES } from "@/lib/pack-rules";
@@ -215,8 +216,7 @@ function PackOpening({
                   <span className="inner">
                     <span className="face back" />
                     <span className="face front">
-                      {/* eslint-disable-next-line @next/next/no-img-element -- pochettes servies par Cover Art Archive */}
-                      <span className="art">{card.coverUrl && <img src={smallCover(card.coverUrl)!} alt="" />}</span>
+                      <span className="art"><CoverImage src={smallCover(card.coverUrl)} fallback={card.coverUrl} title={card.title} /></span>
                       {card.isNew && <span className="new">Nouveau</span>}
                       <span className="meta"><span className="t">{card.title}</span><span className="tier">{RARITY_LABELS[card.tier]}</span></span>
                     </span>

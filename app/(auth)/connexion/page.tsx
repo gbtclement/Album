@@ -25,7 +25,7 @@ export default async function ConnexionPage({ searchParams }: Props) {
       footer={
         <>
           Pas encore de compte ?{" "}
-          <Link href={`/inscription${suffix}`} className="font-medium text-amber-300 hover:text-amber-200">
+          <Link href={`/inscription${suffix}`}>
             Créer un compte
           </Link>
         </>
