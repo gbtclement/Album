@@ -23,7 +23,7 @@ export async function resendVerificationAction() {
   }
 
   try {
-    await sendVerificationEmail(user.id, user.email);
+    await sendVerificationEmail(user.id, user.email, user.pseudo);
   } catch (error) {
     console.error("Envoi de l'e-mail de vérification impossible", error);
     backToProfile("L'e-mail n'a pas pu être envoyé. Réessaie plus tard.");

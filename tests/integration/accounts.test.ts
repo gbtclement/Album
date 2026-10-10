@@ -9,7 +9,7 @@ const sendMail = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/mailer", () => ({ sendMail }));
 
 async function sendAndReadToken(userId: string, email: string) {
-  await sendVerificationEmail(userId, email);
+  await sendVerificationEmail(userId, email, "Joueur");
   const { text } = sendMail.mock.lastCall![0] as { text: string };
   return text.match(/token=([\w-]+)/)![1];
 }
@@ -61,7 +61,7 @@ describe("vérification de l'adresse e-mail", () => {
 describe("connexion Google sur un compte existant", () => {
   it("reprend un compte à l'adresse non vérifiée : mot de passe supprimé, sessions coupées", async () => {
     const user = await createTestUser({ verified: false });
-    await sendVerificationEmail(user.id, user.email);
+    await sendVerificationEmail(user.id, user.email, user.pseudo);
 
     await claimAccountWithGoogle(user.id);
 

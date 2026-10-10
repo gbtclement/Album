@@ -29,6 +29,9 @@ export async function signUpAction(_previous: FormState, formData: FormData): Pr
   if (password.length < 8) {
     return { error: "Le mot de passe doit faire au moins 8 caractères.", values };
   }
+  if (password !== String(formData.get("confirmation") ?? "")) {
+    return { error: "Les deux mots de passe ne sont pas identiques.", values };
+  }
 
   // Limite les créations de comptes en masse depuis une même adresse IP
   if (await isRateLimited(`signup:ip:${clientIp(await headers())}`, 10, HOUR)) {
@@ -57,7 +60,7 @@ export async function signUpAction(_previous: FormState, formData: FormData): Pr
   // Le compte est utilisable tout de suite ; un e-mail permet de prouver que l'adresse est bien la sienne.
   // Un échec d'envoi ne bloque pas l'inscription : le joueur pourra redemander le lien depuis son profil.
   try {
-    await sendVerificationEmail(userId, email);
+    await sendVerificationEmail(userId, email, pseudo);
   } catch (error) {
     console.error("Envoi de l'e-mail de vérification impossible", error);
   }

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -5,6 +6,12 @@ import { DEFAULT_AFTER_LOGIN, safeCallbackUrl } from "@/lib/callback-url";
 import { AuthShell } from "../auth-ui";
 import { GoogleOption } from "../google-option";
 import { SignupForm } from "./signup-form";
+
+export const metadata: Metadata = {
+  title: "Créer un compte",
+  description: "Crée ton compte Album gratuitement : ouvre des packs d'albums, collectionne-les et échange-les avec tes amis.",
+  alternates: { canonical: "/inscription" },
+};
 
 type Props = {
   searchParams: Promise<{ callbackUrl?: string }>;

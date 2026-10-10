@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { db } from "@/lib/db";
+import { verificationEmail } from "@/lib/email-templates";
 import { sendMail } from "@/lib/mailer";
 import { absoluteUrl } from "@/lib/seo";
 
@@ -10,7 +11,7 @@ function hashToken(token: string) {
 }
 
 // Crée un nouveau lien de vérification (l'ancien ne marche plus) et l'envoie par e-mail
-export async function sendVerificationEmail(userId: string, email: string) {
+export async function sendVerificationEmail(userId: string, email: string, pseudo: string) {
   const token = randomBytes(32).toString("base64url");
   await db.query(
     `insert into email_verifications (user_id, token_hash, expires_at)
@@ -21,13 +22,7 @@ export async function sendVerificationEmail(userId: string, email: string) {
   );
 
   const link = absoluteUrl(`/verifier-email?token=${token}`);
-  await sendMail({
-    to: email,
-    subject: "Album : confirme ton adresse e-mail",
-    text:
-      `Bienvenue sur Album !\n\nPour confirmer ton adresse e-mail, ouvre ce lien (valable ${VALIDITY_HOURS} heures) :\n${link}\n\n` +
-      "Si tu n'as pas créé de compte, ignore simplement ce message.",
-  });
+  await sendMail({ to: email, ...verificationEmail({ pseudo, link, hours: VALIDITY_HOURS }) });
 }
 
 // Valide le jeton : le lien ne sert qu'une fois. Renvoie false si le lien est inconnu ou expiré.

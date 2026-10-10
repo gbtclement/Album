@@ -14,7 +14,10 @@ export const metadata: Metadata = {
 const ROUTES = [
   { path: "/", description: "Accueil (un joueur connecté est envoyé vers sa collection)" },
   { path: "/connexion", description: "Connexion (e-mail/mot de passe, Google si configuré)" },
-  { path: "/inscription", description: "Création de compte" },
+  { path: "/inscription", description: "Création de compte (pseudo, e-mail, mot de passe et sa confirmation)" },
+  { path: "/mot-de-passe-oublie", description: "Demande d'un lien pour choisir un nouveau mot de passe (même réponse que l'adresse soit inscrite ou non)" },
+  { path: "/nouveau-mot-de-passe", description: "Choix du nouveau mot de passe depuis le lien reçu (?token=, usage unique, valable 1 h)" },
+  { path: "/apercu-emails/[modele]", description: "Aperçu des e-mails dans le navigateur (verification, mot-de-passe), en développement seulement" },
   { path: "/profil", description: "Profil : statistiques, vitrine, répartition par rareté, réglages du jeu, compte (protégée)" },
   { path: "/packs", description: "Ouverture d'un pack ou de tous les packs, animation de révélation, chances par rareté (protégée)" },
   { path: "/collection", description: "Cartes possédées uniquement, recherche, filtre de rareté, fiche qui glisse depuis le bas (protégée)" },
@@ -39,6 +42,7 @@ const ROUTES = [
 const TABLES = [
   { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement)" },
   { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
+  { name: "password_resets", description: "Lien de réinitialisation du mot de passe en cours par joueur (empreinte SHA-256 du jeton, expiration 1 h)" },
   { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
   { name: "albums", description: "Catalogue : identifiant MusicBrainz, titre, artiste, pochette, écoutes et auditeurs ListenBrainz, palier de rareté, liens d'écoute" },
   { name: "pack_stocks", description: "Stock de packs par joueur et date de la dernière recharge" },
@@ -104,6 +108,7 @@ const LOTS = [
   { lot: "D2", name: "Design : connexion et inscription au thème du jeu, pochettes de secours (vinyle à la place d'une image en panne, script de réparation, pochette Deezer à l'import)", status: "Terminé", branch: "design2-auth-pochettes" },
   { lot: "C9", name: "Correctif : rareté selon les écoutes totales, plafonnées à 100 par auditeur (au lieu du nombre d'auditeurs)", status: "Terminé", branch: "correctif9-rarete-ecoutes" },
   { lot: "D3", name: "Marché et bourse : tri (prix, rareté, variation), pagination du marché par la base (24 annonces par page), affichage progressif de la bourse", status: "Terminé", branch: "design3-tri-pagination" },
+  { lot: "D4", name: "Comptes : confirmation du mot de passe à l'inscription, mot de passe oublié (e-mail + page de changement), modèles d'e-mails HTML aux couleurs du jeu", status: "Terminé", branch: "design4-comptes-emails" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -272,6 +277,12 @@ export default function DocumentationPage() {
           <ul className="list-disc space-y-2 pl-6">
             <li>
               <strong>Vérification de l&apos;e-mail :</strong> à l&apos;inscription, un lien (valable 24 h, utilisable une fois) est envoyé. Le compte est jouable tout de suite ; le profil affiche un bandeau tant que l&apos;adresse n&apos;est pas vérifiée, avec un bouton pour renvoyer le lien. Les comptes Google sont vérifiés d&apos;office (Google ne transmet que des adresses qu&apos;il a vérifiées, les autres sont refusées).
+            </li>
+            <li>
+              <strong>Mot de passe oublié :</strong> le lien envoyé (valable 1 h, utilisable une fois, remplacé par toute nouvelle demande) permet de choisir un nouveau mot de passe. L&apos;ouvrir prouve que le joueur reçoit les e-mails de l&apos;adresse : elle est marquée vérifiée, toutes les sessions ouvertes sont coupées et les essais de connexion ratés sont oubliés. La page de demande répond la même chose qu&apos;un compte existe ou non (on ne peut pas s&apos;en servir pour savoir qui est inscrit) ; limite de 3 demandes par adresse et 10 par adresse IP et par heure.
+            </li>
+            <li>
+              <strong>E-mails</strong> (<code>lib/email-templates.ts</code>) : vérification de l&apos;adresse et mot de passe oublié, chacun en version texte et HTML (tableaux et styles écrits sur chaque balise, seule mise en page fiable dans les messageries). Aperçu : <code>/apercu-emails/verification</code> et <code>/apercu-emails/mot-de-passe</code> en développement.
             </li>
             <li>
               <strong>Connexion Google sur un compte existant :</strong> si l&apos;adresse du compte est vérifiée, Google se connecte au même compte. Sinon, rien ne prouve que le mot de passe a été choisi par le titulaire de l&apos;adresse (n&apos;importe qui peut s&apos;inscrire avec l&apos;e-mail d&apos;un autre) : le titulaire, prouvé par Google, récupère le compte. Le mot de passe est supprimé et toutes les sessions ouvertes sont coupées.
