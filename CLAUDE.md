@@ -18,8 +18,9 @@ Next.js 16 a des changements par rapport aux versions habituelles : lire le guid
 - Arrêter : `docker compose down`
 - Vérifier la santé : http://localhost:3000/api/health (200 si la base et Redis répondent)
 - E-mails en développement : sans `SMTP_URL`, ils ne sont pas envoyés mais affichés dans `docker compose logs app` (lien de vérification à copier).
-- Appliquer les migrations sur une base existante (le dossier `db/migrations` n'est lu automatiquement que sur une base neuve) :
-  `Get-Content db/migrations/001_users.sql | docker compose exec -T db psql -U album -d album`
+- Migrations : appliquées automatiquement au démarrage de l'app par `scripts/migrate.mjs` (suivi dans la table `schema_migrations`). Pour les relancer à la main : `docker compose exec app npm run migrate`. Ne jamais modifier une migration déjà appliquée : ajouter un nouveau fichier numéroté.
+- Tests : `docker compose exec app npm test` (Vitest). `tests/unit/` sans base ; `tests/integration/` sur la base `album_test` et Redis n°15, vidés à chaque test.
+- CI : `.github/workflows/ci.yml` (lint, typage, tests, build) à chaque push et PR.
 
 Le projet tourne uniquement dans Docker : Node n'est pas installé sur la machine Windows.
 - Production (test local) : `docker compose -f docker-compose.prod.yml up -d --build`. Arrêter la dev avant (`docker compose down`), les ports sont les mêmes. Le fichier `.env` n'est jamais copié dans l'image.

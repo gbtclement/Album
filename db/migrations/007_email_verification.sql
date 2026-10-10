@@ -1,5 +1,5 @@
 -- Correctif 5 : vérification de l'adresse e-mail et invalidation des sessions
--- Appliquée automatiquement sur une base neuve, sinon à lancer à la main : voir CLAUDE.md.
+-- Appliquée par scripts/migrate.mjs, comme toutes les migrations (voir CLAUDE.md).
 
 -- Date de vérification de l'e-mail (NULL tant que le joueur n'a pas cliqué sur le lien)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at timestamptz;

@@ -1,6 +1,5 @@
 -- Table des joueurs (lot 1 : inscription et connexion)
--- Appliquée automatiquement sur une base neuve (docker-entrypoint-initdb.d),
--- sinon à lancer à la main : voir CLAUDE.md.
+-- Appliquée par scripts/migrate.mjs, comme toutes les migrations (voir CLAUDE.md).
 
 CREATE TABLE IF NOT EXISTS users (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),

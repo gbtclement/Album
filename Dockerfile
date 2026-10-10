@@ -23,6 +23,10 @@ RUN addgroup -S app && adduser -S app -G app
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=app:app /app/.next/standalone ./
 COPY --from=builder --chown=app:app /app/.next/static ./.next/static
+# Outil de migration : il utilise le module pg déjà présent dans le build autonome
+COPY --from=builder /app/scripts/migrate.mjs ./scripts/migrate.mjs
+COPY --from=builder /app/db/migrations ./db/migrations
 USER app
 EXPOSE 3000
-CMD ["node", "server.js"]
+# Les migrations en attente sont appliquées avant de lancer le serveur
+CMD ["sh", "-c", "node scripts/migrate.mjs && exec node server.js"]

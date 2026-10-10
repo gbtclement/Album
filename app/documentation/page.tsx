@@ -39,6 +39,7 @@ const ROUTES = [
 const TABLES = [
   { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions" },
   { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
+  { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
   { name: "albums", description: "Catalogue : identifiant MusicBrainz, titre, artiste, pochette, écoutes Last.fm, palier de rareté, liens d'écoute" },
   { name: "pack_stocks", description: "Stock de packs par joueur et date de la dernière recharge" },
   { name: "user_albums", description: "Collection : une ligne par album possédé, avec le nombre d'exemplaires" },
@@ -92,6 +93,7 @@ const LOTS = [
   { lot: "C3", name: "Correctif : proxy.ts lit la session via Auth.js (cookie __Secure- reconnu en HTTPS)", status: "Terminé", branch: "correctif3-proxy-cookie" },
   { lot: "C4", name: "Correctif : erreurs d'échange conservées, annonces en double, callbackUrl, pages de connexion quand on est connecté, quêtes d'échange", status: "Terminé", branch: "correctif4-bugs-fonctionnels" },
   { lot: "C5", name: "Correctif : vérification de l'e-mail, reprise d'un compte non vérifié par Google, limitation des tentatives (connexion, inscription, e-mails)", status: "Terminé", branch: "correctif5-email-limites" },
+  { lot: "C6", name: "Correctif : outil de migration automatique, tests automatiques (Vitest, base de test séparée) et intégration continue GitHub Actions", status: "Terminé", branch: "correctif6-tests-ci" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -176,7 +178,7 @@ export default function DocumentationPage() {
         <Section title="Base de données">
           <Table headers={["Table", "Contenu"]} rows={TABLES.map((item) => [item.name, item.description])} />
           <p className="mt-3">
-            Les migrations sont dans <code>db/migrations/</code>, appliquées dans l&apos;ordre des numéros.
+            Les migrations sont dans <code>db/migrations/</code>. Au démarrage de l&apos;application (dev et production), <code>scripts/migrate.mjs</code> applique dans l&apos;ordre des numéros celles qui ne l&apos;ont pas encore été et les note dans <code>schema_migrations</code>. Chaque migration est appliquée entièrement ou pas du tout. Une migration déjà appliquée n&apos;est jamais relancée : pour changer le schéma, ajouter un nouveau fichier plutôt que modifier un ancien.
           </p>
         </Section>
 
@@ -220,7 +222,7 @@ export default function DocumentationPage() {
           <ol className="list-decimal space-y-2 pl-6">
             <li>Remplir le fichier <code>.env</code> du serveur, avec <code>PUBLIC_BASE_URL</code> et <code>AUTH_URL</code> sur l&apos;adresse publique (https).</li>
             <li>Lancer <code>docker compose -f docker-compose.prod.yml up -d --build</code>. L&apos;image ne contient pas le <code>.env</code> et tourne en utilisateur non root.</li>
-            <li>Sur une base existante, appliquer les nouvelles migrations de <code>db/migrations/</code> dans l&apos;ordre.</li>
+            <li>Les migrations sont appliquées automatiquement au démarrage du conteneur, avant le serveur. Si l&apos;une échoue, le serveur ne démarre pas (voir <code>docker compose -f docker-compose.prod.yml logs app</code>).</li>
             <li>Mettre un reverse proxy avec HTTPS devant le port 3000, sans l&apos;exposer directement. Le reverse proxy doit ajouter l&apos;adresse du visiteur à la fin de <code>X-Forwarded-For</code> (par exemple <code>proxy_add_x_forwarded_for</code> avec nginx) : les limites par adresse IP lisent la dernière valeur.</li>
             <li>Renseigner <code>SMTP_URL</code> et <code>MAIL_FROM</code> pour que les liens de vérification soient réellement envoyés.</li>
             <li>Passer <code>SEO_INDEXING</code> à <code>true</code> une fois le domaine en ligne, puis soumettre le sitemap.</li>
@@ -252,6 +254,29 @@ export default function DocumentationPage() {
             <li>Le plan du site (<code>/sitemap.xml</code>) liste les pages publiques et toutes les fiches d&apos;albums avec pochette.</li>
             <li>Les pages réservées aux joueurs ne sont pas indexées (exclues du <code>robots.txt</code>).</li>
             <li>Tant que <code>SEO_INDEXING</code> n&apos;est pas <code>true</code>, le site demande aux moteurs de ne rien indexer : c&apos;est le cas en local.</li>
+          </ul>
+        </Section>
+
+        <Section title="Tests et intégration continue">
+          <ul className="list-disc space-y-2 pl-6">
+            <li>
+              <strong>Lancer les tests :</strong> <code>docker compose exec app npm test</code> (Vitest). Les tests unitaires
+              (<code>tests/unit/</code>) vérifient les règles pures : tirage des packs, raretés, périodes des quêtes, liens de
+              redirection, adresses IP. Les tests d&apos;intégration (<code>tests/integration/</code>) utilisent une vraie base et
+              un vrai Redis : migrations, vérification d&apos;e-mail, reprise de compte Google, limites de tentatives, packs,
+              marché et échanges, y compris des demandes simultanées (un pack ou une annonce ne part qu&apos;une fois).
+            </li>
+            <li>
+              <strong>Base de test :</strong> les tests d&apos;intégration utilisent la base <code>album_test</code> (créée et
+              migrée automatiquement) et la base Redis n°15, vidées à chaque test. Les données du jeu ne sont jamais touchées :
+              le nettoyage refuse toute base dont le nom ne finit pas par <code>_test</code>.
+            </li>
+            <li>
+              <strong>Intégration continue :</strong> à chaque push et à chaque pull request vers <code>dev</code>,{" "}
+              <code>preprod</code> ou <code>prod</code>, GitHub Actions (<code>.github/workflows/ci.yml</code>) lance le lint,
+              le typage, les tests et le build de production. Le résultat est visible dans l&apos;onglet « Actions » du dépôt
+              et sur chaque pull request.
+            </li>
           </ul>
         </Section>
 

@@ -8,4 +8,5 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 EXPOSE 3000
-CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0"]
+# Les migrations en attente sont appliquées avant de lancer le serveur
+CMD ["sh", "-c", "node scripts/migrate.mjs && exec npm run dev -- -H 0.0.0.0"]
