@@ -35,6 +35,8 @@ const ROUTES = [
   { path: "/documentation", description: "Cette page" },
   { path: "/sitemap.xml", description: "Plan du site : pages publiques et fiches d'albums (SEO)" },
   { path: "/robots.txt", description: "Règles pour les robots d'indexation (bloqué tant que SEO_INDEXING n'est pas true)" },
+  { path: "/manifest.webmanifest", description: "Manifeste (nom, couleurs, icônes) pour l'ajout à l'écran d'accueil" },
+  { path: "/opengraph-image", description: "Image d'aperçu générée pour le partage de liens" },
   { path: "/api/health", description: "État de l'application, de PostgreSQL et de Redis" },
   { path: "/api/auth/*", description: "Routes Auth.js (connexion, déconnexion, callbacks)" },
 ];
@@ -66,6 +68,7 @@ const ENV_VARS = [
   { name: "MAIL_FROM", description: "Expéditeur des e-mails (ex. Album <no-reply@domaine>)" },
   { name: "PUBLIC_BASE_URL", description: "Adresse publique pour les URLs canoniques et le sitemap" },
   { name: "SEO_INDEXING", description: "\"true\" pour autoriser l'indexation par les moteurs de recherche. Désactivé tant que le domaine n'est pas en ligne" },
+  { name: "GOOGLE_SITE_VERIFICATION", description: "Code de vérification Google Search Console (facultatif, une fois le domaine en ligne)" },
   { name: "MUSICBRAINZ_CONTACT", description: "Contact envoyé à MusicBrainz dans le User-Agent (optionnel)" },
 ];
 
@@ -109,6 +112,7 @@ const LOTS = [
   { lot: "C9", name: "Correctif : rareté selon les écoutes totales, plafonnées à 100 par auditeur (au lieu du nombre d'auditeurs)", status: "Terminé", branch: "correctif9-rarete-ecoutes" },
   { lot: "D3", name: "Marché et bourse : tri (prix, rareté, variation), pagination du marché par la base (24 annonces par page), affichage progressif de la bourse", status: "Terminé", branch: "design3-tri-pagination" },
   { lot: "D4", name: "Comptes : confirmation du mot de passe à l'inscription, mot de passe oublié (e-mail + page de changement), modèles d'e-mails HTML aux couleurs du jeu", status: "Terminé", branch: "design4-comptes-emails" },
+  { lot: "D5", name: "SEO et performances : schema.org (WebSite, VideoGame, MusicAlbum, fil d'Ariane), titres h1/h2, accueil enrichi, robots et sitemap, image de partage, icônes et manifeste, pochettes optimisées (WebP, cache 30 jours), en-têtes de sécurité, préparation de la mise en production (Caddy)", status: "Terminé", branch: "design5-seo-performances" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -263,12 +267,15 @@ export default function DocumentationPage() {
 
         <Section title="Mise en production">
           <ol className="list-decimal space-y-2 pl-6">
-            <li>Remplir le fichier <code>.env</code> du serveur, avec <code>PUBLIC_BASE_URL</code> et <code>AUTH_URL</code> sur l&apos;adresse publique (https).</li>
-            <li>Lancer <code>docker compose -f docker-compose.prod.yml up -d --build</code>. L&apos;image ne contient pas le <code>.env</code> et tourne en utilisateur non root.</li>
+            <li>Faire pointer le domaine vers le serveur (enregistrements DNS A et AAAA, avec et sans <code>www</code>).</li>
+            <li>Remplir le fichier <code>.env</code> du serveur, avec <code>PUBLIC_BASE_URL</code> et <code>AUTH_URL</code> sur l&apos;adresse publique (https, sans <code>www</code> ni barre finale).</li>
+            <li>Lancer <code>docker compose -f docker-compose.prod.yml up -d --build</code>. L&apos;image ne contient pas le <code>.env</code> et tourne en utilisateur non root. Le port 3000 n&apos;écoute que sur le serveur lui-même ; les pochettes optimisées sont gardées dans le volume <code>image_cache</code>.</li>
             <li>Les migrations sont appliquées automatiquement au démarrage du conteneur, avant le serveur. Si l&apos;une échoue, le serveur ne démarre pas (voir <code>docker compose -f docker-compose.prod.yml logs app</code>).</li>
-            <li>Mettre un reverse proxy avec HTTPS devant le port 3000, sans l&apos;exposer directement. Le reverse proxy doit ajouter l&apos;adresse du visiteur à la fin de <code>X-Forwarded-For</code> (par exemple <code>proxy_add_x_forwarded_for</code> avec nginx) : les limites par adresse IP lisent la dernière valeur.</li>
-            <li>Renseigner <code>SMTP_URL</code> et <code>MAIL_FROM</code> pour que les liens de vérification soient réellement envoyés.</li>
-            <li>Passer <code>SEO_INDEXING</code> à <code>true</code> une fois le domaine en ligne, puis soumettre le sitemap.</li>
+            <li>Installer Caddy et copier <code>deploy/Caddyfile</code> (remplacer <code>album.example</code> par le domaine) : HTTPS automatique (Let&apos;s Encrypt), compression, redirection de <code>www</code> vers le domaine principal, cache long des fichiers de build. Caddy place l&apos;adresse du visiteur en dernier dans <code>X-Forwarded-For</code>, ce que lisent les limites par adresse IP (avec nginx : <code>proxy_add_x_forwarded_for</code>).</li>
+            <li>Renseigner <code>SMTP_URL</code> et <code>MAIL_FROM</code> (adresse du domaine, avec SPF, DKIM et DMARC configurés chez le fournisseur d&apos;e-mails pour ne pas finir en indésirables) : sans eux, aucun e-mail ne part.</li>
+            <li>Vérifier <code>https://domaine/api/health</code>, l&apos;inscription, la réception des deux e-mails et le changement de mot de passe.</li>
+            <li>Passer <code>SEO_INDEXING</code> à <code>true</code> et redémarrer l&apos;application. Dans Google Search Console : ajouter le site, coller le code de vérification dans <code>GOOGLE_SITE_VERIFICATION</code> (puis redémarrer), soumettre <code>https://domaine/sitemap.xml</code>. Faire de même dans Bing Webmaster Tools.</li>
+            <li>Garder <code>SEO_INDEXING=false</code> sur une éventuelle préproduction, pour qu&apos;elle ne soit jamais indexée.</li>
           </ol>
           <p className="mt-3">Les pages joueurs redirigent vers la connexion au niveau du serveur (<code>proxy.ts</code>), avant tout rendu. La session y est lue par <code>auth()</code> d&apos;Auth.js, qui choisit le nom du cookie selon le protocole d&apos;<code>AUTH_URL</code> (préfixe <code>__Secure-</code> en HTTPS) : <code>AUTH_URL</code> doit donc être l&apos;adresse publique en https. Le proxy renvoie aussi un joueur déjà connecté qui ouvre <code>/connexion</code> ou <code>/inscription</code> vers sa destination. Après la connexion, le joueur revient sur la page demandée (<code>callbackUrl</code>), uniquement si c&apos;est un chemin interne au site (<code>lib/callback-url.ts</code>) : une adresse externe est ignorée.</p>
         </Section>
@@ -298,11 +305,28 @@ export default function DocumentationPage() {
 
         <Section title="Référencement (SEO)">
           <ul className="list-disc space-y-1 pl-6">
-            <li>Chaque page publique a son titre, sa description et son URL canonique. La page d&apos;accueil, les fiches d&apos;albums et cette documentation sont publiques.</li>
-            <li>Les fiches d&apos;albums ont des balises Open Graph (pochette) et des données structurées schema.org de type MusicAlbum.</li>
-            <li>Le plan du site (<code>/sitemap.xml</code>) liste les pages publiques et toutes les fiches d&apos;albums avec pochette.</li>
-            <li>Les pages réservées aux joueurs ne sont pas indexées (exclues du <code>robots.txt</code>).</li>
-            <li>Tant que <code>SEO_INDEXING</code> n&apos;est pas <code>true</code>, le site demande aux moteurs de ne rien indexer : c&apos;est le cas en local.</li>
+            <li>Chaque page publique a son titre, sa description et son URL canonique. Pages publiques : accueil, fiches d&apos;albums, connexion, inscription et cette documentation.</li>
+            <li>Les métadonnées sont placées dans le <code>&lt;head&gt;</code> pour tous les visiteurs (<code>htmlLimitedBots</code> dans <code>next.config.ts</code>), pas seulement pour les robots connus de Next.js : les aperçus de liens des messageries restent justes.</li>
+            <li>Données structurées schema.org (JSON-LD) : <code>WebSite</code> et <code>VideoGame</code> (gratuit, navigateur) sur l&apos;accueil ; <code>MusicAlbum</code> (artiste, année, pochette, lien MusicBrainz) et fil d&apos;Ariane <code>BreadcrumbList</code> sur chaque fiche.</li>
+            <li>Titres : un seul <code>h1</code> par page, puis des <code>h2</code> pour les sections (et <code>h3</code> pour les étapes de l&apos;accueil).</li>
+            <li>Liens internes : l&apos;accueil présente des légendaires, chaque fiche liste les autres albums du même artiste.</li>
+            <li>Partage : image d&apos;aperçu générée (<code>app/opengraph-image.tsx</code>, 1200 × 630), pochette pour les fiches ; carte Twitter grand format. Icônes : <code>app/icon.svg</code>, <code>app/apple-icon.tsx</code>, manifeste <code>/manifest.webmanifest</code> (ajout à l&apos;écran d&apos;accueil).</li>
+            <li>Le plan du site (<code>/sitemap.xml</code>) liste les pages publiques et les fiches d&apos;albums avec pochette (49 000 au plus, limite d&apos;un plan : 50 000).</li>
+            <li><code>robots.txt</code> exclut l&apos;espace joueur, les pages ouvertes depuis un e-mail, l&apos;aperçu des e-mails et l&apos;API (<code>PRIVATE_PATHS</code> dans <code>lib/seo.ts</code>). Les pages de lien reçu par e-mail sont aussi en <code>noindex</code>.</li>
+            <li>Tant que <code>SEO_INDEXING</code> n&apos;est pas <code>true</code>, le site demande aux moteurs de ne rien indexer : c&apos;est le cas en local et en préproduction.</li>
+            <li>Mesuré avec Lighthouse sur le build de production (mobile) : SEO 100 avec l&apos;indexation activée, accessibilité 100, bonnes pratiques 100, performance 94 à 97.</li>
+          </ul>
+        </Section>
+
+        <Section title="Performances">
+          <ul className="list-disc space-y-1 pl-6">
+            <li>Pochettes servies par l&apos;optimiseur d&apos;images de Next.js (<code>components/cover-image.tsx</code>, réglages <code>images</code> dans <code>next.config.ts</code>) : téléchargées une fois depuis Cover Art Archive ou Deezer, redimensionnées à la taille affichée, converties en WebP et gardées 30 jours en cache. Toujours en <code>https://</code>.</li>
+            <li>La pochette principale d&apos;une fiche est téléchargée en priorité ; les autres seulement quand elles approchent de l&apos;écran.</li>
+            <li>La bibliothèque de graphiques (la plus lourde du site) n&apos;est chargée qu&apos;au moment d&apos;afficher un graphique.</li>
+            <li>Listes longues : pagination par la base au marché, affichage par tranches à la bourse.</li>
+            <li>Index PostgreSQL pour les annonces actives (date, prix, vendeur), les ventes récentes et les albums par artiste (migration 011).</li>
+            <li>Polices auto-hébergées par <code>next/font</code> (aucune requête vers Google), connexion vers Cover Art Archive ouverte dès le début de la page.</li>
+            <li>En-têtes de sécurité sur toutes les pages : <code>X-Content-Type-Options</code>, <code>Referrer-Policy</code>, <code>X-Frame-Options</code>, <code>Permissions-Policy</code>, HSTS (actif en HTTPS).</li>
           </ul>
         </Section>
 

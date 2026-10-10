@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Chakra_Petch, Lilita_One, Nunito } from "next/font/google";
 import type { ReactNode } from "react";
+import { preconnect } from "react-dom";
 import { indexingEnabled, siteUrl } from "@/lib/seo";
 import "./globals.css";
 
@@ -28,18 +29,28 @@ export const metadata: Metadata = {
   },
   description: "Collectionne des albums de musique, ouvre des packs et échange avec tes amis.",
   applicationName: "Album",
+  category: "games",
+  // Les numéros et adresses ne deviennent pas des liens automatiques sur iPhone
+  formatDetection: { telephone: false, address: false, email: false },
   openGraph: {
     siteName: "Album",
     locale: "fr_FR",
     type: "website",
   },
+  twitter: { card: "summary_large_image" },
+  appleWebApp: { title: "Album", statusBarStyle: "black-translucent" },
   robots: {
     index: indexingEnabled(),
     follow: indexingEnabled(),
+    googleBot: { index: indexingEnabled(), follow: indexingEnabled(), "max-image-preview": "large" },
   },
+  // Preuve de propriété pour Google Search Console (code fourni par Google, à mettre dans .env)
+  ...(process.env.GOOGLE_SITE_VERIFICATION ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } } : {}),
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  // Les pochettes viennent de Cover Art Archive : la connexion est ouverte dès le début de la page
+  preconnect("https://coverartarchive.org");
   return (
     <html lang="fr" className={`${lilita.variable} ${chakra.variable} ${nunito.variable}`}>
       <body>{children}</body>

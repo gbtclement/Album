@@ -38,7 +38,7 @@ export function smallCover(url: string | null) {
 export function Thumb({ cover, tier, title }: { cover: string | null; tier: RarityTier; title: string }) {
   return (
     <span className={`thumb tier-${tier}`}>
-      <CoverImage src={smallCover(cover)} fallback={cover} title={title} alt={`Pochette de ${title}`} lazy />
+      <CoverImage src={smallCover(cover)} fallback={cover} title={title} alt={`Pochette de ${title}`} sizes="56px" lazy />
     </span>
   );
 }

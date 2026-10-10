@@ -56,7 +56,7 @@ export default async function QuetesPage({ searchParams }: Props) {
 
         {PERIODS.map((period) => (
           <section key={period}>
-            <div className="label">{PERIOD_LABELS[period]} <span>{renewsIn(period)}</span></div>
+            <h2 className="label">{PERIOD_LABELS[period]} <span>{renewsIn(period)}</span></h2>
             <div className="stack two">
               {quests
                 .filter((quest) => quest.period === period)

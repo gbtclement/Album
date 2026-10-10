@@ -14,8 +14,12 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       REDIS_URL: redis://redis:6379
+    # Accessible seulement depuis le serveur lui-même : le reverse proxy HTTPS (deploy/Caddyfile) est la seule entrée publique
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
+    # Pochettes optimisées gardées entre deux redémarrages (sinon tout est retéléchargé)
+    volumes:
+      - image_cache:/app/.next/cache
     depends_on:
       db:
         condition: service_healthy
@@ -47,3 +51,4 @@ services:
 volumes:
   db_data:
   redis_data:
+  image_cache:

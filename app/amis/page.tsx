@@ -42,7 +42,7 @@ export default async function AmisPage({ searchParams }: Props) {
 
         {incoming.length > 0 && (
           <>
-            <div className="label">Demandes reçues</div>
+            <h2 className="label">Demandes reçues</h2>
             <div className="stack two">
               {incoming.map((request) => (
                 <div key={request.id} className="item">
@@ -67,7 +67,7 @@ export default async function AmisPage({ searchParams }: Props) {
           </>
         )}
 
-        <div className="label">Tes amis</div>
+        <h2 className="label">Tes amis</h2>
         <div className="stack two">
           {friends.length === 0 && <p className="empty">Tu n&apos;as pas encore d&apos;amis. Ajoute un joueur avec son pseudo.</p>}
           {friends.map((friend) => (
@@ -90,7 +90,7 @@ export default async function AmisPage({ searchParams }: Props) {
 
         {outgoing.length > 0 && (
           <>
-            <div className="label">Demandes envoyées</div>
+            <h2 className="label">Demandes envoyées</h2>
             <div className="stack two">
               {outgoing.map((request) => (
                 <div key={request.id} className="item">

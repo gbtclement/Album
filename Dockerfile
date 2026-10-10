@@ -26,6 +26,8 @@ COPY --from=builder --chown=app:app /app/.next/static ./.next/static
 # Outil de migration : il utilise le module pg déjà présent dans le build autonome
 COPY --from=builder /app/scripts/migrate.mjs ./scripts/migrate.mjs
 COPY --from=builder /app/db/migrations ./db/migrations
+# Cache des pochettes optimisées (next/image) : dossier inscriptible, monté sur un volume en production
+RUN mkdir -p .next/cache && chown app:app .next/cache
 USER app
 EXPOSE 3000
 # Les migrations en attente sont appliquées avant de lancer le serveur

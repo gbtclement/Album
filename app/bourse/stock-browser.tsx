@@ -118,7 +118,7 @@ export function StockBrowser({ stocks }: { stocks: StockLine[] }) {
         )}
       </div>
 
-      <div className="label">Toutes les cotes</div>
+      <h2 className="label">Toutes les cotes</h2>
       <SearchBar id="q-bourse" value={query} onChange={setQuery} placeholder="Rechercher une cote" />
       <div className="sortbar" role="group" aria-label="Trier">
         <span>Trier</span>

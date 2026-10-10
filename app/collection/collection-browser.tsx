@@ -75,7 +75,7 @@ function AlbumSheet({ card, onClose }: { card: CollectionCard; onClose: () => vo
         <span className="grab" />
         <div className="sheet-top">
           <span className="cover">
-            <CoverImage src={card.cover_url} title={card.title} alt={`Pochette de ${card.title}`} />
+            <CoverImage src={card.cover_url} title={card.title} alt={`Pochette de ${card.title}`} sizes="120px" />
           </span>
           <div>
             <span className="tier-tag">{RARITY_LABELS[card.rarity_tier]}</span>

@@ -85,7 +85,7 @@ export function PackRoom({ stock, autoReveal: initialAuto }: { stock: number; au
         Révéler les cartes automatiquement
       </label>
       <div className="rates">
-        <div className="label">Chances par carte</div>
+        <h2 className="label">Chances par carte</h2>
         {[...RARITY_TIERS].reverse().map((tier) => (
           <div key={tier} className={`rate tier-${tier}`}>
             <span><i />{RARITY_LABELS[tier]}</span>
@@ -216,7 +216,7 @@ function PackOpening({
                   <span className="inner">
                     <span className="face back" />
                     <span className="face front">
-                      <span className="art"><CoverImage src={smallCover(card.coverUrl)} fallback={card.coverUrl} title={card.title} /></span>
+                      <span className="art"><CoverImage src={smallCover(card.coverUrl)} fallback={card.coverUrl} title={card.title} sizes="124px" /></span>
                       {card.isNew && <span className="new">Nouveau</span>}
                       <span className="meta"><span className="t">{card.title}</span><span className="tier">{RARITY_LABELS[card.tier]}</span></span>
                     </span>

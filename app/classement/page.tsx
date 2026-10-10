@@ -89,7 +89,7 @@ export default async function ClassementPage({ searchParams }: Props) {
 
         {me && !meShown && (
           <>
-            <div className="label">Ta position</div>
+            <h2 className="label">Ta position</h2>
             <LeaderLine row={me} isMe />
           </>
         )}

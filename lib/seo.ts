@@ -10,6 +10,25 @@ export function indexingEnabled() {
   return process.env.SEO_INDEXING === "true";
 }
 
+// Pages que les moteurs ne doivent pas explorer : espace des joueurs (redirigé vers la connexion de toute façon),
+// pages ouvertes depuis un e-mail, outils de développement et API
+export const PRIVATE_PATHS = [
+  "/packs",
+  "/collection",
+  "/amis",
+  "/echanges",
+  "/marche",
+  "/bourse",
+  "/classement",
+  "/quetes",
+  "/profil",
+  "/verifier-email",
+  "/mot-de-passe-oublie",
+  "/nouveau-mot-de-passe",
+  "/apercu-emails",
+  "/api/",
+];
+
 export function absoluteUrl(path: string) {
   return `${siteUrl()}${path}`;
 }

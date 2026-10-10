@@ -345,7 +345,7 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .pcard:not(.flipped):hover .back { border-color: var(--gold); }
 .front { transform: rotateY(180deg); background: var(--night-2); border: 3px solid var(--rar); box-shadow: 0 5px 0 color-mix(in srgb, var(--rar) 45%, #000); display: grid; grid-template-rows: 1fr auto; text-align: left; }
 .multi .front, .multi .back { border-width: 2px; }
-.front .art { display: block; min-height: 0; overflow: hidden; }
+.front .art { position: relative; display: block; min-height: 0; overflow: hidden; }
 .front .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .front .meta { display: grid; gap: 1px; padding: 5px 6px 6px; min-width: 0; }
 .multi .front .meta { padding: 2px 4px 3px; }
@@ -390,7 +390,20 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .op-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; min-height: 52px; }
 
 /* ---------- Pages publiques (accueil, album pour un visiteur) ---------- */
-.landing { min-height: 100dvh; display: grid; place-items: center; padding: 32px 16px; text-align: center; }
+.landing { padding: 0 16px 40px; text-align: center; }
+.landing-hero { min-height: 80dvh; display: grid; place-content: center; padding: 32px 0; }
+.landing-more { max-width: 1040px; margin: 0 auto; padding: 36px 0 8px; }
+.landing-more h2 { font-family: var(--f-display); font-weight: 400; font-size: clamp(26px, 6vw, 34px); line-height: 1.1; margin: 0 0 16px; }
+.landing .landing-lead { margin-top: -8px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); text-align: left; }
+.steps li { background: var(--dock); border: 1px solid var(--line); border-radius: 18px; padding: 16px; box-shadow: 0 5px 0 var(--dock-edge); }
+.steps b { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: #2b1d02; font-family: var(--f-display); font-weight: 400; box-shadow: 0 3px 0 var(--gold-deep); }
+.steps h3 { font-family: var(--f-display); font-weight: 400; font-size: 20px; margin: 10px 0 4px; }
+.landing .steps p { margin: 0; max-width: none; font-size: 14px; }
+.landing ul.cards, ul.cards.plain { list-style: none; margin: 0; padding: 0; text-align: left; }
+.landing ul.cards > li, ul.cards.plain > li { min-width: 0; display: grid; }
+.landing-foot { max-width: 1040px; margin: 36px auto 0; display: grid; justify-items: center; gap: 12px; }
+.landing .landing-foot p { font-size: 12px; margin: 0; }
 .landing h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(44px, 10vw, 72px); line-height: 1; margin: 18px 0 8px; }
 .landing p { color: var(--muted); max-width: 46ch; margin: 0 auto 22px; }
 

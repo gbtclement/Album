@@ -163,5 +163,6 @@ export async function fetchCoverUrl(mbid: string): Promise<string | null> {
   const data = (await res.json()) as CoverArtResponse;
   const front = data.images.find((image) => image.front) ?? data.images[0];
   if (!front) return null;
-  return front.thumbnails["500"] ?? front.image;
+  // L'API répond parfois en http:// : le même fichier est servi en https://
+  return (front.thumbnails["500"] ?? front.image).replace(/^http:\/\//, "https://");
 }

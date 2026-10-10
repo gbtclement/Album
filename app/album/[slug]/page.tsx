@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { auth } from "@/auth";
 import { CoverImage } from "@/components/cover-image";
 import { PriceChart } from "@/components/price-chart";
 import { SiteNav } from "@/components/site-nav";
-import { findAlbumBySlug, type AlbumLinks } from "@/lib/catalog";
+import { smallCover } from "@/components/game-ui";
+import { findAlbumBySlug, findAlbumsByArtist, type AlbumLinks } from "@/lib/catalog";
 import { getOwnedCount } from "@/lib/collection";
 import { getAlbumCote } from "@/lib/market";
 import { RARITY_LABELS, RARITY_POINTS } from "@/lib/rarity";
@@ -21,44 +23,65 @@ const PLATFORMS: Array<{ key: keyof AlbumLinks; label: string }> = [
   { key: "youtube", label: "YouTube" },
 ];
 
+// Une seule requête par affichage : les métadonnées et la page lisent le même album
+const getAlbum = cache(findAlbumBySlug);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const album = await findAlbumBySlug(slug);
-  if (!album) return { title: "Album introuvable" };
+  const album = await getAlbum(slug);
+  if (!album) return { title: "Album introuvable", robots: { index: false } };
 
   return {
     title: `${album.title} — ${album.artist}`,
-    description: `${album.title} de ${album.artist}${album.release_year ? ` (${album.release_year})` : ""} : découvre cet album dans Album, le jeu de collection d'albums.`,
+    description: `${album.title} de ${album.artist}${album.release_year ? ` (${album.release_year})` : ""}, carte ${RARITY_LABELS[album.rarity_tier].toLowerCase()} du jeu Album : écoute-le, suis sa cote et ajoute-le à ta collection.`,
     alternates: { canonical: `/album/${album.slug}` },
     openGraph: {
       type: "music.album",
       title: `${album.title} — ${album.artist}`,
-      images: album.cover_url ? [album.cover_url] : undefined,
+      url: `/album/${album.slug}`,
+      images: album.cover_url ? [{ url: album.cover_url, width: 500, height: 500, alt: `Pochette de ${album.title}` }] : undefined,
     },
   };
 }
 
 export default async function AlbumPage({ params }: Props) {
   const { slug } = await params;
-  const album = await findAlbumBySlug(slug);
+  const album = await getAlbum(slug);
   if (!album) notFound();
 
   const session = await auth();
-  const [owned, cote] = await Promise.all([
+  const [owned, cote, sameArtist] = await Promise.all([
     session?.user?.id ? getOwnedCount(session.user.id, album.id) : Promise.resolve(null),
     getAlbumCote(album.id),
+    findAlbumsByArtist(album.artist, album.id),
   ]);
   const listens = album.listen_count ? Number(album.listen_count) : null;
 
   // Données structurées (schema.org) : aident les moteurs à comprendre la fiche
+  // Fil d'Ariane : Accueil > Albums de l'artiste > Album
+  const url = absoluteUrl(`/album/${album.slug}`);
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "MusicAlbum",
-    name: album.title,
-    byArtist: { "@type": "MusicGroup", name: album.artist },
-    ...(album.release_year ? { datePublished: String(album.release_year) } : {}),
-    ...(album.cover_url ? { image: album.cover_url } : {}),
-    url: absoluteUrl(`/album/${album.slug}`),
+    "@graph": [
+      {
+        "@type": "MusicAlbum",
+        "@id": `${url}#album`,
+        name: album.title,
+        url,
+        byArtist: { "@type": "MusicGroup", name: album.artist },
+        albumProductionType: "https://schema.org/StudioAlbum",
+        ...(album.release_year ? { datePublished: String(album.release_year) } : {}),
+        ...(album.cover_url ? { image: album.cover_url } : {}),
+        sameAs: [`https://musicbrainz.org/release-group/${album.mbid}`],
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Accueil", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: album.title, item: url },
+        ],
+      },
+    ],
   };
 
   return (
@@ -68,7 +91,7 @@ export default async function AlbumPage({ params }: Props) {
       <main className={`game-page narrow tier-${album.rarity_tier}`}>
         <div className="sheet-top" style={{ alignItems: "flex-start", marginTop: 8 }}>
           <span className="cover" style={{ width: "min(220px, 42vw)" }}>
-            <CoverImage src={album.cover_url} title={album.title} alt={`Pochette de ${album.title}`} />
+            <CoverImage src={album.cover_url} title={album.title} alt={`Pochette de ${album.title}`} sizes="(min-width: 600px) 220px, 42vw" priority />
           </span>
           <div style={{ minWidth: 0 }}>
             <span className="tier-tag">{RARITY_LABELS[album.rarity_tier]}</span>
@@ -108,10 +131,29 @@ export default async function AlbumPage({ params }: Props) {
           </div>
         )}
 
-        <div className="label">Historique des ventes (90 jours)</div>
+        <h2 className="label">Historique des ventes (90 jours)</h2>
         <div className="chart-card">
           <PriceChart endpoint={`/api/market/history?album=${album.slug}&jours=90`} label={album.title} />
         </div>
+
+        {sameArtist.length > 0 && (
+          <>
+            <h2 className="label">Du même artiste</h2>
+            <ul className="cards plain">
+              {sameArtist.map((other) => (
+                <li key={other.slug}>
+                  <Link href={`/album/${other.slug}`} className={`card tier-${other.rarity_tier}`}>
+                    <span className="cover">
+                      <CoverImage src={smallCover(other.cover_url)} fallback={other.cover_url} title={other.title} lazy />
+                    </span>
+                    <span className="t">{other.title}</span>
+                    <span className="a">{other.release_year ?? RARITY_LABELS[other.rarity_tier]}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </main>
     </>
   );

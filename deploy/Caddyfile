@@ -1,0 +1,26 @@
+# Reverse proxy HTTPS pour la production (Caddy : certificat Let's Encrypt obtenu et renouvelé tout seul).
+# Remplacer album.example par le vrai domaine, puis sur le serveur :
+#   sudo cp deploy/Caddyfile /etc/caddy/Caddyfile && sudo systemctl reload caddy
+# Le domaine doit pointer vers le serveur (enregistrement DNS A/AAAA) et les ports 80 et 443 être ouverts.
+
+album.example {
+	# Compression des pages, du CSS et du JavaScript
+	encode zstd gzip
+
+	# L'application tourne dans Docker, accessible seulement depuis le serveur (voir docker-compose.prod.yml)
+	reverse_proxy 127.0.0.1:3000
+
+	# Fichiers de build (noms avec empreinte) : gardés un an par les navigateurs.
+	# Les pochettes optimisées (/_next/image) reçoivent déjà leur durée de cache de Next.js (30 jours).
+	@static path /_next/static/*
+	header @static Cache-Control "public, max-age=31536000, immutable"
+
+	log {
+		output file /var/log/caddy/album.log
+	}
+}
+
+# Adresse avec www : redirection permanente vers le domaine principal (une seule adresse pour le SEO)
+www.album.example {
+	redir https://album.example{uri} permanent
+}

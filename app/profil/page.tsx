@@ -64,7 +64,7 @@ export default async function ProfilPage({ searchParams }: Props) {
 
         {showcase.length > 0 && (
           <>
-            <div className="label">Vitrine</div>
+            <h2 className="label">Vitrine</h2>
             <div className="cards">
               {showcase.map((card) => (
                 <Link key={card.slug} href={`/album/${card.slug}`} className={`card tier-${card.rarity_tier}`}>
@@ -79,7 +79,7 @@ export default async function ProfilPage({ searchParams }: Props) {
           </>
         )}
 
-        <div className="label">Par rareté</div>
+        <h2 className="label">Par rareté</h2>
         <div className="breakdown">
           {byTier.map(({ tier, count }) => (
             <div key={tier} className={`bd-row tier-${tier}`}>
@@ -90,7 +90,7 @@ export default async function ProfilPage({ searchParams }: Props) {
           ))}
         </div>
 
-        <div className="label">Réglages du jeu</div>
+        <h2 className="label">Réglages du jeu</h2>
         <div className="item">
           <div className="l">
             <strong>Révéler automatiquement</strong>
@@ -99,7 +99,7 @@ export default async function ProfilPage({ searchParams }: Props) {
           <AutoRevealSwitch initial={user.auto_reveal} />
         </div>
 
-        <div className="label">Compte</div>
+        <h2 className="label">Compte</h2>
         <div className="stack">
           {!user.email_verified_at && (
             <div className="notice">

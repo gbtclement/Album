@@ -26,3 +26,20 @@ describe("jsonLd", () => {
     expect(JSON.parse(output)).toEqual({ name: "</script><script>alert(1)</script>" });
   });
 });
+
+describe("robots.txt", () => {
+  it("bloque tout le site tant que l'indexation n'est pas activée", async () => {
+    vi.stubEnv("SEO_INDEXING", "false");
+    const { default: robots } = await import("@/app/robots");
+    expect((await robots()).rules).toEqual({ userAgent: "*", disallow: "/" });
+  });
+
+  it("en production, ouvre le site sauf l'espace joueur et les liens reçus par e-mail", async () => {
+    vi.stubEnv("SEO_INDEXING", "true");
+    vi.stubEnv("PUBLIC_BASE_URL", "https://album.example");
+    const { default: robots } = await import("@/app/robots");
+    const result = await robots();
+    expect(result.sitemap).toBe("https://album.example/sitemap.xml");
+    expect(result.rules).toMatchObject({ allow: "/", disallow: expect.arrayContaining(["/collection", "/nouveau-mot-de-passe", "/api/"]) });
+  });
+});

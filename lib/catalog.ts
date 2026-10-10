@@ -66,7 +66,8 @@ export async function upsertAlbum(input: AlbumInput) {
       input.title,
       input.artist,
       input.releaseYear,
-      input.coverUrl,
+      // Toujours en https (Cover Art Archive renvoie parfois du http://)
+      input.coverUrl.replace(/^http:\/\//, "https://"),
       input.listens,
       input.listeners,
       JSON.stringify(input.links),
@@ -125,4 +126,16 @@ export async function recomputeRarity() {
 export async function findAlbumBySlug(slug: string) {
   const result = await db.query<AlbumRow>("select * from albums where slug = $1", [slug]);
   return result.rows[0] ?? null;
+}
+
+// Autres albums du même artiste (fiche album), les plus écoutés d'abord
+export async function findAlbumsByArtist(artist: string, excludeId: string, limit = 6) {
+  const result = await db.query<Pick<AlbumRow, "slug" | "title" | "release_year" | "cover_url" | "rarity_tier">>(
+    `select slug, title, release_year, cover_url, rarity_tier from albums
+     where artist = $1 and id <> $2
+     order by listen_count desc nulls last, release_year
+     limit $3`,
+    [artist, excludeId, limit],
+  );
+  return result.rows;
 }
