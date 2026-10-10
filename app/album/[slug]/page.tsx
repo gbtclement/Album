@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { auth } from "@/auth";
+import { PriceChart } from "@/components/price-chart";
 import { SiteNav } from "@/components/site-nav";
 import { findAlbumBySlug, type AlbumLinks } from "@/lib/catalog";
 import { getOwnedCount } from "@/lib/collection";
@@ -90,6 +91,10 @@ export default async function AlbumPage({ params }: Props) {
             })}
           </div>
         </div>
+        <section className="md:col-span-2">
+          <h2 className="mb-3 font-semibold">Historique des ventes (90 jours)</h2>
+          <PriceChart endpoint={`/api/market/history?album=${album.slug}&jours=90`} label={album.title} />
+        </section>
       </main>
     </>
   );
