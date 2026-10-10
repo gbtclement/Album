@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 import { db, withTransaction } from "@/lib/db";
 import { areFriends } from "@/lib/friends";
+import { recordEvent } from "@/lib/quests";
 
 export class TradeError extends Error {}
 
@@ -139,6 +140,8 @@ export async function acceptTrade(receiverId: string, tradeId: string) {
     await client.query("update users set coins = coins - $2 + $3 where id = $1", [trade.receiver_id, trade.request_coins, trade.offer_coins]);
 
     await client.query("update trades set status = 'accepted', resolved_at = now() where id = $1", [tradeId]);
+    await recordEvent(client, trade.proposer_id, "trade", 1);
+    await recordEvent(client, trade.receiver_id, "trade", 1);
   });
 }
 

@@ -21,6 +21,7 @@ export async function SiteNav() {
               <Link href="/marche" className="hover:underline">Marché</Link>
               <Link href="/bourse" className="hover:underline">Bourse</Link>
               <Link href="/classement" className="hover:underline">Classement</Link>
+              <Link href="/quetes" className="hover:underline">Quêtes</Link>
               <Link href="/profil" className="hover:underline">{session.user.pseudo}</Link>
             </>
           ) : (

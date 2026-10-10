@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 import { db, withTransaction } from "@/lib/db";
 import { moveAlbum } from "@/lib/trades";
+import { recordEvent } from "@/lib/quests";
 
 export class MarketError extends Error {}
 
@@ -123,6 +124,8 @@ export async function buyListing(buyerId: string, listingId: string, offeredSlug
 
     await moveAlbum(client, listing.seller_id, buyerId, listing.album_id);
     await client.query("update listings set status = 'sold', closed_at = now() where id = $1", [listingId]);
+    await recordEvent(client, buyerId, "trade", 1);
+    await recordEvent(client, listing.seller_id, "trade", 1);
     return "sold" as const;
   });
 

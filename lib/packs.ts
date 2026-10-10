@@ -3,6 +3,7 @@ import type { PoolClient } from "pg";
 import { withTransaction } from "@/lib/db";
 import { RARITY_TIERS, type RarityTier } from "@/lib/rarity";
 import { MAX_STOCK, PACK_INTERVAL_MS, PACK_RATES, PACK_SIZE } from "@/lib/pack-rules";
+import { recordEvent } from "@/lib/quests";
 
 export class PackError extends Error {}
 
@@ -125,6 +126,12 @@ export async function openPack(userId: string): Promise<{ cards: PackCard[]; sta
     }
 
     await client.query("insert into pack_openings (user_id, album_ids) values ($1, $2)", [userId, albumIds]);
+
+    // Progression des quêtes, dans la même transaction que l'ouverture
+    await recordEvent(client, userId, "pack_opened", 1);
+    await recordEvent(client, userId, "rare_card", cards.filter((card) => card.tier !== "commun" && card.tier !== "peu_commun").length);
+    await recordEvent(client, userId, "legendary_card", cards.filter((card) => card.tier === "legendaire").length);
+    await recordEvent(client, userId, "new_album", cards.filter((card) => card.isNew).length);
 
     // Recalcul du prochain pack après la dépense (sans gain de stock : le délai vient de démarrer)
     const state = await rechargeStock(client, userId);

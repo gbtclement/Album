@@ -19,6 +19,7 @@ const ROUTES = [
   { path: "/bourse", description: "Indice du marché, plus fortes hausses et baisses sur 30 jours (protégée)" },
   { path: "/api/market/history", description: "Historique des prix : ?album=<slug> et ?jours=<n> (30 par défaut, 365 max)" },
   { path: "/classement", description: "Top 100 des joueurs par score de rareté, et position du joueur connecté (protégée)" },
+  { path: "/quetes", description: "Quêtes journalières, hebdomadaires et mensuelles, avec récupération des récompenses (protégée)" },
   { path: "/album/[slug]", description: "Fiche d'un album : pochette, rareté, liens d'écoute" },
   { path: "/documentation", description: "Cette page" },
   { path: "/api/health", description: "État de l'application, de PostgreSQL et de Redis" },
@@ -66,7 +67,7 @@ const LOTS = [
   { lot: "5", name: "Marché", status: "Terminé", branch: "lot5-marche" },
   { lot: "6", name: "Bourse (Lightweight Charts)", status: "Terminé", branch: "lot6-bourse" },
   { lot: "7", name: "Classement", status: "Terminé", branch: "lot7-classement" },
-  { lot: "8", name: "Quêtes", status: "À faire", branch: "lot8-quetes" },
+  { lot: "8", name: "Quêtes", status: "Terminé", branch: "lot8-quetes" },
   { lot: "9", name: "SEO", status: "À faire", branch: "lot9-seo" },
   { lot: "10", name: "Mise en production", status: "À faire", branch: "lot10-prod" },
 ];
