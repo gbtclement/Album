@@ -84,6 +84,7 @@ const LOTS = [
   { lot: "9", name: "SEO", status: "Terminé", branch: "lot9-seo" },
   { lot: "10", name: "Mise en production", status: "Préparé, pas encore déployé", branch: "lot10-prod" },
   { lot: "C1", name: "Correctif : environnement de dev (docker compose watch)", status: "Terminé", branch: "correctif1-env-dev" },
+  { lot: "C2", name: "Correctif : options avancées de Next 16 désactivées, contournements retirés", status: "Terminé", branch: "correctif2-next-options" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -133,7 +134,7 @@ export default function DocumentationPage() {
 
         <Section title="Stack technique">
           <ul className="list-disc space-y-1 pl-6">
-            <li>Next.js 16 (App Router, TypeScript, Turbopack) et React 19</li>
+            <li>Next.js 16 (App Router, TypeScript, Turbopack) et React 19, en configuration standard : les options avancées (<code>cacheComponents</code>, <code>partialPrefetching</code>) sont désactivées. Le layout racine rend tout le site à chaque requête (<code>dynamic = &quot;force-dynamic&quot;</code>) : la session, la base et les variables de <code>.env</code> sont lues au lancement, pas au build.</li>
             <li>Tailwind CSS 4 pour le style</li>
             <li>PostgreSQL 16 pour les données, Redis 7 pour le cache des API externes</li>
             <li>Auth.js (next-auth 5 bêta) : e-mail/mot de passe et Google</li>

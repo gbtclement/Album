@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { auth } from "@/auth";
 import { SiteNav } from "@/components/site-nav";
 import { getPlayerRank, getTopPlayers } from "@/lib/leaderboard";
 
 export default async function ClassementPage() {
-  const session = await getSession();
+  const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
   const userId = session.user.id;
 

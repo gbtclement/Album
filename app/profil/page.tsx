@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { signOut } from "@/auth";
 import { SiteNav } from "@/components/site-nav";
-import { getSession } from "@/lib/session";
+import { auth } from "@/auth";
 
 // Page protégée : sans session, on renvoie vers la connexion
 export default async function ProfilPage() {
-  const session = await getSession();
+  const session = await auth();
   if (!session?.user) {
     redirect("/connexion");
   }

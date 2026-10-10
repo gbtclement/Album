@@ -25,7 +25,7 @@ Le projet tourne uniquement dans Docker : Node n'est pas installé sur la machin
 - Le code n'est pas monté depuis Windows (un dossier monté provoquait des rechargements en boucle) : l'image `Dockerfile.dev` contient code et dépendances, `docker compose watch` synchronise. Modifier `package.json` reconstruit l'image, modifier `next.config.ts` redémarre le serveur.
 - Un fichier créé dans le conteneur (par `next dev`, un script...) ne revient pas sous Windows : la synchronisation va de Windows vers le conteneur seulement.
 Après un changement dans `.env`, relancer avec `docker compose up -d app` (et non `restart`) pour que le conteneur relise les variables.
-Next.js 16 avec `cacheComponents` : pas de `export const dynamic`. Une page qui lit la configuration à chaque requête appelle `await connection()` dans un composant enveloppé dans `<Suspense>`.
+Next.js 16 sans `cacheComponents` (désactivé : trop de contournements). Le layout racine déclare `export const dynamic = "force-dynamic"` : tout le site est rendu à chaque requête, les variables de `.env` sont lues au lancement et non au build. La session se lit avec `await auth()` (`@/auth`).
 
 ## Branches
 

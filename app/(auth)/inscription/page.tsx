@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { AuthShell } from "../auth-ui";
 import { GoogleOption } from "../google-option";
 import { SignupForm } from "./signup-form";
@@ -18,9 +17,7 @@ export default function InscriptionPage() {
         </>
       }
     >
-      <Suspense fallback={null}>
-        <GoogleOption />
-      </Suspense>
+      <GoogleOption />
       <SignupForm />
     </AuthShell>
   );

@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { auth } from "@/auth";
 import { SiteNav } from "@/components/site-nav";
 import { getPackState } from "@/lib/packs";
 import { PackOpener } from "./pack-opener";
 
 export default async function PacksPage() {
-  const session = await getSession();
+  const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
 
   const state = await getPackState(session.user.id);

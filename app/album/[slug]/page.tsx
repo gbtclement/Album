@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
-import { getSession } from "@/lib/session";
+import { auth } from "@/auth";
 import { PriceChart } from "@/components/price-chart";
 import { SiteNav } from "@/components/site-nav";
 import { findAlbumBySlug, type AlbumLinks } from "@/lib/catalog";
@@ -20,7 +19,6 @@ const PLATFORMS: Array<{ key: keyof AlbumLinks; label: string }> = [
 ];
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  await connection();
   const { slug } = await params;
   const album = await findAlbumBySlug(slug);
   if (!album) return { title: "Album introuvable" };
@@ -38,12 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AlbumPage({ params }: Props) {
-  await connection();
   const { slug } = await params;
   const album = await findAlbumBySlug(slug);
   if (!album) notFound();
 
-  const session = await getSession();
+  const session = await auth();
   const owned = session?.user?.id ? await getOwnedCount(session.user.id, album.id) : null;
   const playcount = album.lastfm_playcount ? Number(album.lastfm_playcount) : null;
 

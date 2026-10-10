@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import { connection } from "next/server";
-import { Suspense, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { indexingEnabled, siteUrl } from "@/lib/seo";
 import "./globals.css";
+
+// Tout le site est rendu à chaque requête : les pages lisent la session, la base,
+// et les variables d'environnement (URL publique, indexation) fournies au lancement du conteneur,
+// pas au moment du build.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -23,21 +27,10 @@ export const metadata: Metadata = {
   },
 };
 
-// Marque le rendu comme dépendant de la requête : les pages lisent la session et la base
-async function RequestTime() {
-  await connection();
-  return null;
-}
-
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
-      <body>
-        <Suspense fallback={<p role="status" className="p-8 text-center text-zinc-500">Chargement...</p>}>
-          <RequestTime />
-          {children}
-        </Suspense>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

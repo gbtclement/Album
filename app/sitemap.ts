@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
-import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { absoluteUrl } from "@/lib/seo";
 
+// Lu à chaque requête : la base n'est pas joignable pendant le build
+export const dynamic = "force-dynamic";
+
 // Plan du site : pages publiques et une URL par album du catalogue
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  await connection();
 
   const albums = await db.query<{ slug: string; updated_at: Date }>(
     "select slug, updated_at from albums where cover_url is not null order by updated_at desc",

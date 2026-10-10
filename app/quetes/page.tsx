@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { auth } from "@/auth";
 import { SiteNav } from "@/components/site-nav";
 import { getQuestStatus, PERIOD_LABELS, type Period } from "@/lib/quests";
 import { claimQuestAction } from "./actions";
@@ -11,7 +11,7 @@ type Props = {
 const PERIODS: Period[] = ["daily", "weekly", "monthly"];
 
 export default async function QuetesPage({ searchParams }: Props) {
-  const session = await getSession();
+  const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
 
   const { message } = await searchParams;

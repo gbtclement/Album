@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { auth } from "@/auth";
 import { AlbumCard } from "@/components/album-card";
 import { SiteNav } from "@/components/site-nav";
 import { getCollection, getCollectionTotals } from "@/lib/collection";
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default async function CollectionPage({ searchParams }: Props) {
-  const session = await getSession();
+  const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
 
   const { tier } = await searchParams;
