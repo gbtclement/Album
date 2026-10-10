@@ -16,6 +16,8 @@ export async function SiteNav() {
             <>
               <Link href="/packs" className="hover:underline">Packs</Link>
               <Link href="/collection" className="hover:underline">Collection</Link>
+              <Link href="/amis" className="hover:underline">Amis</Link>
+              <Link href="/echanges" className="hover:underline">Échanges</Link>
               <Link href="/profil" className="hover:underline">{session.user.pseudo}</Link>
             </>
           ) : (
