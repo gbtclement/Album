@@ -85,6 +85,7 @@ const LOTS = [
   { lot: "10", name: "Mise en production", status: "Préparé, pas encore déployé", branch: "lot10-prod" },
   { lot: "C1", name: "Correctif : environnement de dev (docker compose watch)", status: "Terminé", branch: "correctif1-env-dev" },
   { lot: "C2", name: "Correctif : options avancées de Next 16 désactivées, contournements retirés", status: "Terminé", branch: "correctif2-next-options" },
+  { lot: "C3", name: "Correctif : proxy.ts lit la session via Auth.js (cookie __Secure- reconnu en HTTPS)", status: "Terminé", branch: "correctif3-proxy-cookie" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -211,7 +212,7 @@ export default function DocumentationPage() {
             <li>Mettre un reverse proxy avec HTTPS devant le port 3000, sans l&apos;exposer directement.</li>
             <li>Passer <code>SEO_INDEXING</code> à <code>true</code> une fois le domaine en ligne, puis soumettre le sitemap.</li>
           </ol>
-          <p className="mt-3">Les pages joueurs redirigent vers la connexion au niveau du serveur (<code>proxy.ts</code>), avant tout rendu.</p>
+          <p className="mt-3">Les pages joueurs redirigent vers la connexion au niveau du serveur (<code>proxy.ts</code>), avant tout rendu. La session y est lue par <code>auth()</code> d&apos;Auth.js, qui choisit le nom du cookie selon le protocole d&apos;<code>AUTH_URL</code> (préfixe <code>__Secure-</code> en HTTPS) : <code>AUTH_URL</code> doit donc être l&apos;adresse publique en https.</p>
         </Section>
 
         <Section title="Référencement (SEO)">
