@@ -48,7 +48,10 @@ export function PackOpener({ initialStock, initialNextPackAt }: Props) {
           Packs disponibles : <span className="font-semibold">{stock}</span> / {MAX_STOCK}
         </p>
         {stock < MAX_STOCK && nextPackAt && (
-          <p className="text-sm text-zinc-500">Prochain pack dans {formatRemaining(remainingMs)}</p>
+          <p className="text-sm text-zinc-500">
+            {/* Le serveur et le navigateur calculent l'heure à quelques instants d'écart : la seconde peut différer */}
+            Prochain pack dans <span suppressHydrationWarning>{formatRemaining(remainingMs)}</span>
+          </p>
         )}
       </div>
 
