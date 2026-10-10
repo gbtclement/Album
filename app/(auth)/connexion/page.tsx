@@ -1,9 +1,23 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { DEFAULT_AFTER_LOGIN, safeCallbackUrl } from "@/lib/callback-url";
 import { AuthShell } from "../auth-ui";
 import { GoogleOption } from "../google-option";
 import { LoginForm } from "./login-form";
 
-export default function ConnexionPage() {
+type Props = {
+  searchParams: Promise<{ callbackUrl?: string }>;
+};
+
+export default async function ConnexionPage({ searchParams }: Props) {
+  const callbackUrl = safeCallbackUrl((await searchParams).callbackUrl);
+  // Déjà connecté : rien à faire ici, on renvoie vers la page demandée
+  if ((await auth())?.user?.id) redirect(callbackUrl);
+
+  // Le lien vers l'autre formulaire garde la page de destination
+  const suffix = callbackUrl === DEFAULT_AFTER_LOGIN ? "" : `?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+
   return (
     <AuthShell
       title="Connexion"
@@ -11,14 +25,14 @@ export default function ConnexionPage() {
       footer={
         <>
           Pas encore de compte ?{" "}
-          <Link href="/inscription" className="font-medium text-amber-300 hover:text-amber-200">
+          <Link href={`/inscription${suffix}`} className="font-medium text-amber-300 hover:text-amber-200">
             Créer un compte
           </Link>
         </>
       }
     >
-      <GoogleOption />
-      <LoginForm />
+      <GoogleOption callbackUrl={callbackUrl} />
+      <LoginForm callbackUrl={callbackUrl} />
     </AuthShell>
   );
 }

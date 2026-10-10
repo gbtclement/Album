@@ -25,10 +25,10 @@ export const PERIOD_LABELS: Record<Period, string> = {
 export const QUESTS: QuestDef[] = [
   { key: "daily_packs", period: "daily", event: "pack_opened", title: "Ouvre 3 packs", target: 3, reward: 100 },
   { key: "daily_new", period: "daily", event: "new_album", title: "Obtiens 2 albums nouveaux", target: 2, reward: 100 },
-  { key: "daily_trade", period: "daily", event: "trade", title: "Réalise un échange ou un achat", target: 1, reward: 150 },
+  { key: "daily_trade", period: "daily", event: "trade", title: "Réalise un échange d'album ou un achat", target: 1, reward: 150 },
   { key: "weekly_packs", period: "weekly", event: "pack_opened", title: "Ouvre 20 packs", target: 20, reward: 500 },
   { key: "weekly_rare", period: "weekly", event: "rare_card", title: "Obtiens 3 cartes rares ou plus", target: 3, reward: 400 },
-  { key: "weekly_trade", period: "weekly", event: "trade", title: "Réalise 3 échanges ou achats", target: 3, reward: 400 },
+  { key: "weekly_trade", period: "weekly", event: "trade", title: "Réalise 3 échanges d'albums ou achats", target: 3, reward: 400 },
   { key: "monthly_packs", period: "monthly", event: "pack_opened", title: "Ouvre 100 packs", target: 100, reward: 1000 },
   { key: "monthly_new", period: "monthly", event: "new_album", title: "Obtiens 30 albums nouveaux", target: 30, reward: 800 },
   { key: "monthly_legendary", period: "monthly", event: "legendary_card", title: "Obtiens 1 carte légendaire", target: 1, reward: 1000 },

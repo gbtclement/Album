@@ -7,11 +7,12 @@ import { signUpAction, type FormState } from "./actions";
 
 const initialState: FormState = {};
 
-export function SignupForm() {
+export function SignupForm({ callbackUrl }: { callbackUrl: string }) {
   const [state, formAction] = useActionState(signUpAction, initialState);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      <input type="hidden" name="callbackUrl" value={callbackUrl} />
       <ErrorMessage message={state.error} />
 
       <label className="flex flex-col gap-2 text-sm text-zinc-300">

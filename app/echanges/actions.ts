@@ -10,8 +10,10 @@ async function requireUserId() {
   return session.user.id;
 }
 
-function backTo(path: string, message: string): never {
-  redirect(`${path}?message=${encodeURIComponent(message)}`);
+// Retour vers une page avec un message (et d'autres paramètres éventuels, comme `avec` pour le formulaire d'échange)
+function backTo(path: string, message: string, params: Record<string, string> = {}): never {
+  const query = new URLSearchParams({ ...params, message });
+  redirect(`${path}?${query}`);
 }
 
 function parseCoins(value: FormDataEntryValue | null) {
@@ -26,16 +28,17 @@ function parseSlug(value: FormDataEntryValue | null) {
 
 export async function createTradeAction(formData: FormData) {
   const userId = await requireUserId();
+  const receiverId = String(formData.get("receiverId") ?? "");
   try {
     await createTrade(
       userId,
-      String(formData.get("receiverId")),
+      receiverId,
       { albumSlug: parseSlug(formData.get("offerSlug")), coins: parseCoins(formData.get("offerCoins")) },
       { albumSlug: parseSlug(formData.get("requestSlug")), coins: parseCoins(formData.get("requestCoins")) },
     );
     backTo("/echanges", "Proposition envoyée.");
   } catch (error) {
-    if (error instanceof TradeError) backTo("/echanges/nouveau", error.message);
+    if (error instanceof TradeError) backTo("/echanges/nouveau", error.message, { avec: receiverId });
     throw error;
   }
 }

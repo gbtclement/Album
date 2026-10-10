@@ -2,15 +2,17 @@
 
 import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
+import { safeCallbackUrl } from "@/lib/callback-url";
 
 export type FormState = { error?: string };
 
 export async function loginAction(_previous: FormState, formData: FormData): Promise<FormState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const redirectTo = safeCallbackUrl(formData.get("callbackUrl"));
 
   try {
-    await signIn("credentials", { email, password, redirectTo: "/profil" });
+    await signIn("credentials", { email, password, redirectTo });
   } catch (error) {
     if (error instanceof AuthError) {
       return { error: "E-mail ou mot de passe incorrect." };
@@ -21,6 +23,6 @@ export async function loginAction(_previous: FormState, formData: FormData): Pro
   return {};
 }
 
-export async function googleLoginAction() {
-  await signIn("google", { redirectTo: "/profil" });
+export async function googleLoginAction(formData: FormData) {
+  await signIn("google", { redirectTo: safeCallbackUrl(formData.get("callbackUrl")) });
 }

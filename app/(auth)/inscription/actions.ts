@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
+import { safeCallbackUrl } from "@/lib/callback-url";
 import { createUser, findUserByEmail, isPseudoTaken, isUniqueViolation, isValidPseudo } from "@/lib/users";
 
 export type FormState = { error?: string };
@@ -43,7 +44,7 @@ export async function signUpAction(_previous: FormState, formData: FormData): Pr
   }
 
   try {
-    await signIn("credentials", { email, password, redirectTo: "/profil" });
+    await signIn("credentials", { email, password, redirectTo: safeCallbackUrl(formData.get("callbackUrl")) });
   } catch (error) {
     if (error instanceof AuthError) {
       return { error: "Compte créé, mais la connexion a échoué. Essaie de te connecter." };

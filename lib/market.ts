@@ -52,28 +52,49 @@ export async function createListing(
   albumSlug: string,
   mode: { kind: "coins"; price: number } | { kind: "swap"; wantedSlug: string },
 ) {
-  const albumId = await albumIdBySlug(db, albumSlug);
-  if (!(await ownsAlbum(db, sellerId, albumId))) {
-    throw new MarketError("Tu ne possèdes pas cet album.");
+  if (mode.kind === "coins" && (!Number.isInteger(mode.price) || mode.price < 1 || mode.price > MAX_PRICE)) {
+    throw new MarketError(`Le prix doit être entre 1 et ${MAX_PRICE} pièces.`);
   }
 
-  if (mode.kind === "coins") {
-    if (!Number.isInteger(mode.price) || mode.price < 1 || mode.price > MAX_PRICE) {
-      throw new MarketError(`Le prix doit être entre 1 et ${MAX_PRICE} pièces.`);
-    }
-    await db.query(
-      "insert into listings (seller_id, album_id, price_coins) values ($1, $2, $3)",
-      [sellerId, albumId, mode.price],
+  await withTransaction(async (client) => {
+    const albumId = await albumIdBySlug(client, albumSlug);
+
+    // Verrou sur la ligne de collection : deux annonces envoyées en même temps attendent leur tour
+    const owned = await client.query<{ count: number }>(
+      "select count from user_albums where user_id = $1 and album_id = $2 for update",
+      [sellerId, albumId],
     );
-    return;
-  }
+    const copies = owned.rows[0]?.count ?? 0;
+    if (copies < 1) throw new MarketError("Tu ne possèdes pas cet album.");
 
-  const wantedId = await albumIdBySlug(db, mode.wantedSlug);
-  if (wantedId === albumId) throw new MarketError("Tu ne peux pas échanger un album contre lui-même.");
-  await db.query(
-    "insert into listings (seller_id, album_id, wanted_album_id) values ($1, $2, $3)",
-    [sellerId, albumId, wantedId],
-  );
+    // Une annonce par exemplaire possédé, pas plus
+    const listed = await client.query<{ total: number }>(
+      "select count(*)::int as total from listings where seller_id = $1 and album_id = $2 and status = 'active'",
+      [sellerId, albumId],
+    );
+    if (listed.rows[0].total >= copies) {
+      throw new MarketError(
+        copies === 1
+          ? "Cet album est déjà en vente : retire l'annonce existante avant d'en créer une autre."
+          : `Tes ${copies} exemplaires de cet album sont déjà en vente.`,
+      );
+    }
+
+    if (mode.kind === "coins") {
+      await client.query(
+        "insert into listings (seller_id, album_id, price_coins) values ($1, $2, $3)",
+        [sellerId, albumId, mode.price],
+      );
+      return;
+    }
+
+    const wantedId = await albumIdBySlug(client, mode.wantedSlug);
+    if (wantedId === albumId) throw new MarketError("Tu ne peux pas échanger un album contre lui-même.");
+    await client.query(
+      "insert into listings (seller_id, album_id, wanted_album_id) values ($1, $2, $3)",
+      [sellerId, albumId, wantedId],
+    );
+  });
 }
 
 export async function cancelListing(sellerId: string, listingId: string) {

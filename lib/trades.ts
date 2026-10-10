@@ -140,8 +140,12 @@ export async function acceptTrade(receiverId: string, tradeId: string) {
     await client.query("update users set coins = coins - $2 + $3 where id = $1", [trade.receiver_id, trade.request_coins, trade.offer_coins]);
 
     await client.query("update trades set status = 'accepted', resolved_at = now() where id = $1", [tradeId]);
-    await recordEvent(client, trade.proposer_id, "trade", 1);
-    await recordEvent(client, trade.receiver_id, "trade", 1);
+    // Seul un échange où un album change de mains fait avancer les quêtes :
+    // sinon deux amis pourraient s'échanger 1 pièce contre 1 pièce pour valider la quête sans rien faire.
+    if (trade.offer_album_id || trade.request_album_id) {
+      await recordEvent(client, trade.proposer_id, "trade", 1);
+      await recordEvent(client, trade.receiver_id, "trade", 1);
+    }
   });
 }
 
