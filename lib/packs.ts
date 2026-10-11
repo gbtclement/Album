@@ -2,7 +2,7 @@ import { randomInt } from "node:crypto";
 import type { PoolClient } from "pg";
 import { withTransaction } from "@/lib/db";
 import { RARITY_TIERS, type RarityTier } from "@/lib/rarity";
-import { GUARANTEED_TIER, MAX_STOCK, PACK_INTERVAL_MS, PACK_RATES, packSize, type PackKind } from "@/lib/pack-rules";
+import { GUARANTEED_TIER, maxStock, PACK_INTERVAL_MS, PACK_RATES, packSize, type PackKind } from "@/lib/pack-rules";
 import { recordEvent } from "@/lib/quests";
 
 export class PackError extends Error {}
@@ -17,8 +17,9 @@ export type PackCard = {
 };
 
 export type PackState = {
-  // Stock qui se recharge (10 max)
+  // Stock qui se recharge, jusqu'à max (10, ou 15 pour un compte premium)
   stock: number;
+  max: number;
   // Moment où le prochain pack sera disponible (null si le stock est plein)
   nextPackAt: Date | null;
   // Packs gagnés, sans maximum : classiques, Solo, Épique et Légendaire
@@ -45,29 +46,35 @@ async function rechargeStock(client: PoolClient, userId: string): Promise<PackSt
   await client.query("insert into pack_stocks (user_id) values ($1) on conflict (user_id) do nothing", [userId]);
 
   const { rows } = await client.query<{
-    stock: number; bonus_packs: number; solo_packs: number; epic_packs: number; legendary_packs: number; last_recharged_at: Date; now: Date;
+    stock: number; bonus_packs: number; solo_packs: number; epic_packs: number; legendary_packs: number;
+    last_recharged_at: Date; now: Date; premium: boolean;
   }>(
-    "select stock, bonus_packs, solo_packs, epic_packs, legendary_packs, last_recharged_at, now() as now from pack_stocks where user_id = $1 for update",
+    `select ps.stock, ps.bonus_packs, ps.solo_packs, ps.epic_packs, ps.legendary_packs, ps.last_recharged_at, now() as now,
+            coalesce(u.premium_until > now(), false) as premium
+     from pack_stocks ps join users u on u.id = ps.user_id
+     where ps.user_id = $1 for update of ps`,
     [userId],
   );
   const row = rows[0];
-  const extra = { bonus: row.bonus_packs, solo: row.solo_packs, epic: row.epic_packs, legendary: row.legendary_packs };
+  // Stock maximum : 15 pour un compte premium, 10 sinon. Un premium expiré garde ses packs au-dessus de 10.
+  const max = maxStock(row.premium);
+  const extra = { bonus: row.bonus_packs, solo: row.solo_packs, epic: row.epic_packs, legendary: row.legendary_packs, max };
 
   // Stock plein : le compteur repart de maintenant, pour qu'un pack dépensé soit recréé 5 minutes plus tard
-  if (row.stock >= MAX_STOCK) {
+  if (row.stock >= max) {
     await client.query("update pack_stocks set last_recharged_at = now() where user_id = $1", [userId]);
     return { stock: row.stock, nextPackAt: null, ...extra };
   }
 
   const elapsed = row.now.getTime() - row.last_recharged_at.getTime();
-  const gained = Math.min(MAX_STOCK - row.stock, Math.floor(elapsed / PACK_INTERVAL_MS));
+  const gained = Math.min(max - row.stock, Math.floor(elapsed / PACK_INTERVAL_MS));
   if (gained <= 0) {
     return { stock: row.stock, nextPackAt: new Date(row.last_recharged_at.getTime() + PACK_INTERVAL_MS), ...extra };
   }
 
   const stock = row.stock + gained;
   const lastRechargedAt =
-    stock >= MAX_STOCK ? row.now : new Date(row.last_recharged_at.getTime() + gained * PACK_INTERVAL_MS);
+    stock >= max ? row.now : new Date(row.last_recharged_at.getTime() + gained * PACK_INTERVAL_MS);
   await client.query("update pack_stocks set stock = $2, last_recharged_at = $3 where user_id = $1", [
     userId,
     stock,
@@ -76,7 +83,7 @@ async function rechargeStock(client: PoolClient, userId: string): Promise<PackSt
 
   return {
     stock,
-    nextPackAt: stock >= MAX_STOCK ? null : new Date(lastRechargedAt.getTime() + PACK_INTERVAL_MS),
+    nextPackAt: stock >= max ? null : new Date(lastRechargedAt.getTime() + PACK_INTERVAL_MS),
     ...extra,
   };
 }

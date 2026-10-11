@@ -3,6 +3,12 @@ import type { RarityTier } from "@/lib/rarity";
 
 export const PACK_SIZE = 5;
 export const MAX_STOCK = 10;
+// Premium : stock plus grand (avantage du compte premium, lot P1)
+export const MAX_STOCK_PREMIUM = 15;
+
+export function maxStock(premium: boolean) {
+  return premium ? MAX_STOCK_PREMIUM : MAX_STOCK;
+}
 export const PACK_INTERVAL_MS = 5 * 60 * 1000;
 
 // Packs gagnés (quêtes, séries de la pioche, grands sets, passe) : gardés à part du stock, sans maximum.

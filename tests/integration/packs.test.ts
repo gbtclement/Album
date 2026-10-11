@@ -88,7 +88,7 @@ describe("recharge du stock", () => {
     const user = await createTestUser();
     await setStock(user.id, 0, (PACK_INTERVAL_MS / 60_000) * (MAX_STOCK + 20));
 
-    expect(await getPackState(user.id)).toEqual({ stock: MAX_STOCK, nextPackAt: null, bonus: 0, solo: 0, epic: 0, legendary: 0 });
+    expect(await getPackState(user.id)).toEqual({ stock: MAX_STOCK, max: MAX_STOCK, nextPackAt: null, bonus: 0, solo: 0, epic: 0, legendary: 0 });
   });
 });
 

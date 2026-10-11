@@ -11,6 +11,7 @@
     "import:lastfm": "tsx --env-file-if-exists=.env scripts/import-lastfm.ts",
     "check:covers": "tsx --env-file-if-exists=.env scripts/check-covers.ts",
     "purge:inactive": "tsx --env-file-if-exists=.env scripts/purge-inactive.ts",
+    "premium": "tsx --env-file-if-exists=.env scripts/premium.ts",
     "seed:demo":"tsx --env-file-if-exists=.env scripts/seed-demo.ts",
     "migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
     "test": "vitest run",
