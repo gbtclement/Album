@@ -30,12 +30,28 @@ describe("vente contre des pièces", () => {
     await buyListing(buyer.id, id, null);
 
     expect(await coinsOf(buyer.id)).toBe(800);
-    expect(await coinsOf(seller.id)).toBe(1200);
+    // Taxe du marché : 5 % de 200 = 10 pièces qui disparaissent
+    expect(await coinsOf(seller.id)).toBe(1190);
     expect(await ownedCount(buyer.id, album.id)).toBe(1);
     expect(await ownedCount(seller.id, album.id)).toBe(0);
     expect(await listingStatus(id)).toBe("sold");
     const sales = await db.query("select 1 from market_sales where album_id = $1", [album.id]);
     expect(sales.rowCount).toBe(1);
+  });
+
+  it("le vendeur reçoit le prix moins 5 %, l'acheteur paie le prix : la taxe disparaît", async () => {
+    const seller = await createTestUser({ coins: 0 });
+    const buyer = await createTestUser({ coins: 1000 });
+    const album = await createAlbum();
+    await giveAlbum(seller.id, album.id);
+    await createListing(seller.id, album.slug, { kind: "coins", price: 1000 });
+
+    await buyListing(buyer.id, await listingIdOf(seller.id), null);
+
+    expect(await coinsOf(buyer.id)).toBe(0);
+    expect(await coinsOf(seller.id)).toBe(950);
+    const sale = await db.query<{ price_coins: number }>("select price_coins from market_sales where album_id = $1", [album.id]);
+    expect(sale.rows[0].price_coins).toBe(1000);
   });
 
   it("refuse l'achat sans assez de pièces, sans rien modifier", async () => {
@@ -75,7 +91,8 @@ describe("vente contre des pièces", () => {
     const results = await Promise.allSettled([buyListing(first.id, id, null), buyListing(second.id, id, null)]);
 
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-    expect(await coinsOf(seller.id)).toBe(100);
+    // Une seule vente : 100 pièces moins la taxe de 5 %
+    expect(await coinsOf(seller.id)).toBe(95);
     expect((await coinsOf(first.id)) + (await coinsOf(second.id))).toBe(900);
     expect((await ownedCount(first.id, album.id)) + (await ownedCount(second.id, album.id))).toBe(1);
   });

@@ -1,5 +1,6 @@
 import type { PoolClient } from "pg";
 import { db, withTransaction } from "@/lib/db";
+import { sellerReceives } from "@/lib/market-rules";
 import type { RarityTier } from "@/lib/rarity";
 import { moveAlbum } from "@/lib/trades";
 import { recordEvent } from "@/lib/quests";
@@ -139,7 +140,8 @@ export async function buyListing(buyerId: string, listingId: string, offeredSlug
       if (balance.rows[0].coins < listing.price_coins) throw new MarketError("Tu n'as pas assez de pièces.");
 
       await client.query("update users set coins = coins - $2 where id = $1", [buyerId, listing.price_coins]);
-      await client.query("update users set coins = coins + $2 where id = $1", [listing.seller_id, listing.price_coins]);
+      // Le vendeur reçoit le prix moins la taxe du marché (5 %), qui disparaît du jeu
+      await client.query("update users set coins = coins + $2 where id = $1", [listing.seller_id, sellerReceives(listing.price_coins)]);
       await client.query("insert into market_sales (album_id, price_coins) values ($1, $2)", [listing.album_id, listing.price_coins]);
     } else {
       if (!offeredSlug) throw new MarketError("Choisis l'album que tu proposes en échange.");

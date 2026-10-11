@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { getCollection } from "@/lib/collection";
 import { RARITY_LABELS } from "@/lib/rarity";
 import { createListingAction } from "../actions";
+import { PriceField } from "./price-field";
 
 export const metadata: Metadata = { title: "Vendre un album" };
 
@@ -61,7 +62,7 @@ export default async function VendrePage({ searchParams }: Props) {
                 <input type="radio" name="mode" value="coins" defaultChecked />
                 Des pièces
               </label>
-              <input name="price" type="number" min={1} max={100000} placeholder="Prix en pièces" />
+              <PriceField />
               <label className="radio">
                 <input type="radio" name="mode" value="swap" />
                 Un autre album
