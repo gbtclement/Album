@@ -4,7 +4,7 @@ import { SiteNav } from "@/components/site-nav";
 
 export const metadata: Metadata = {
   title: "Documentation technique",
-  description: "Documentation technique du site Album : stack, routes, base de données, règles du jeu et avancement.",
+  description: "Documentation technique du site Musicodex : stack, routes, base de données, règles du jeu et avancement.",
   alternates: { canonical: "/documentation" },
 };
 
@@ -80,7 +80,7 @@ const ENV_VARS = [
   { name: "AUTH_URL", description: "Adresse publique du site, utilisée par Auth.js" },
   { name: "AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET", description: "Identifiants OAuth Google (optionnels)" },
   { name: "SMTP_URL", description: "Serveur d'envoi des e-mails (smtp://utilisateur:motdepasse@serveur:587). Vide en développement : les e-mails sont affichés dans les logs" },
-  { name: "MAIL_FROM", description: "Expéditeur des e-mails (ex. Album <no-reply@domaine>)" },
+  { name: "MAIL_FROM", description: "Expéditeur des e-mails (ex. Musicodex <no-reply@musicodex.fr>)" },
   { name: "PUBLIC_BASE_URL", description: "Adresse publique pour les URLs canoniques et le sitemap" },
   { name: "SEO_INDEXING", description: "\"true\" pour autoriser l'indexation par les moteurs de recherche. Désactivé tant que le domaine n'est pas en ligne" },
   { name: "GOOGLE_SITE_VERIFICATION", description: "Code de vérification Google Search Console (facultatif, une fois le domaine en ligne)" },
@@ -197,7 +197,7 @@ export default function DocumentationPage() {
         <div className="mx-auto max-w-4xl rounded-2xl bg-white px-5 py-8 leading-relaxed text-zinc-900">
         <h1 className="text-3xl font-semibold">Documentation technique</h1>
         <p className="mt-2 text-zinc-600">
-          Album est un jeu de collection de cartes d&apos;albums de musique, inspiré de Wikimaster. Les cartes sont
+          Musicodex (ex-« Album », domaine <code>musicodex.fr</code>) est un jeu de collection de cartes d&apos;albums de musique, inspiré de Wikimaster. Les cartes sont
           tirées dans des packs, échangées entre joueurs, et classées selon leur rareté.
         </p>
 
@@ -385,7 +385,7 @@ export default function DocumentationPage() {
             <li>Remplir le fichier <code>.env</code> du serveur, avec <code>PUBLIC_BASE_URL</code> et <code>AUTH_URL</code> sur l&apos;adresse publique (https, sans <code>www</code> ni barre finale).</li>
             <li>Lancer <code>docker compose -f docker-compose.prod.yml up -d --build</code>. L&apos;image ne contient pas le <code>.env</code> et tourne en utilisateur non root. Le port 3000 n&apos;écoute que sur le serveur lui-même ; les pochettes optimisées sont gardées dans le volume <code>image_cache</code>.</li>
             <li>Les migrations sont appliquées automatiquement au démarrage du conteneur, avant le serveur. Si l&apos;une échoue, le serveur ne démarre pas (voir <code>docker compose -f docker-compose.prod.yml logs app</code>).</li>
-            <li>Installer Caddy et copier <code>deploy/Caddyfile</code> (remplacer <code>album.example</code> par le domaine) : HTTPS automatique (Let&apos;s Encrypt), compression, redirection de <code>www</code> vers le domaine principal, cache long des fichiers de build. Caddy place l&apos;adresse du visiteur en dernier dans <code>X-Forwarded-For</code>, ce que lisent les limites par adresse IP (avec nginx : <code>proxy_add_x_forwarded_for</code>).</li>
+            <li>Installer Caddy et copier <code>deploy/Caddyfile</code> (remplacer <code>musicodex.fr</code> par le domaine) : HTTPS automatique (Let&apos;s Encrypt), compression, redirection de <code>www</code> vers le domaine principal, cache long des fichiers de build. Caddy place l&apos;adresse du visiteur en dernier dans <code>X-Forwarded-For</code>, ce que lisent les limites par adresse IP (avec nginx : <code>proxy_add_x_forwarded_for</code>).</li>
             <li>Renseigner <code>SMTP_URL</code> et <code>MAIL_FROM</code> (adresse du domaine, avec SPF, DKIM et DMARC configurés chez le fournisseur d&apos;e-mails pour ne pas finir en indésirables) : sans eux, aucun e-mail ne part.</li>
             <li>Vérifier <code>https://domaine/api/health</code>, l&apos;inscription, la réception des deux e-mails et le changement de mot de passe.</li>
             <li>Passer <code>SEO_INDEXING</code> à <code>true</code> et redémarrer l&apos;application. Dans Google Search Console : ajouter le site, coller le code de vérification dans <code>GOOGLE_SITE_VERIFICATION</code> (puis redémarrer), soumettre <code>https://domaine/sitemap.xml</code>. Faire de même dans Bing Webmaster Tools.</li>

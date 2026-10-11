@@ -34,7 +34,7 @@ function layout(options: { preheader: string; title: string; paragraphs: string[
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
       <tr><td align="center" style="padding-bottom:20px;">
         <span style="display:inline-block;width:34px;height:34px;border-radius:50%;background:${COLORS.gold};vertical-align:middle;text-align:center;line-height:34px;font:bold 16px ${FONT};color:${COLORS.goldText};">&#9835;</span>
-        <span style="font:bold 24px ${FONT};color:${COLORS.ink};vertical-align:middle;padding-left:8px;">Album</span>
+        <span style="font:bold 24px ${FONT};color:${COLORS.ink};vertical-align:middle;padding-left:8px;">Musicodex</span>
       </td></tr>
       <tr><td style="background:${COLORS.card};border:1px solid ${COLORS.line};border-radius:18px;padding:28px 24px;">
         <h1 style="margin:0 0 16px;font:bold 24px/1.25 ${FONT};color:${COLORS.ink};">${escapeHtml(options.title)}</h1>
@@ -62,10 +62,10 @@ export function verificationEmail({ pseudo, link, hours }: { pseudo: string; lin
   return {
     subject: "Confirme ton adresse e-mail",
     text:
-      `Bienvenue sur Album, ${pseudo} !\n\n` +
+      `Bienvenue sur Musicodex, ${pseudo} !\n\n` +
       `Pour confirmer ton adresse e-mail, ouvre ce lien (valable ${hours} heures) :\n${link}\n\n` +
       "Ton compte fonctionne déjà : cette confirmation protège ton compte et te permettra de récupérer ton mot de passe.\n\n" +
-      "Si tu n'as pas créé de compte sur Album, ignore simplement ce message.",
+      "Si tu n'as pas créé de compte sur Musicodex, ignore simplement ce message.",
     html: layout({
       preheader: "Un clic pour confirmer ton adresse et protéger ton compte.",
       title: `Bienvenue, ${pseudo} !`,
@@ -74,7 +74,7 @@ export function verificationEmail({ pseudo, link, hours }: { pseudo: string; lin
         `Confirme ton adresse e-mail pour protéger ton compte : elle te permettra de récupérer ton mot de passe si tu l&#39;oublies. Le lien est valable ${hours} heures.`,
       ],
       button: { label: "Confirmer mon adresse", url: link },
-      note: "Tu n'as pas créé de compte sur Album ? Ignore ce message, aucun compte ne sera confirmé.",
+      note: "Tu n'as pas créé de compte sur Musicodex ? Ignore ce message, aucun compte ne sera confirmé.",
     }),
   };
 }
@@ -82,10 +82,10 @@ export function verificationEmail({ pseudo, link, hours }: { pseudo: string; lin
 // Compte sans visite depuis longtemps : dernier avertissement avant la suppression (voir lib/account.ts)
 export function inactivityEmail({ pseudo, link, days, years }: { pseudo: string; link: string; days: number; years: number }): EmailContent {
   return {
-    subject: "Ton compte Album va être supprimé",
+    subject: "Ton compte Musicodex va être supprimé",
     text:
       `Bonjour ${pseudo},\n\n` +
-      `Tu ne t'es pas connecté à Album depuis près de ${years} ans. Pour ne pas garder tes données sans raison, ` +
+      `Tu ne t'es pas connecté à Musicodex depuis près de ${years} ans. Pour ne pas garder tes données sans raison, ` +
       `ton compte et ta collection seront supprimés dans ${days} jours.\n\n` +
       `Pour garder ton compte, il suffit de te connecter avant cette date :\n${link}\n\n` +
       "Si tu ne veux plus jouer, tu n'as rien à faire.",
@@ -94,7 +94,7 @@ export function inactivityEmail({ pseudo, link, days, years }: { pseudo: string;
       title: "Tu nous manques !",
       paragraphs: [
         `Bonjour ${escapeHtml(pseudo)},`,
-        `Tu ne t&#39;es pas connecté à Album depuis près de ${years} ans. Pour ne pas garder tes données sans raison, ton compte et ta collection seront supprimés dans <strong>${days} jours</strong>.`,
+        `Tu ne t&#39;es pas connecté à Musicodex depuis près de ${years} ans. Pour ne pas garder tes données sans raison, ton compte et ta collection seront supprimés dans <strong>${days} jours</strong>.`,
         "Pour garder ton compte, il suffit de te connecter avant cette date.",
       ],
       button: { label: "Garder mon compte", url: link },
@@ -108,7 +108,7 @@ export function passwordResetEmail({ pseudo, link, minutes }: { pseudo: string; 
     subject: "Réinitialise ton mot de passe",
     text:
       `Bonjour ${pseudo},\n\n` +
-      `Tu as demandé à changer le mot de passe de ton compte Album. Ouvre ce lien pour en choisir un nouveau (valable ${minutes} minutes) :\n${link}\n\n` +
+      `Tu as demandé à changer le mot de passe de ton compte Musicodex. Ouvre ce lien pour en choisir un nouveau (valable ${minutes} minutes) :\n${link}\n\n` +
       "Si tu n'as rien demandé, ignore ce message : ton mot de passe actuel reste valable.",
     html: layout({
       preheader: `Choisis un nouveau mot de passe (lien valable ${minutes} minutes).`,

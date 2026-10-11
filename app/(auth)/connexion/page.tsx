@@ -9,7 +9,7 @@ import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
   title: "Connexion",
-  description: "Connecte-toi à Album pour ouvrir tes packs et retrouver ta collection d'albums.",
+  description: "Connecte-toi à Musicodex pour ouvrir tes packs et retrouver ta collection d'albums.",
   alternates: { canonical: "/connexion" },
 };
 

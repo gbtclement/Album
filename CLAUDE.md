@@ -1,4 +1,4 @@
-# Album — instructions pour Claude
+# Musicodex (ex-Album) — instructions pour Claude
 
 Jeu de collection de cartes d'albums de musique, inspiré de Wikimaster. Interface en français.
 

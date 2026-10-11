@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 // Image d'aperçu quand un lien du site est partagé (réseaux sociaux, messageries).
 // Les fiches album utilisent leur pochette à la place (voir app/album/[slug]/page.tsx).
-export const alt = "Album : le jeu de cartes des albums de musique";
+export const alt = "Musicodex : le jeu de cartes des albums de musique";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -39,7 +39,7 @@ export default function OpengraphImage() {
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", maxWidth: 620 }}>
-          <div style={{ fontSize: 120, fontWeight: 800, lineHeight: 1 }}>Album</div>
+          <div style={{ fontSize: 120, fontWeight: 800, lineHeight: 1 }}>Musicodex</div>
           <div style={{ fontSize: 40, color: "#9a94c2", marginTop: 20, lineHeight: 1.25 }}>
             Ouvre des packs, collectionne les albums légendaires, échange avec tes amis.
           </div>

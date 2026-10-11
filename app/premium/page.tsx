@@ -43,7 +43,7 @@ export default async function PremiumPage() {
           <div className="dlx-cover" aria-hidden="true">
             <span className="dlx-disc" />
             <div className="dlx-sleeve">
-              <span className="dlx-brand">Album</span>
+              <span className="dlx-brand">Musicodex</span>
               <span className="dlx-name">Édition<br />Deluxe</span>
               <span className="dlx-ref">PRM · {tracks.length} titres</span>
             </div>
@@ -75,7 +75,7 @@ export default async function PremiumPage() {
                   {trial
                     ? "Sans engagement : résilie pendant le mois offert et tu ne paies rien."
                     : "Sans engagement, résiliable à tout moment. Le mois offert a déjà servi sur ce compte."}{" "}
-                  Paiement par Stripe, Album ne voit jamais ta carte.{" "}
+                  Paiement par Stripe, Musicodex ne voit jamais ta carte.{" "}
                   <Link href="/cgv">Conditions de vente</Link>
                 </p>
               </div>

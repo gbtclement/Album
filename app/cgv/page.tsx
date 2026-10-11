@@ -7,7 +7,7 @@ import { formatEuros, PREMIUM_PRICE_CENTS, PREMIUM_TRIAL_DAYS } from "@/lib/prem
 
 export const metadata: Metadata = {
   title: "Conditions générales de vente",
-  description: "L'abonnement premium d'Album : prix, mois offert, paiement, renouvellement, résiliation et rétractation.",
+  description: "L'abonnement premium de Musicodex : prix, mois offert, paiement, renouvellement, résiliation et rétractation.",
   alternates: { canonical: "/cgv" },
 };
 
@@ -18,7 +18,7 @@ export default function CgvPage() {
   return (
     <LegalPage title="Conditions générales de vente">
       <p>
-        Ces conditions s&apos;appliquent à la seule chose payante d&apos;Album : l&apos;<strong>abonnement premium</strong>. Le reste du jeu
+        Ces conditions s&apos;appliquent à la seule chose payante de Musicodex : l&apos;<strong>abonnement premium</strong>. Le reste du jeu
         est gratuit et régi par les <Link href="/cgu">conditions générales d&apos;utilisation</Link>. En t&apos;abonnant, tu acceptes ces
         conditions.
       </p>
@@ -54,7 +54,7 @@ export default function CgvPage() {
       <h2>4. Paiement</h2>
       <p>
         Le paiement se fait par carte bancaire, via <strong>Stripe</strong>, prestataire de paiement agréé. Ta carte est saisie chez Stripe :
-        Album ne voit jamais son numéro. L&apos;abonnement est prélevé chaque mois à la date anniversaire de la fin du mois offert. Un reçu est
+        Musicodex ne voit jamais son numéro. L&apos;abonnement est prélevé chaque mois à la date anniversaire de la fin du mois offert. Un reçu est
         envoyé par e-mail à chaque paiement.
       </p>
       <p>

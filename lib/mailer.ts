@@ -13,7 +13,7 @@ export async function sendMail({ to, subject, text, html }: Mail) {
     return;
   }
   await transport.sendMail({
-    from: process.env.MAIL_FROM ?? "Album <no-reply@localhost>",
+    from: process.env.MAIL_FROM ?? "Musicodex <no-reply@localhost>",
     to,
     subject,
     text,

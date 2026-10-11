@@ -5,7 +5,7 @@ import { legalInfo } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
-  description: "Éditeur, hébergeur et sources des données musicales du jeu Album.",
+  description: "Éditeur, hébergeur et sources des données musicales du jeu Musicodex.",
   alternates: { canonical: "/mentions-legales" },
 };
 
@@ -16,7 +16,7 @@ export default function MentionsLegalesPage() {
     <LegalPage title="Mentions légales">
       <h2>Éditeur du site</h2>
       <p>
-        Album est un jeu gratuit, avec un abonnement premium facultatif (voir les <Link href="/cgv">conditions de vente</Link>), édité
+        Musicodex est un jeu gratuit, avec un abonnement premium facultatif (voir les <Link href="/cgv">conditions de vente</Link>), édité
         par <strong>{publisher}</strong>, qui en est aussi le directeur de la publication.
         <br />
         Contact : <strong>{contactEmail}</strong>
@@ -34,7 +34,7 @@ export default function MentionsLegalesPage() {
       </p>
       <p>
         Les noms d&apos;albums et d&apos;artistes et les pochettes appartiennent à leurs auteurs et ayants droit. Ils sont montrés pour
-        illustrer chaque carte, sans usage commercial. Album n&apos;est lié à aucun de ces services, artistes ou labels. Un ayant droit
+        illustrer chaque carte, sans usage commercial. Musicodex n&apos;est lié à aucun de ces services, artistes ou labels. Un ayant droit
         qui souhaite le retrait d&apos;une pochette peut écrire à l&apos;adresse de contact ci-dessus.
       </p>
 

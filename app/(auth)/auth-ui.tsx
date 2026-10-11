@@ -17,12 +17,12 @@ export function AuthShell({
   return (
     <main className="auth">
       <div className="auth-box">
-        <Link href="/" className="auth-logo" aria-label="Album, retour à l'accueil">
+        <Link href="/" className="auth-logo" aria-label="Musicodex, retour à l'accueil">
           <span className="disc" aria-hidden="true">
             <span className="disc-rot"><span className="hub" /></span>
             <span className="sheen" />
           </span>
-          Album
+          Musicodex
         </Link>
         <h1>{title}</h1>
         <p className="sub">{subtitle}</p>

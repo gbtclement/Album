@@ -7,7 +7,7 @@
 import { db } from "@/lib/db";
 
 const LASTFM_BASE = "https://ws.audioscrobbler.com/2.0/";
-const USER_AGENT = `Album/0.1 (${process.env.MUSICBRAINZ_CONTACT ?? "https://github.com/gbtclement/Album"})`;
+const USER_AGENT = `Musicodex/0.1 (${process.env.MUSICBRAINZ_CONTACT ?? "https://github.com/gbtclement/Album"})`;
 const MAX_ATTEMPTS = 5;
 // Last.fm demande de rester raisonnable (environ 5 requêtes par seconde) : on en fait 4
 export const LASTFM_DELAY_MS = 250;

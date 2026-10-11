@@ -24,21 +24,21 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "Album",
-    template: "%s | Album",
+    default: "Musicodex",
+    template: "%s | Musicodex",
   },
   description: "Collectionne des albums de musique, ouvre des packs et échange avec tes amis.",
-  applicationName: "Album",
+  applicationName: "Musicodex",
   category: "games",
   // Les numéros et adresses ne deviennent pas des liens automatiques sur iPhone
   formatDetection: { telephone: false, address: false, email: false },
   openGraph: {
-    siteName: "Album",
+    siteName: "Musicodex",
     locale: "fr_FR",
     type: "website",
   },
   twitter: { card: "summary_large_image" },
-  appleWebApp: { title: "Album", statusBarStyle: "black-translucent" },
+  appleWebApp: { title: "Musicodex", statusBarStyle: "black-translucent" },
   robots: {
     index: indexingEnabled(),
     follow: indexingEnabled(),

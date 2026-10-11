@@ -5,7 +5,7 @@ import { legalInfo, MIN_AGE } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Conditions générales d'utilisation",
-  description: "Les règles du jeu Album : compte, pièces et cartes virtuelles, échanges, comportement et responsabilités.",
+  description: "Les règles du jeu Musicodex : compte, pièces et cartes virtuelles, échanges, comportement et responsabilités.",
   alternates: { canonical: "/cgu" },
 };
 
@@ -15,7 +15,7 @@ export default function CguPage() {
   return (
     <LegalPage title="Conditions générales d'utilisation">
       <p>
-        Ces conditions fixent les règles d&apos;utilisation d&apos;Album, jeu gratuit de collection de cartes d&apos;albums de musique édité par{" "}
+        Ces conditions fixent les règles d&apos;utilisation de Musicodex, jeu gratuit de collection de cartes d&apos;albums de musique édité par{" "}
         {publisher}. En créant un compte, tu les acceptes.
       </p>
 
@@ -66,7 +66,7 @@ export default function CguPage() {
 
       <h2>4. Contenus musicaux</h2>
       <p>
-        Les noms d&apos;albums et d&apos;artistes et les pochettes appartiennent à leurs ayants droit. Album n&apos;est lié à aucun artiste,
+        Les noms d&apos;albums et d&apos;artistes et les pochettes appartiennent à leurs ayants droit. Musicodex n&apos;est lié à aucun artiste,
         label ou plateforme d&apos;écoute. Les nombres d&apos;écoutes viennent de services publics (ListenBrainz, Last.fm) et sont donnés à titre
         indicatif. Plus de détails dans les <Link href="/mentions-legales">mentions légales</Link>.
       </p>

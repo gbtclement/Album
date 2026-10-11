@@ -1,4 +1,4 @@
-# Album
+# Musicodex
 
 Jeu de collection de cartes d'albums de musique, inspiré de Wikimaster. Ouvre des packs, collectionne des albums, échange-les avec tes amis et sur le marché.
 

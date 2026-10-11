@@ -3,7 +3,7 @@ import { cached, WEEK } from "@/lib/cache";
 // MusicBrainz demande un User-Agent identifiant l'application et un contact.
 // Limite : une requête par seconde maximum, sinon l'IP peut être bloquée.
 const MB_BASE = "https://musicbrainz.org/ws/2";
-const USER_AGENT = `Album/0.1 (${process.env.MUSICBRAINZ_CONTACT ?? "https://github.com/gbtclement/Album"})`;
+const USER_AGENT = `Musicodex/0.1 (${process.env.MUSICBRAINZ_CONTACT ?? "https://github.com/gbtclement/Album"})`;
 const MIN_DELAY_MS = 1100;
 
 let lastRequestAt = 0;

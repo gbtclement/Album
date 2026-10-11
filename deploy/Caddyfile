@@ -1,9 +1,9 @@
 # Reverse proxy HTTPS pour la production (Caddy : certificat Let's Encrypt obtenu et renouvelé tout seul).
-# Remplacer album.example par le vrai domaine, puis sur le serveur :
+# Domaine : musicodex.fr. Puis sur le serveur :
 #   sudo cp deploy/Caddyfile /etc/caddy/Caddyfile && sudo systemctl reload caddy
 # Le domaine doit pointer vers le serveur (enregistrement DNS A/AAAA) et les ports 80 et 443 être ouverts.
 
-album.example {
+musicodex.fr {
 	# Compression des pages, du CSS et du JavaScript
 	encode zstd gzip
 
@@ -21,6 +21,6 @@ album.example {
 }
 
 # Adresse avec www : redirection permanente vers le domaine principal (une seule adresse pour le SEO)
-www.album.example {
-	redir https://album.example{uri} permanent
+www.musicodex.fr {
+	redir https://musicodex.fr{uri} permanent
 }

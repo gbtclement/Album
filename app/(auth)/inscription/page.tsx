@@ -9,7 +9,7 @@ import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = {
   title: "Créer un compte",
-  description: "Crée ton compte Album gratuitement : ouvre des packs d'albums, collectionne-les et échange-les avec tes amis.",
+  description: "Crée ton compte Musicodex gratuitement : ouvre des packs d'albums, collectionne-les et échange-les avec tes amis.",
   alternates: { canonical: "/inscription" },
 };
 

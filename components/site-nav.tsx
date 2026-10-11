@@ -17,7 +17,7 @@ export async function SiteNav({ message }: { message?: string } = {}) {
     return (
       <>
         <header className="hud">
-          <Link href="/" className="player"><span className="avatar" aria-hidden="true">A</span><strong>Album</strong></Link>
+          <Link href="/" className="player"><span className="avatar" aria-hidden="true">M</span><strong>Musicodex</strong></Link>
           <div className="guest-links">
             <Link href="/connexion" className="btn">Connexion</Link>
             <Link href="/inscription" className="btn gold">Inscription</Link>

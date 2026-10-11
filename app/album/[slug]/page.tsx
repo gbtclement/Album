@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${album.title} — ${album.artist}`,
-    description: `${album.title} de ${album.artist}${album.release_year ? ` (${album.release_year})` : ""}, carte ${RARITY_LABELS[album.rarity_tier].toLowerCase()} du jeu Album : écoute-le, suis sa cote et ajoute-le à ta collection.`,
+    description: `${album.title} de ${album.artist}${album.release_year ? ` (${album.release_year})` : ""}, carte ${RARITY_LABELS[album.rarity_tier].toLowerCase()} du jeu Musicodex : écoute-le, suis sa cote et ajoute-le à ta collection.`,
     alternates: { canonical: `/album/${album.slug}` },
     openGraph: {
       type: "music.album",

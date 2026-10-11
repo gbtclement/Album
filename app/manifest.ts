@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 // Manifeste : nom, couleurs et icône quand le site est ajouté à l'écran d'accueil d'un téléphone
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Album : le jeu de cartes des albums de musique",
-    short_name: "Album",
+    name: "Musicodex : le jeu de cartes des albums de musique",
+    short_name: "Musicodex",
     description: "Ouvre des packs d'albums, collectionne-les et échange-les avec tes amis.",
     lang: "fr",
     start_url: "/collection",

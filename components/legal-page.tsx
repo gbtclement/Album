@@ -7,7 +7,7 @@ import { LEGAL_UPDATED_AT } from "@/lib/legal";
 export function LegalPage({ title, children }: { title: string; children: ReactNode }) {
   return (
     <main className="legal">
-      <Link href="/" className="legal-back">← Album</Link>
+      <Link href="/" className="legal-back">← Musicodex</Link>
       <h1>{title}</h1>
       <p className="legal-date">Mise à jour : {LEGAL_UPDATED_AT}</p>
       <div className="legal-body">{children}</div>

@@ -5,7 +5,7 @@ import { INACTIVE_YEARS, INACTIVITY_NOTICE_DAYS, legalInfo, MIN_AGE } from "@/li
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
-  description: "Les données que le jeu Album enregistre, pourquoi, combien de temps, et comment les télécharger ou les supprimer.",
+  description: "Les données que le jeu Musicodex enregistre, pourquoi, combien de temps, et comment les télécharger ou les supprimer.",
   alternates: { canonical: "/confidentialite" },
 };
 
@@ -15,7 +15,7 @@ export default function ConfidentialitePage() {
   return (
     <LegalPage title="Politique de confidentialité">
       <p>
-        En bref : Album enregistre le strict nécessaire pour faire fonctionner ton compte et ta partie. Pas de publicité, pas de mesure
+        En bref : Musicodex enregistre le strict nécessaire pour faire fonctionner ton compte et ta partie. Pas de publicité, pas de mesure
         d&apos;audience, aucune donnée vendue ou prêtée. Tu peux télécharger tes données et supprimer ton compte à tout moment depuis ton profil.
       </p>
 
@@ -39,7 +39,7 @@ export default function ConfidentialitePage() {
           <strong>Ta partie</strong> : cartes, pièces, packs ouverts et gagnés, quêtes, Disque d&apos;Or (passe du mois : XP et paliers récupérés), points et place au classement saisonnier, succès, pioches du jour, amis, échanges et annonces du marché, et tes réglages.
         </li>
         <li>
-          <strong>Statut premium</strong> : sa date de fin. Si tu t&apos;abonnes, le paiement est traité par Stripe : Album ne reçoit jamais
+          <strong>Statut premium</strong> : sa date de fin. Si tu t&apos;abonnes, le paiement est traité par Stripe : Musicodex ne reçoit jamais
           ton numéro de carte, seulement un identifiant client Stripe et l&apos;état de ton abonnement (essai, actif, résilié). Les preuves de
           paiement sont gardées 10 ans, comme l&apos;exige la loi pour les pièces comptables.
         </li>
@@ -50,7 +50,7 @@ export default function ConfidentialitePage() {
       </ul>
       <p>
         Le jeu ne te demande jamais ton nom, ton adresse ou ton téléphone. Il est gratuit ; seul l&apos;abonnement premium, facultatif, est
-        payant, et ta carte est alors saisie chez Stripe, jamais sur Album.
+        payant, et ta carte est alors saisie chez Stripe, jamais sur Musicodex.
       </p>
 
       <h2>Pourquoi</h2>

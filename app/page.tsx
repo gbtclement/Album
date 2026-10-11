@@ -11,7 +11,7 @@ import { RARITY_LABELS, type RarityTier } from "@/lib/rarity";
 import { absoluteUrl, jsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: { absolute: "Album : le jeu de cartes des albums de musique" },
+  title: { absolute: "Musicodex : le jeu de cartes des albums de musique" },
   description:
     "Ouvre des packs d'albums de musique, collectionne les légendaires, échange-les avec tes amis et suis leur cote en bourse. Gratuit, dans le navigateur.",
   alternates: { canonical: "/" },
@@ -49,12 +49,12 @@ export default async function Home({ searchParams }: Props) {
         "@type": "WebSite",
         "@id": absoluteUrl("/#site"),
         url: absoluteUrl("/"),
-        name: "Album",
+        name: "Musicodex",
         inLanguage: "fr-FR",
       },
       {
         "@type": "VideoGame",
-        name: "Album",
+        name: "Musicodex",
         url: absoluteUrl("/"),
         description: "Jeu de collection de cartes d'albums de musique : packs, raretés, échanges, marché et bourse.",
         genre: ["Jeu de cartes à collectionner", "Musique"],
@@ -81,7 +81,7 @@ export default async function Home({ searchParams }: Props) {
             <span className="sheen" />
           </div>
         </div>
-        <h1>Album</h1>
+        <h1>Musicodex</h1>
         <p>Ouvre des packs, collectionne les albums qui ont marqué la musique, échange-les avec tes amis et grimpe au classement.</p>
         <div className="pack-actions">
           <Link href="/inscription" className="btn lg gold">Créer un compte</Link>

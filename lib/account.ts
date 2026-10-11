@@ -130,7 +130,7 @@ export async function exportUserData(userId: string) {
   ]);
 
   return {
-    site: "Album",
+    site: "Musicodex",
     exporte_le: new Date().toISOString(),
     compte: account,
     packs: packs[0] ?? null,
