@@ -81,7 +81,7 @@ const COMMANDS = [
   { command: "docker compose -f docker-compose.prod.yml up -d --build", description: "Lancer la version de production (image construite à partir du Dockerfile)" },
   { command: "npm run import:catalog", description: "Importer le catalogue de test (data/seed-albums.json)" },
   { command: "npm run import:catalog -- --listenbrainz", description: "Importer les albums les plus écoutés sur ListenBrainz (sans clé)" },
-  { command: "npm run import:catalog -- --listenbrainz --artists 300", description: "Ajouter aussi les albums studio des 300 artistes les plus écoutés (long : une requête MusicBrainz par seconde)" },
+  { command: "npm run import:catalog -- --listenbrainz --artists 1000 --similar 5 --min-listens 1000", description: "Catalogue élargi : discographies des 1 000 artistes les plus écoutés de chaque période et de leurs artistes proches (plusieurs heures la première fois : une requête MusicBrainz par seconde)" },
   { command: "npm run import:catalog -- --listens", description: "Mettre à jour les écoutes et recalculer la rareté de tout le catalogue" },
   { command: "npm run check:covers", description: "Vérifier que chaque pochette s'affiche encore et remplacer celles en panne (Cover Art Archive, sinon Deezer). Option --max 200 pour un essai" },
   { command: "npm run seed:demo", description: "Créer des données de démonstration (compte demo@demo.invalid / demo-album, 8 autres joueurs, marché, bourse, échanges). Refusé en production" },
@@ -257,7 +257,7 @@ export default function DocumentationPage() {
             Deezer (liens d&apos;écoute exacts, pochette de secours). Quand un lien exact n&apos;est pas trouvé, un lien de recherche est proposé.
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-6">
-            <li>ListenBrainz ne publie que les 1 000 albums les plus écoutés par période : l&apos;import combine six périodes (tous temps, année, semestre, trimestre, mois, semaine), puis peut ajouter les albums studio des artistes les plus écoutés (<code>--artists</code>).</li>
+            <li>ListenBrainz ne publie que les 1 000 albums les plus écoutés par période : l&apos;import combine six périodes (tous temps, année, semestre, trimestre, mois, semaine), puis peut ajouter les albums studio des artistes les plus écoutés de chaque période (<code>--artists</code>, 1 000 au maximum par période) et des artistes que les mêmes auditeurs écoutent (<code>--similar</code>). Les discographies lues sont gardées une semaine en cache : une relance ne les redemande pas.</li>
             <li>Seuls les albums studio sont gardés (pas de live, compilation, single ni bande originale), avec au moins 2 000 écoutes par défaut (<code>--min-listens</code>) et une pochette.</li>
             <li>Un album déjà présent n&apos;est pas réimporté : relancer l&apos;import reprend là où il s&apos;était arrêté.</li>
             <li>La rareté est recalculée à la fin de chaque import, et à la demande avec <code>npm run import:catalog -- --listens</code> (écoutes remises à jour).</li>

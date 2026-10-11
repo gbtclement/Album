@@ -83,14 +83,36 @@ type SitewideArtists = {
   payload: { artists: Array<{ artist_mbid: string | null; artist_name: string }> };
 };
 
-// Les artistes les plus écoutés de tous les temps (1000 maximum)
-export async function fetchTopArtists(count: number): Promise<Array<{ mbid: string; name: string }>> {
+export type ArtistRef = { mbid: string; name: string };
+
+// Les artistes les plus écoutés sur une période (1000 maximum, imposé par ListenBrainz)
+export async function fetchTopArtists(count: number, range: StatRange = "all_time"): Promise<ArtistRef[]> {
   const data = await lbFetch<SitewideArtists>(
-    `/stats/sitewide/artists?range=all_time&count=${Math.min(count, STATS_PAGE)}&offset=0`,
+    `/stats/sitewide/artists?range=${range}&count=${Math.min(count, STATS_PAGE)}&offset=0`,
   );
   return (data?.payload.artists ?? []).flatMap((artist) =>
     artist.artist_mbid ? [{ mbid: artist.artist_mbid, name: artist.artist_name }] : [],
   );
+}
+
+// Artistes que les mêmes auditeurs écoutent (service expérimental « labs » de ListenBrainz)
+const SIMILAR_ALGORITHM = "session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30";
+
+export async function fetchSimilarArtists(artistMbid: string, limit: number): Promise<ArtistRef[]> {
+  for (let attempt = 1; ; attempt++) {
+    const res = await fetch(
+      `https://labs.api.listenbrainz.org/similar-artists/json?artist_mbids=${artistMbid}&algorithm=${SIMILAR_ALGORITHM}`,
+      { headers: { "User-Agent": USER_AGENT, Accept: "application/json" } },
+    );
+    if (res.ok) {
+      const data = (await res.json()) as Array<{ artist_mbid: string | null; name: string }>;
+      return data.flatMap((artist) => (artist.artist_mbid ? [{ mbid: artist.artist_mbid, name: artist.name }] : [])).slice(0, limit);
+    }
+    if ((res.status !== 429 && res.status !== 503) || attempt === MAX_ATTEMPTS) {
+      throw new Error(`ListenBrainz (artistes similaires) a répondu ${res.status}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+  }
 }
 
 type PopularityResponse = Array<{

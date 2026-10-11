@@ -5,6 +5,8 @@
 //   npm run import:catalog -- --listenbrainz                -> albums les plus écoutés sur ListenBrainz
 //                                                              (tous temps, année, semestre, trimestre, mois, semaine)
 //   npm run import:catalog -- --listenbrainz --artists 300  -> en plus, les albums studio des 300 artistes les plus écoutés
+//                                                              de chaque période (tous temps, année, ..., semaine)
+//   ... --artists 1000 --similar 5                          -> et ceux des 5 artistes les plus proches de chacun
 //   npm run import:catalog -- --listens                     -> met seulement à jour les écoutes et la rareté
 //
 // Options : --min-listens 2000 (écoutes minimum d'un album pour entrer au catalogue), --max 500 (nombre maximum
@@ -15,7 +17,14 @@
 import { readFile } from "node:fs/promises";
 import { db } from "@/lib/db";
 import { existingMbids, recomputeRarity, saveListens, upsertAlbum } from "@/lib/catalog";
-import { fetchPopularity, fetchTopArtists, fetchTopReleaseGroups, STAT_RANGES } from "@/lib/listenbrainz";
+import {
+  type ArtistRef,
+  fetchPopularity,
+  fetchSimilarArtists,
+  fetchTopArtists,
+  fetchTopReleaseGroups,
+  STAT_RANGES,
+} from "@/lib/listenbrainz";
 import { browseArtistAlbums, fetchCoverUrl, lookupReleaseGroups, searchReleaseGroup } from "@/lib/musicbrainz";
 import { redis } from "@/lib/redis";
 import { buildLinks, findDeezerCover } from "@/lib/streaming";
@@ -47,6 +56,30 @@ async function seedCandidates(seedPath: string): Promise<Candidate[]> {
   return candidates;
 }
 
+// Artistes dont on parcourt la discographie : les plus écoutés de chaque période (les classiques comme les
+// artistes du moment), puis, avec --similar, les artistes proches de ceux de tous les temps
+async function artistPool(countPerRange: number, similarPerArtist: number): Promise<ArtistRef[]> {
+  const pool = new Map<string, ArtistRef>();
+  for (const range of STAT_RANGES) {
+    for (const artist of await fetchTopArtists(countPerRange, range)) pool.set(artist.mbid, artist);
+    console.log(`Artistes (${range}) : ${pool.size} au total.`);
+  }
+  if (similarPerArtist > 0) {
+    const seeds = await fetchTopArtists(countPerRange, "all_time");
+    for (const [index, seed] of seeds.entries()) {
+      try {
+        for (const artist of await fetchSimilarArtists(seed.mbid, similarPerArtist)) {
+          if (!pool.has(artist.mbid)) pool.set(artist.mbid, artist);
+        }
+      } catch (error) {
+        console.log(`Artistes similaires ignorés (${seed.name}) : ${(error as Error).message}`);
+      }
+      if ((index + 1) % 100 === 0) console.log(`Artistes similaires : ${index + 1}/${seeds.length}, ${pool.size} artistes au total.`);
+    }
+  }
+  return [...pool.values()];
+}
+
 // Albums les plus écoutés sur ListenBrainz, toutes périodes confondues, puis discographies des artistes phares
 async function listenbrainzCandidates(artistCount: number, known: Set<string>): Promise<Candidate[]> {
   const found = new Map<string, Candidate>();
@@ -72,7 +105,7 @@ async function listenbrainzCandidates(artistCount: number, known: Set<string>): 
   console.log(`Albums studio retenus : ${found.size}.`);
 
   if (artistCount > 0) {
-    const artists = await fetchTopArtists(artistCount);
+    const artists = await artistPool(artistCount, Number(readOption("--similar") ?? 0));
     for (const [index, artist] of artists.entries()) {
       try {
         for (const album of await browseArtistAlbums(artist.mbid, artist.name)) {
@@ -81,7 +114,7 @@ async function listenbrainzCandidates(artistCount: number, known: Set<string>): 
       } catch (error) {
         console.log(`Artiste ignoré (${artist.name}) : ${(error as Error).message}`);
       }
-      if ((index + 1) % 25 === 0) console.log(`Discographies : ${index + 1}/${artists.length} artistes, ${found.size} albums candidats.`);
+      if ((index + 1) % 100 === 0) console.log(`Discographies : ${index + 1}/${artists.length} artistes, ${found.size} albums candidats.`);
     }
   }
   return [...found.values()];

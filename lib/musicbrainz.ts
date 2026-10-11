@@ -127,8 +127,11 @@ export async function lookupReleaseGroups(mbids: string[], batchSize = 50): Prom
 export async function browseArtistAlbums(artistMbid: string, artistName: string, maxPages = 2) {
   const albums: ReleaseGroupInfo[] = [];
   for (let page = 0; page < maxPages; page++) {
-    const data = await mbGet<{ "release-groups": ReleaseGroupDetails[]; "release-group-count": number }>(
-      `/release-group?artist=${artistMbid}&type=album&fmt=json&limit=100&offset=${page * 100}`,
+    // Mise en cache : relancer un import ne redemande pas les discographies déjà parcourues
+    const data = await cached(`mb:artist-albums:${artistMbid}:${page}`, WEEK, () =>
+      mbGet<{ "release-groups": ReleaseGroupDetails[]; "release-group-count": number }>(
+        `/release-group?artist=${artistMbid}&type=album&fmt=json&limit=100&offset=${page * 100}`,
+      ),
     );
     albums.push(...data["release-groups"].map((group) => toInfo(group, artistName)).filter((info) => info.studioAlbum));
     if ((page + 1) * 100 >= data["release-group-count"]) break;
