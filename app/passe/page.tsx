@@ -107,6 +107,8 @@ export default async function PassePage({ searchParams }: Props) {
               key={row.tier}
               className={`pass-col${row.tier <= pass.level ? " reached" : ""}`}
               data-current={row.tier === Math.min(PASS_TIERS, pass.level + 1) ? "" : undefined}
+              // Ligne de progression : pleine pour les paliers atteints, en partie pour celui en cours
+              style={{ "--f": `${row.tier <= pass.level ? 100 : row.tier === pass.level + 1 ? (inTier / XP_PER_TIER) * 100 : 0}%` } as CSSProperties}
             >
               <span className="pass-tier">{row.tier}</span>
               {cell(row.tier, "free", row.free)}
