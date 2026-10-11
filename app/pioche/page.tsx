@@ -31,7 +31,8 @@ export default async function PiochePage({ searchParams }: Props) {
 
   const { message } = await searchParams;
   const draw = await getTodayDraw(session.user.id);
-  const tierStyle = { "--rar": `var(--r-${draw.tier})` } as CSSProperties;
+  // Rareté gardée secrète jusqu'à la réponse : une pioche « commune » donnerait moins envie de jouer
+  const tierStyle = { "--rar": draw.answered ? `var(--r-${draw.tier})` : "var(--gold)" } as CSSProperties;
   const toBonus = STREAK_BONUS_EVERY - (draw.streak % STREAK_BONUS_EVERY);
 
   return (
@@ -41,8 +42,8 @@ export default async function PiochePage({ searchParams }: Props) {
         <h1>Pioche du jour</h1>
         <p className="sub">Un album rien que pour toi, un morceau de pochette, une seule chance.</p>
 
-        <section className={`draw tier-${draw.tier}${draw.answered ? (draw.solved ? " won" : " lost") : ""}`} style={tierStyle}>
-          <span className="tier-tag draw-tier">Pioche {RARITY_LABELS[draw.tier].toLowerCase()}</span>
+        <section className={`draw${draw.answered ? ` tier-${draw.tier}${draw.solved ? " won" : " lost"}` : ""}`} style={tierStyle}>
+          {draw.answered && <span className="tier-tag draw-tier">Pioche {RARITY_LABELS[draw.tier].toLowerCase()}</span>}
           <div className="draw-art">
             {draw.album ? (
               <CoverImage src={draw.album.coverUrl} title={draw.album.title} alt={`Pochette de ${draw.album.title}`} sizes="(min-width: 720px) 320px, 80vw" priority />
@@ -66,22 +67,25 @@ export default async function PiochePage({ searchParams }: Props) {
           )}
         </section>
 
-        <h2 className="label">Série <span>{draw.streak > 0 ? `${draw.streak} jour${draw.streak > 1 ? "s" : ""} d'affilée` : "aucune en cours"}</span></h2>
-        <div className="streak" aria-label={`Encore ${toBonus} bonne${toBonus > 1 ? "s" : ""} réponse${toBonus > 1 ? "s" : ""} pour un pack offert`}>
-          {Array.from({ length: STREAK_BONUS_EVERY }, (_, index) => (
-            <i key={index} className={index < draw.streak % STREAK_BONUS_EVERY || (draw.streak > 0 && draw.streak % STREAK_BONUS_EVERY === 0) ? "on" : ""} />
-          ))}
-          <span>{STREAK_BONUS_EVERY} d&apos;affilée = 1 pack offert</span>
-        </div>
+        {/* Série et chances centrées sous la pioche, comme les chances sous le pack */}
+        <div className="draw-info">
+          <h2 className="label">Série <span>{draw.streak > 0 ? `${draw.streak} jour${draw.streak > 1 ? "s" : ""} d'affilée` : "aucune en cours"}</span></h2>
+          <div className="streak" aria-label={`Encore ${toBonus} bonne${toBonus > 1 ? "s" : ""} réponse${toBonus > 1 ? "s" : ""} pour un pack Épique offert`}>
+            {Array.from({ length: STREAK_BONUS_EVERY }, (_, index) => (
+              <i key={index} className={index < draw.streak % STREAK_BONUS_EVERY || (draw.streak > 0 && draw.streak % STREAK_BONUS_EVERY === 0) ? "on" : ""} />
+            ))}
+          </div>
+          <p className="streak-note">{STREAK_BONUS_EVERY} d&apos;affilée = 1 pack Épique offert</p>
 
-        <h2 className="label">Chances de la pioche</h2>
-        <div className="rates">
-          {[...RARITY_TIERS].reverse().map((tier) => (
-            <div key={tier} className={`rate tier-${tier}`}>
-              <span><i />{RARITY_LABELS[tier]}</span>
-              <b>{(DRAW_RATES[tier] * 100).toLocaleString("fr-FR")} %</b>
-            </div>
-          ))}
+          <div className="rates">
+            <h2 className="label">Chances de la pioche</h2>
+            {[...RARITY_TIERS].reverse().map((tier) => (
+              <div key={tier} className={`rate tier-${tier}`}>
+                <span><i />{RARITY_LABELS[tier]}</span>
+                <b>{(DRAW_RATES[tier] * 100).toLocaleString("fr-FR")} %</b>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
     </>

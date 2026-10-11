@@ -14,7 +14,7 @@ export const DRAW_RATES: Record<RarityTier, number> = {
 // assez pour reconnaître une pochette connue, rarement assez pour lire le titre en entier
 export const CROP_SIZE = 0.3;
 
-// Une série de 7 bonnes réponses d'affilée rapporte un pack (ajouté aux packs gagnés)
+// Une série de 7 bonnes réponses d'affilée rapporte un pack Épique (ajouté aux packs gagnés)
 export const STREAK_BONUS_EVERY = 7;
 
 // Nouvelle pioche chaque jour à minuit, heure de Paris

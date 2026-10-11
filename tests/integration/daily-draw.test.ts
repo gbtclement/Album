@@ -88,7 +88,7 @@ describe("pioche du jour", () => {
     expect((await submitGuess(user.id, homonym.id)).solved).toBe(true);
   });
 
-  it("le 7e jour d'affilée offre un pack gagné, même quand le stock est plein", async () => {
+  it("le 7e jour d'affilée offre un pack Épique, même quand le stock est plein", async () => {
     const user = await createTestUser({ coins: 0 });
     const album = await createAlbum();
     const old = await createAlbum();
@@ -97,9 +97,12 @@ describe("pioche du jour", () => {
     await db.query("insert into pack_stocks (user_id, stock) values ($1, 10)", [user.id]);
 
     await getTodayDraw(user.id);
-    expect(await submitGuess(user.id, album.id)).toMatchObject({ solved: true, streak: 14, bonus: "pack" });
-    const { rows } = await db.query<{ stock: number; bonus_packs: number }>("select stock, bonus_packs from pack_stocks where user_id = $1", [user.id]);
-    expect(rows[0]).toEqual({ stock: 10, bonus_packs: 1 });
+    expect(await submitGuess(user.id, album.id)).toMatchObject({ solved: true, streak: 14, bonus: "epic" });
+    const { rows } = await db.query<{ stock: number; bonus_packs: number; epic_packs: number }>(
+      "select stock, bonus_packs, epic_packs from pack_stocks where user_id = $1",
+      [user.id],
+    );
+    expect(rows[0]).toEqual({ stock: 10, bonus_packs: 0, epic_packs: 1 });
     expect(await coinsOf(user.id)).toBe(0);
   });
 

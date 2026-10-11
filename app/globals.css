@@ -706,6 +706,11 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .streak i { width: 22px; height: 22px; border-radius: 50%; background: var(--night-3); box-shadow: inset 0 0 0 2px var(--line); }
 .streak i.on { background: var(--gold); box-shadow: 0 2px 0 var(--gold-deep); }
 .streak span { margin-left: 6px; font-size: 12px; color: var(--muted); }
+.draw-info { display: grid; justify-items: center; text-align: center; }
+.draw-info > .label { justify-content: center; gap: 10px; }
+.draw-info .rates { margin-top: 10px; }
+.draw-info .rates .label { justify-content: center; }
+.streak-note { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
 .draw-banner { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: 14px; text-decoration: none; background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 18%, var(--night-2)), var(--night-2)); border: 1px solid color-mix(in srgb, var(--gold) 50%, var(--line)); }
 .draw-banner .l { flex: 1; min-width: 0; }
 .draw-banner strong { display: block; font-family: var(--f-display); font-weight: 400; font-size: 17px; }

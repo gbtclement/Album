@@ -134,7 +134,7 @@ export async function getDrawCrop(userId: string) {
   return draw ? { coverUrl: draw.cover_url, x: draw.crop_x, y: draw.crop_y, size: CROP_SIZE } : null;
 }
 
-export type GuessResult = { solved: boolean; streak: number; bonus: "pack" | null; isNew: boolean };
+export type GuessResult = { solved: boolean; streak: number; bonus: "epic" | null; isNew: boolean };
 
 // Une seule réponse par jour : le joueur choisit un album dans les suggestions,
 // c'est juste si le titre est le même que celui de l'album pioché (majuscules et accents ignorés)
@@ -175,10 +175,10 @@ export async function submitGuess(userId: string, guessedAlbumId: string): Promi
       if (isNew) await recordEvent(client, userId, "new_album", 1);
       await addPassXp(client, userId, [draw.rarity_tier]);
 
-      // Série de 7 : un pack classique dans les packs gagnés (sans maximum)
+      // Série de 7 : un pack Épique dans les packs gagnés (sans maximum)
       if (streak % STREAK_BONUS_EVERY === 0) {
-        await grantPacks(client, userId, { classic: 1 });
-        bonus = "pack";
+        await grantPacks(client, userId, { epic: 1 });
+        bonus = "epic";
       }
     }
     return { solved, streak, bonus, isNew };

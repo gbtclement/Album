@@ -18,7 +18,7 @@ export async function guessAction(formData: FormData) {
   try {
     const result = await submitGuess(session.user.id, albumId);
     if (!result.solved) backTo("Raté ! Nouvelle pioche demain à minuit.");
-    const bonus = result.bonus === "pack" ? ` Série de ${result.streak} : un pack offert !` : "";
+    const bonus = result.bonus === "epic" ? ` Série de ${result.streak} : un pack Épique offert !` : "";
     backTo(`Bravo, l'album rejoint ta collection !${bonus}`);
   } catch (error) {
     if (error instanceof DrawError) backTo(error.message);
