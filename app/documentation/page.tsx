@@ -18,7 +18,7 @@ const ROUTES = [
   { path: "/mot-de-passe-oublie", description: "Demande d'un lien pour choisir un nouveau mot de passe (même réponse que l'adresse soit inscrite ou non)" },
   { path: "/nouveau-mot-de-passe", description: "Choix du nouveau mot de passe depuis le lien reçu (?token=, usage unique, valable 1 h)" },
   { path: "/apercu-emails/[modele]", description: "Aperçu des e-mails dans le navigateur (verification, mot-de-passe), en développement seulement" },
-  { path: "/profil", description: "Profil : statistiques, vitrine, répartition par rareté, réglages du jeu, compte (protégée)" },
+  { path: "/profil", description: "Profil : statistiques, vitrine, répartition par rareté, succès (badges débloqués et progression), réglages du jeu, compte (protégée)" },
   { path: "/packs", description: "Ouverture d'un pack ou de tous les packs, animation de révélation, chances par rareté (protégée)" },
   { path: "/collection", description: "Cartes possédées uniquement, recherche, filtre de rareté, fiche qui glisse depuis le bas ; onglet Artistes (?vue=artistes) : collections d'artiste commencées, progression et récompenses (protégée)" },
   { path: "/amis", description: "Demandes d'amis, liste d'amis (protégée)" },
@@ -58,6 +58,7 @@ const TABLES = [
   { name: "user_quests", description: "Progression des quêtes par joueur et par période, récompense récupérée ou non" },
   { name: "daily_draws", description: "Pioche du jour : album tiré par joueur et par jour (heure de Paris), position du morceau montré, réponse, réussite et série en cours" },
   { name: "artist_set_rewards", description: "Collections d'artiste terminées : récompense récupérée par joueur et par artiste (taille du set, pièces, pack), une seule fois" },
+  { name: "user_achievements", description: "Succès débloqués par joueur (clé du succès, pièces versées, date, notification déjà affichée ou non). La liste des succès est dans lib/achievement-rules.ts" },
   { name: "listings", description: "Annonces du marché : vente en pièces ou troc contre un album" },
   { name: "market_sales", description: "Ventes en pièces sur le marché, base de la cote des albums" },
 ];
@@ -122,6 +123,7 @@ const LOTS = [
   { lot: "C11", name: "Correctif : catalogue élargi (discographies des artistes les plus écoutés de chaque période et de leurs artistes proches, 1 000 écoutes minimum)", status: "Terminé", branch: "correctif11-catalogue-elargi" },
   { lot: "G1", name: "Pioche du jour : un album par joueur et par jour, un morceau de pochette, une seule réponse avec recherche guidée, série de 7 = 1 pack", status: "Terminé", branch: "jeu1-pioche-du-jour" },
   { lot: "G2", name: "Collections d'artiste : un set par artiste d'au moins 3 albums, progression dans la collection, récompense unique en pièces (et un pack pour les grands sets)", status: "Terminé", branch: "jeu2-collections-artiste" },
+  { lot: "G3", name: "Succès et badges : 22 objectifs permanents (collection, raretés, packs, artistes, social, pioche), pièces versées au déblocage, notification dorée, grille sur le profil, nombre de succès des amis", status: "Terminé", branch: "jeu3-succes" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -257,6 +259,9 @@ export default function DocumentationPage() {
             </li>
             <li>
               <strong>Collections d&apos;artiste :</strong> chaque artiste qui a au moins 3 albums dans le catalogue est un set à compléter (onglet Artistes de la collection, seuls les sets commencés sont affichés). Set complet : 20 pièces par point de rareté de ses albums (100 au minimum), plus un pack pour les sets de 8 albums ou plus (300 pièces si le stock est plein). La récompense se récupère une seule fois par artiste, même si une carte est revendue ensuite ou si l&apos;artiste reçoit de nouveaux albums.
+            </li>
+            <li>
+              <strong>Succès :</strong> 22 objectifs permanents (albums différents, raretés possédées, packs ouverts, collections d&apos;artiste, amis, échanges, ventes, pioches trouvées). Ils sont vérifiés à chaque page : un succès atteint est débloqué une seule fois, ses pièces (50 à 2 500) sont versées tout de suite et une notification dorée l&apos;annonce. Un succès débloqué ne se reperd pas. Les joueurs existants débloquent d&apos;un coup ceux qu&apos;ils remplissent déjà.
             </li>
             <li>
               <strong>Quêtes d&apos;échange :</strong> un échange entre amis ne compte que si au moins un album change de mains (pas de pièces contre pièces). Chaque achat sur le marché compte.

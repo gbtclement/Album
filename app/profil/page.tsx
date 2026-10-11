@@ -3,9 +3,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { auth, signOut } from "@/auth";
+import { AchievementBadges } from "@/components/achievement-badges";
 import { CoverImage } from "@/components/cover-image";
 import { Avatar, smallCover } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
+import { getAchievements, syncAchievements } from "@/lib/achievements";
 import { collectionScore, getCollectionCards } from "@/lib/collection";
 import { db } from "@/lib/db";
 import { RARITY_LABELS, RARITY_TIERS } from "@/lib/rarity";
@@ -24,12 +26,16 @@ export default async function ProfilPage({ searchParams }: Props) {
   if (!session?.user?.id) redirect("/connexion");
   const { message } = await searchParams;
 
-  const [userResult, cards] = await Promise.all([
+  // La barre d'infos vérifie aussi les succès, en parallèle : on le fait d'abord ici pour que
+  // les pièces et la grille de succès de la page soient déjà à jour
+  await syncAchievements(session.user.id);
+  const [userResult, cards, achievements] = await Promise.all([
     db.query<{ email: string; pseudo: string; coins: number; auto_reveal: boolean; email_verified_at: Date | null; created_at: Date }>(
       "select email, pseudo, coins, auto_reveal, email_verified_at, created_at from users where id = $1",
       [session.user.id],
     ),
     getCollectionCards(session.user.id),
+    getAchievements(session.user.id),
   ]);
   const user = userResult.rows[0];
   if (!user) redirect("/connexion");
@@ -89,6 +95,9 @@ export default async function ProfilPage({ searchParams }: Props) {
             </div>
           ))}
         </div>
+
+        <h2 className="label">Succès <span>{achievements.filter((item) => item.unlockedAt).length} / {achievements.length}</span></h2>
+        <AchievementBadges items={achievements} />
 
         <h2 className="label">Réglages du jeu</h2>
         <div className="item">

@@ -1,3 +1,4 @@
+import { syncAchievements, takeAchievementNotices } from "@/lib/achievements";
 import { countClaimableSets } from "@/lib/artist-sets";
 import { db } from "@/lib/db";
 import { isDrawPending } from "@/lib/daily-draw";
@@ -13,9 +14,14 @@ export type HudData = {
   questsReady: number;
   social: number;
   setsReady: number;
+  // Succès débloqués pendant ce chargement de page (notification)
+  unlocked: Array<{ key: string; title: string; reward: number }>;
 };
 
 export async function getHudData(userId: string): Promise<HudData> {
+  // D'abord les succès : leurs pièces doivent apparaître dans le solde affiché
+  await syncAchievements(userId);
+  const unlocked = await takeAchievementNotices(userId);
   const [user, pack, quests, social, drawPending, setsReady] = await Promise.all([
     db.query<{ coins: number; cards: number }>(
       `select u.coins, coalesce((select sum(count) from user_albums where user_id = u.id), 0)::int as cards
@@ -43,5 +49,6 @@ export async function getHudData(userId: string): Promise<HudData> {
     questsReady: quests.filter((quest) => !quest.claimed && quest.progress >= quest.target).length + (drawPending ? 1 : 0),
     social: social.rows[0]?.total ?? 0,
     setsReady,
+    unlocked: unlocked.map(({ key, title, reward }) => ({ key, title, reward })),
   };
 }

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Avatar } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
+import { countAchievements } from "@/lib/achievements";
 import { countCards, listFriends, listIncomingRequests, listOutgoingRequests } from "@/lib/friends";
 import { removeFriendAction, respondFriendRequestAction, sendFriendRequestAction } from "./actions";
 
@@ -14,6 +15,7 @@ type Props = {
 };
 
 const cardsLabel = (count: number) => `${count.toLocaleString("fr-FR")} carte${count > 1 ? "s" : ""}`;
+const badgesLabel = (count: number) => `${count} succès`;
 
 export default async function AmisPage({ searchParams }: Props) {
   const session = await auth();
@@ -26,7 +28,10 @@ export default async function AmisPage({ searchParams }: Props) {
     listIncomingRequests(userId),
     listOutgoingRequests(userId),
   ]);
-  const cards = await countCards([...friends, ...incoming].map((user) => user.id));
+  const [cards, badges] = await Promise.all([
+    countCards([...friends, ...incoming].map((user) => user.id)),
+    countAchievements(friends.map((user) => user.id)),
+  ]);
 
   return (
     <>
@@ -76,6 +81,7 @@ export default async function AmisPage({ searchParams }: Props) {
               <div className="l">
                 <strong>{friend.pseudo}</strong>
                 <small>{cardsLabel(cards.get(friend.id) ?? 0)}</small>
+                <small>{badgesLabel(badges.get(friend.id) ?? 0)}</small>
               </div>
               <div className="r">
                 <Link href={`/echanges/nouveau?avec=${friend.id}`} className="btn">Échanger</Link>

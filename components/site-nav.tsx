@@ -52,6 +52,13 @@ export async function SiteNav({ message }: { message?: string } = {}) {
       </header>
       <Dock stock={hud.stock} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} collection={hud.setsReady} />
       <Toast key={message} message={message} />
+      {hud.unlocked.length > 0 && (
+        <Toast
+          key={hud.unlocked.map((item) => item.key).join()}
+          message={`Succès débloqué : ${hud.unlocked.map((item) => item.title).join(", ")} · +${formatNumber(hud.unlocked.reduce((sum, item) => sum + item.reward, 0))} pièces`}
+          variant="achievement"
+        />
+      )}
     </>
   );
 }

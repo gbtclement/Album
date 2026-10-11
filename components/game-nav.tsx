@@ -184,18 +184,21 @@ export function Dock({ stock, nextPackAt, questsReady, social, collection }: Doc
 
 // Message de confirmation ou d'erreur, affiché en haut puis retiré de l'adresse de la page.
 // À utiliser avec key={message} : un nouveau message recrée le composant et le réaffiche.
-export function Toast({ message }: { message?: string }) {
+// variant="achievement" : succès débloqué, affiché en doré sous un éventuel autre message.
+export function Toast({ message, variant }: { message?: string; variant?: "achievement" }) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     if (!message) return;
-    const url = new URL(window.location.href);
-    url.searchParams.delete("message");
-    window.history.replaceState(null, "", url);
-    const timer = setTimeout(() => setVisible(false), 3500);
+    if (!variant) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("message");
+      window.history.replaceState(null, "", url);
+    }
+    const timer = setTimeout(() => setVisible(false), variant ? 5000 : 3500);
     return () => clearTimeout(timer);
-  }, [message]);
+  }, [message, variant]);
 
   if (!message || !visible) return null;
-  return <div className="toast" role="status">{message}</div>;
+  return <div className={`toast${variant ? ` ${variant}` : ""}`} role="status">{message}</div>;
 }
