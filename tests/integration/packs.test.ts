@@ -162,7 +162,8 @@ describe("packs gagnés", () => {
 describe("récompenses des quêtes", () => {
   async function finish(userId: string, key: string) {
     await db.query(
-      "insert into user_quests (user_id, quest_key, period_start, progress) values ($1, $2, $3, 1000)",
+      `insert into user_quests (user_id, quest_key, period_start, progress) values ($1, $2, $3, 1000)
+       on conflict (user_id, quest_key, period_start) do update set progress = excluded.progress`,
       [userId, key, periodStart(QUESTS.find((quest) => quest.key === key)!.period)],
     );
   }
@@ -180,5 +181,23 @@ describe("récompenses des quêtes", () => {
     expect(await coinsOf(user.id)).toBe(500);
     expect(await getPackState(user.id)).toMatchObject({ solo: 1, bonus: 1 });
     await expect(claimQuest(user.id, "monthly_legendary")).rejects.toThrow("déjà récupéré");
+  });
+
+  it("quêtes premium : tout le monde progresse, seul un compte premium réclame", async () => {
+    const user = await createTestUser({ coins: 0 });
+    await openPack(user.id);
+    const progress = await db.query<{ progress: number }>(
+      "select progress from user_quests where user_id = $1 and quest_key = 'daily_premium'",
+      [user.id],
+    );
+    expect(progress.rows[0].progress).toBe(1);
+
+    await finish(user.id, "monthly_premium");
+    await expect(claimQuest(user.id, "monthly_premium")).rejects.toThrow("réservée aux comptes premium");
+
+    await db.query("update users set premium_until = now() + interval '1 day' where id = $1", [user.id]);
+    await claimQuest(user.id, "monthly_premium");
+    expect(await coinsOf(user.id)).toBe(1000);
+    expect(await getPackState(user.id)).toMatchObject({ epic: 1, legendary: 0 });
   });
 });

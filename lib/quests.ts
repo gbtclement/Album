@@ -17,12 +17,21 @@ export type QuestDef = {
   title: string;
   target: number;
   reward: Reward;
+  // Réservée aux comptes premium : tout le monde progresse, seul un premium peut réclamer
+  premium?: boolean;
 };
 
 // Journalière : 1 pack Solo · hebdomadaire : 1 pack Solo + 100 pièces · mensuelle : 1 pack + 500 pièces
 const DAILY: Reward = { coins: 0, packs: 0, solo: 1 };
 const WEEKLY: Reward = { coins: 100, packs: 0, solo: 1 };
 const MONTHLY: Reward = { coins: 500, packs: 1, solo: 0 };
+// Quêtes premium : un pack par jour, 2 packs + 200 pièces par semaine, un pack Épique + 1 000 pièces par mois.
+// Pas de pack Légendaire : la ligne premium du passe en donne déjà un par mois.
+export const PREMIUM_REWARDS: Record<Period, Reward> = {
+  daily: { coins: 0, packs: 1, solo: 0 },
+  weekly: { coins: 200, packs: 2, solo: 0 },
+  monthly: { coins: 1000, packs: 0, solo: 0, epic: 1 },
+};
 
 export const PERIOD_LABELS: Record<Period, string> = {
   daily: "Journalières",
@@ -40,9 +49,17 @@ export const QUESTS: QuestDef[] = [
   { key: "monthly_packs", period: "monthly", event: "pack_opened", title: "Ouvre 100 packs", target: 100, reward: MONTHLY },
   { key: "monthly_new", period: "monthly", event: "new_album", title: "Obtiens 30 albums nouveaux", target: 30, reward: MONTHLY },
   { key: "monthly_legendary", period: "monthly", event: "legendary_card", title: "Obtiens 1 carte légendaire", target: 1, reward: MONTHLY },
+  { key: "daily_premium", period: "daily", event: "pack_opened", title: "Ouvre 5 packs", target: 5, reward: PREMIUM_REWARDS.daily, premium: true },
+  { key: "weekly_premium", period: "weekly", event: "new_album", title: "Obtiens 10 albums nouveaux", target: 10, reward: PREMIUM_REWARDS.weekly, premium: true },
+  { key: "monthly_premium", period: "monthly", event: "rare_card", title: "Obtiens 30 cartes rares ou plus", target: 30, reward: PREMIUM_REWARDS.monthly, premium: true },
 ];
 
 export class QuestError extends Error {}
+
+// Récompense à réclamer : quête terminée, pas encore récupérée, et premium si la quête l'exige
+export function isClaimable(quest: Pick<QuestStatus, "progress" | "target" | "claimed" | "premium">, premium: boolean) {
+  return !quest.claimed && quest.progress >= quest.target && (!quest.premium || premium);
+}
 
 function formatDate(time: number) {
   return new Date(time).toISOString().slice(0, 10);
@@ -117,6 +134,10 @@ export async function claimQuest(userId: string, questKey: string) {
     const row = rows[0];
     if (!row || row.progress < quest.target) throw new QuestError("Cette quête n'est pas encore terminée.");
     if (row.claimed) throw new QuestError("Tu as déjà récupéré cette récompense.");
+    if (quest.premium) {
+      const premium = await client.query("select 1 from users where id = $1 and premium_until > now()", [userId]);
+      if (premium.rowCount === 0) throw new QuestError("Cette quête est réservée aux comptes premium.");
+    }
 
     await client.query(
       "update user_quests set claimed = true where user_id = $1 and quest_key = $2 and period_start = $3",

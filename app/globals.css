@@ -379,38 +379,50 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .pass-xp-chip b::after { content: " XP"; font-family: var(--f-ui); font-size: 11px; color: var(--muted); }
 .pass-upsell a { color: var(--gold); font-weight: 700; }
 
-/* ---------- Premium ---------- */
-.prem-hero { position: relative; overflow: hidden; display: grid; justify-items: center; text-align: center; gap: 4px; margin-top: 8px; padding: 28px 18px 22px; border-radius: 24px; border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line)); background: radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--gold) 22%, transparent), transparent 70%), repeating-radial-gradient(circle at 50% -40%, transparent 0 14px, rgba(255,255,255,.025) 14px 15px), var(--night-2); }
-.prem-hero h1 { margin-top: 10px; }
-.prem-hero .sub { max-width: 420px; }
-.prem-badge { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe08a, var(--gold) 55%, var(--gold-deep)); box-shadow: 0 4px 0 var(--gold-deep), 0 0 28px rgba(244,183,64,.45); color: #2b1d02; }
-.prem-badge svg { width: 32px; height: 22px; }
-.prem-offer { box-sizing: border-box; display: grid; justify-items: center; gap: 8px; width: 100%; max-width: 360px; margin-top: 10px; padding: 18px 16px; border-radius: 18px; background: rgba(0,0,0,.22); border: 1px solid var(--line); }
-.prem-offer .btn { box-sizing: border-box; width: 100%; white-space: normal; padding-inline: 14px; font-size: 18px; }
-.prem-offer .btn svg { width: 16px; height: 16px; }
-.prem-offer .field-hint { margin: 2px 0 0; font-size: 12px; }
-.prem-price { display: flex; align-items: baseline; gap: 6px; margin: 0; }
-.prem-price b { font-family: var(--f-display); font-weight: 400; font-size: 44px; line-height: 1; color: var(--gold); }
-.prem-price span { font-family: var(--f-ui); font-weight: 600; color: var(--muted); }
-.prem-terms { margin: 0 0 6px; font-family: var(--f-ui); font-size: 13px; color: var(--muted); }
-.prem-until { margin: 0 0 6px; color: var(--muted); }
-.prem-until strong { color: var(--ink); }
-.prem-offer.active .premium-tag { margin: 0; }
-.prem-perks { display: grid; gap: 10px; }
-@media (min-width: 640px) { .prem-perks { grid-template-columns: repeat(3, 1fr); } }
-.prem-perk { display: flex; gap: 12px; padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--night-2); }
-@media (min-width: 640px) { .prem-perk { flex-direction: column; } }
-.prem-perk-i { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--gold) 16%, var(--night-3)); color: var(--gold); }
-.prem-perk-i svg { width: 22px; height: 22px; }
-.prem-perk strong { font-family: var(--f-display); font-weight: 400; font-size: 17px; }
-.prem-perk p { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
-.prem-compare { border-radius: 16px; border: 1px solid var(--line); background: var(--night-2); overflow: hidden; }
-.prem-row { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 10px; align-items: center; padding: 12px 14px; font-size: 13px; color: var(--muted); }
-.prem-row + .prem-row { border-top: 1px solid var(--line); }
-.prem-row.head { padding-block: 8px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; background: var(--night-3); }
-.prem-row [role="rowheader"] { color: var(--ink); font-family: var(--f-ui); font-weight: 600; }
-.prem-row .gold { color: var(--gold); font-weight: 700; }
-.prem-fair { margin-top: 12px; }
+/* Page premium : l'édition deluxe d'un album (pochette, vinyle qui dépasse, autocollant de prix, liste des titres) */
+.dlx { max-width: 880px; }
+.dlx-hero { display: grid; gap: 30px; align-items: center; padding-top: 14px; }
+@media (min-width: 760px) { .dlx-hero { grid-template-columns: 370px 1fr; gap: 48px; padding-top: 28px; } .dlx .dlx-cover { width: 260px; } }
+.dlx-cover { position: relative; width: min(58vw, 280px); aspect-ratio: 1; margin: 16px 0 0; }
+.dlx-disc { position: absolute; top: 5%; right: -36%; height: 90%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, var(--night) 0 2.5%, var(--r-epique) 3% 17%, #0e0b1d 17.5% 19%, transparent 19.5%), conic-gradient(from 30deg, transparent, rgba(255,255,255,.1) 8%, transparent 20%, transparent 50%, rgba(255,255,255,.08) 58%, transparent 70%), repeating-radial-gradient(circle, #1b1736 0 2px, #2d2758 2px 3px); box-shadow: 0 12px 30px rgba(0,0,0,.5); animation: dlx-slide .9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes dlx-slide { from { transform: translateX(-28%) rotate(-50deg); } }
+.dlx-sleeve { position: relative; height: 100%; box-sizing: border-box; display: grid; align-content: space-between; padding: 18px; border-radius: 6px; overflow: hidden; color: #2b1d02; background: radial-gradient(circle at 100% 100%, #2b1d02 0 36%, transparent 36.4%), linear-gradient(90deg, transparent 0 64%, var(--r-epique) 64% 72%, transparent 72%), var(--gold); box-shadow: 0 16px 34px rgba(0,0,0,.45); }
+.dlx-brand { font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; }
+.dlx-name { font-family: var(--f-display); font-size: clamp(34px, 10vw, 46px); line-height: .92; }
+.dlx-ref { justify-self: end; font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: .12em; color: var(--gold); }
+.dlx-sticker { position: absolute; top: -16px; right: -20px; display: grid; place-content: center; text-align: center; width: 82px; height: 82px; border-radius: 50%; background: #fff4dc; color: #2b1d02; outline: 2px dashed rgba(43,29,2,.3); outline-offset: -7px; rotate: 12deg; box-shadow: 0 6px 14px rgba(0,0,0,.35); }
+.dlx-sticker b { font-family: var(--f-display); font-weight: 400; font-size: 20px; line-height: 1; }
+.dlx-sticker small { font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.dlx-eyebrow { margin: 0; font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.dlx h1 { font-size: clamp(30px, 6vw, 44px); line-height: 1.02; margin: 6px 0 12px; max-width: 14ch; }
+.dlx-lead { margin: 0 0 20px; max-width: 44ch; font-size: 15px; color: var(--muted); }
+.dlx-cta { display: grid; gap: 10px; justify-items: start; }
+.dlx-cta .btn svg { width: 16px; height: 16px; }
+.dlx-fine, .dlx-status { margin: 0; font-size: 13px; color: var(--muted); }
+.dlx-status strong { color: var(--ink); }
+.dlx-side { margin-top: 48px; }
+.dlx-side-title { display: flex; align-items: center; gap: 12px; margin: 0; padding-bottom: 12px; border-bottom: 2px solid color-mix(in srgb, var(--gold) 45%, var(--line)); font-family: var(--f-display); font-weight: 400; font-size: 22px; }
+.dlx-side-title span { padding: 3px 8px; border-radius: 4px; background: var(--gold); color: #2b1d02; font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+.dlx-side.b .dlx-side-title { border-color: color-mix(in srgb, var(--r-epique) 45%, var(--line)); }
+.dlx-side.b .dlx-side-title span { background: var(--r-epique); color: #fff; }
+.dlx-tracks { list-style: none; margin: 0; padding: 0; }
+.dlx-tracks li { display: grid; grid-template-columns: 32px 1fr; gap: 4px 12px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.dlx-no { font-family: var(--f-ui); font-weight: 700; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; transition: color .2s; }
+.dlx-tracks li:hover .dlx-no { color: var(--gold); }
+.dlx-track strong { display: block; font-family: var(--f-display); font-weight: 400; font-size: 17px; }
+.dlx-track small { display: block; margin-top: 2px; font-size: 13px; color: var(--muted); }
+.dlx-val { grid-column: 2; font-family: var(--f-ui); font-weight: 700; font-size: 14px; color: var(--gold); }
+@media (min-width: 640px) {
+  .dlx-tracks li { grid-template-columns: 40px 1fr minmax(0, 260px); }
+  .dlx-val { grid-column: auto; text-align: right; }
+}
+.dlx-notes { margin: 14px 0 0; max-width: 62ch; font-size: 14px; line-height: 1.6; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .dlx-disc { animation: none; } }
+/* Quêtes premium */
+.quest.premium { border-color: color-mix(in srgb, var(--gold) 35%, var(--line)); background: linear-gradient(100deg, color-mix(in srgb, var(--gold) 10%, var(--night-2)), var(--night-2) 55%); }
+.q-tag { display: block; font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.q-lock { color: var(--gold); }
+.q-lock svg { width: 14px; height: 14px; }
 @keyframes spin { to { rotate: 360deg; } }
 .pack-stock { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .pack-stock span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--night-3); }

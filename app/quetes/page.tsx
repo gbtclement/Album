@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 import { auth } from "@/auth";
-import { DiscIcon, SparkIcon, StarIcon, SwapIcon, CrownIcon } from "@/components/icons";
+import { DiscIcon, SparkIcon, StarIcon, SwapIcon, CrownIcon, LockIcon } from "@/components/icons";
 import { DrawBanner } from "@/components/draw-banner";
 import { SiteNav } from "@/components/site-nav";
 import { isDrawPending } from "@/lib/daily-draw";
 import { rewardLabel } from "@/lib/pack-rules";
-import { getQuestStatus, PERIOD_LABELS, type Period, type QuestEvent } from "@/lib/quests";
+import { isPremium } from "@/lib/premium";
+import { getQuestStatus, isClaimable, PERIOD_LABELS, type Period, type QuestEvent } from "@/lib/quests";
 import { claimQuestAction } from "./actions";
 
 export const metadata: Metadata = { title: "Quêtes" };
@@ -47,8 +49,12 @@ export default async function QuetesPage({ searchParams }: Props) {
   if (!session?.user?.id) redirect("/connexion");
 
   const { message } = await searchParams;
-  const [quests, drawPending] = await Promise.all([getQuestStatus(session.user.id), isDrawPending(session.user.id)]);
-  const ready = quests.filter((quest) => !quest.claimed && quest.progress >= quest.target).length;
+  const [quests, drawPending, premium] = await Promise.all([
+    getQuestStatus(session.user.id),
+    isDrawPending(session.user.id),
+    isPremium(session.user.id),
+  ]);
+  const ready = quests.filter((quest) => isClaimable(quest, premium)).length;
 
   return (
     <>
@@ -68,10 +74,12 @@ export default async function QuetesPage({ searchParams }: Props) {
                   const progress = Math.min(quest.progress, quest.target);
                   const done = progress >= quest.target;
                   const style = EVENT_STYLE[quest.event];
+                  const locked = quest.premium && !premium;
                   return (
-                    <div key={quest.key} className={`quest${done ? " done" : ""}${quest.claimed ? " claimed" : ""}`}>
+                    <div key={quest.key} className={`quest${done ? " done" : ""}${quest.claimed ? " claimed" : ""}${quest.premium ? " premium" : ""}`}>
                       <span className="q-ico" style={{ "--c": style.color } as CSSProperties}>{style.icon}</span>
                       <div className="l">
+                        {quest.premium && <span className="q-tag">Premium</span>}
                         <strong>{quest.title}</strong>
                         <div className="bar">
                           <div style={{ width: `${(progress / quest.target) * 100}%`, "--c": done ? "var(--gold)" : "var(--r-peu_commun)" } as CSSProperties} />
@@ -79,7 +87,8 @@ export default async function QuetesPage({ searchParams }: Props) {
                         <div className="q-meta">
                           <span>{progress} / {quest.target}</span>
                           <span className="reward" aria-label={`Récompense : ${rewardLabel(quest.reward)}`}>
-                            {quest.reward.packs > 0 && <><i className="vinyl-i" aria-hidden="true" />{quest.reward.packs} pack</>}
+                            {(quest.reward.epic ?? 0) > 0 && <><i className="vinyl-i epic" aria-hidden="true" />{quest.reward.epic} Épique</>}
+                            {quest.reward.packs > 0 && <><i className="vinyl-i" aria-hidden="true" />{quest.reward.packs} pack{quest.reward.packs > 1 ? "s" : ""}</>}
                             {quest.reward.solo > 0 && <><i className="vinyl-i solo" aria-hidden="true" />{quest.reward.solo} Solo</>}
                             {quest.reward.coins > 0 && <><i className="coin-i" aria-hidden="true" />{quest.reward.coins.toLocaleString("fr-FR")}</>}
                           </span>
@@ -87,6 +96,10 @@ export default async function QuetesPage({ searchParams }: Props) {
                       </div>
                       {quest.claimed ? (
                         <span className="btn" aria-disabled="true">Récupéré</span>
+                      ) : locked ? (
+                        <Link href="/premium" className="btn q-lock" aria-label="Réservée au premium : voir l'offre">
+                          <LockIcon /> Premium
+                        </Link>
                       ) : (
                         <form action={claimQuestAction}>
                           <input type="hidden" name="questKey" value={quest.key} />

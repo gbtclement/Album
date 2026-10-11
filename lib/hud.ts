@@ -6,7 +6,7 @@ import { getPackState } from "@/lib/packs";
 import { getPassState, settlePastSeasons } from "@/lib/pass";
 import { PASS_TIERS, XP_PER_TIER } from "@/lib/pass-rules";
 import { settleSeasonRanking, type SeasonAward } from "@/lib/season";
-import { getQuestStatus } from "@/lib/quests";
+import { getQuestStatus, isClaimable } from "@/lib/quests";
 
 // Données de la barre d'infos (haut) et des pastilles de la barre de jeu (bas), pour le joueur connecté
 export type HudData = {
@@ -70,7 +70,7 @@ export async function getHudData(userId: string): Promise<HudData> {
     extraPacks: pack.bonus + pack.solo + pack.epic + pack.legendary,
     drawPending,
     // Pastille Quêtes : récompenses à réclamer, plus la pioche du jour tant qu'elle n'est pas jouée
-    questsReady: quests.filter((quest) => !quest.claimed && quest.progress >= quest.target).length + (drawPending ? 1 : 0),
+    questsReady: quests.filter((quest) => isClaimable(quest, pass.premium)).length + (drawPending ? 1 : 0),
     social: social.rows[0]?.total ?? 0,
     setsReady,
     passLevel: pass.level,

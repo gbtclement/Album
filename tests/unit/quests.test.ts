@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rewardLabel } from "@/lib/pack-rules";
-import { periodStart, QUESTS } from "@/lib/quests";
+import { isClaimable, periodStart, PREMIUM_REWARDS, QUESTS } from "@/lib/quests";
 
 describe("periodStart", () => {
   it("journalière : le jour même (UTC)", () => {
@@ -33,11 +33,32 @@ describe("QUESTS", () => {
   });
 
   it("rapportent des packs : Solo par jour et par semaine, un pack classique par mois", () => {
-    for (const quest of QUESTS) {
+    for (const quest of QUESTS.filter((item) => !item.premium)) {
       if (quest.period === "daily") expect(quest.reward).toEqual({ coins: 0, packs: 0, solo: 1 });
       if (quest.period === "weekly") expect(quest.reward).toEqual({ coins: 100, packs: 0, solo: 1 });
       if (quest.period === "monthly") expect(quest.reward).toEqual({ coins: 500, packs: 1, solo: 0 });
     }
+  });
+});
+
+describe("quêtes premium", () => {
+  it("une par période, avec les récompenses prévues", () => {
+    const premium = QUESTS.filter((quest) => quest.premium);
+    expect(premium.map((quest) => quest.period)).toEqual(["daily", "weekly", "monthly"]);
+    expect(PREMIUM_REWARDS).toEqual({
+      daily: { coins: 0, packs: 1, solo: 0 },
+      weekly: { coins: 200, packs: 2, solo: 0 },
+      monthly: { coins: 1000, packs: 0, solo: 0, epic: 1 },
+    });
+  });
+
+  it("ne se réclament qu'en premium", () => {
+    const quest = { progress: 5, target: 5, claimed: false, premium: true };
+    expect(isClaimable(quest, false)).toBe(false);
+    expect(isClaimable(quest, true)).toBe(true);
+    expect(isClaimable({ ...quest, premium: false }, false)).toBe(true);
+    expect(isClaimable({ ...quest, claimed: true }, true)).toBe(false);
+    expect(isClaimable({ ...quest, progress: 4 }, true)).toBe(false);
   });
 });
 
