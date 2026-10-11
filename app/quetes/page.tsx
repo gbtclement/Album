@@ -77,9 +77,14 @@ export default async function QuetesPage({ searchParams }: Props) {
                   const locked = quest.premium && !premium;
                   return (
                     <div key={quest.key} className={`quest${done ? " done" : ""}${quest.claimed ? " claimed" : ""}${quest.premium ? " premium" : ""}`}>
+                      {quest.premium && (
+                        <span className="q-flag" title="Quête premium">
+                          <CrownIcon />
+                          <span className="sr-only">Quête premium</span>
+                        </span>
+                      )}
                       <span className="q-ico" style={{ "--c": style.color } as CSSProperties}>{style.icon}</span>
                       <div className="l">
-                        {quest.premium && <span className="q-tag">Premium</span>}
                         <strong>{quest.title}</strong>
                         <div className="bar">
                           <div style={{ width: `${(progress / quest.target) * 100}%`, "--c": done ? "var(--gold)" : "var(--r-peu_commun)" } as CSSProperties} />

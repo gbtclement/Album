@@ -65,9 +65,10 @@ export default function CgvPage() {
       <h2>5. Durée et résiliation</h2>
       <p>
         L&apos;abonnement est <strong>sans engagement</strong> et se renouvelle chaque mois. Tu peux le résilier à tout moment, en quelques
-        clics, depuis ton <Link href="/profil">profil</Link> (« Gérer mon abonnement »), ou en écrivant à {contactEmail}. La résiliation
-        arrête les paiements suivants. Le premium reste actif jusqu&apos;à la fin du mois déjà payé (ou du mois offert), puis le compte
-        redevient gratuit. Le mois en cours n&apos;est pas remboursé.
+        clics, depuis ton <Link href="/profil">profil</Link> (rubrique « Mon abonnement »), ou en écrivant à {contactEmail}. La résiliation
+        arrête les paiements suivants et <strong>prend effet immédiatement</strong> : tous les avantages premium s&apos;arrêtent dès que tu
+        confirmes, même s&apos;il reste des jours dans le mois payé ou dans le mois offert. Le compte redevient gratuit tout de suite et le
+        mois en cours n&apos;est pas remboursé. Le site te le rappelle avant que tu confirmes.
       </p>
       <p>
         Quand le premium s&apos;arrête, tu gardes tout ce que tu as déjà obtenu : cartes, packs gagnés, pièces. Seuls les avantages à venir

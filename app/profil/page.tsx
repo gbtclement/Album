@@ -11,9 +11,9 @@ import { SiteNav } from "@/components/site-nav";
 import { getAchievements, syncAchievements } from "@/lib/achievements";
 import { collectionScore, getCollectionCards } from "@/lib/collection";
 import { db } from "@/lib/db";
-import { MAX_STOCK_PREMIUM } from "@/lib/pack-rules";
+import { MAX_STOCK, MAX_STOCK_PREMIUM } from "@/lib/pack-rules";
 import { RARITY_LABELS, RARITY_TIERS } from "@/lib/rarity";
-import { resendVerificationAction } from "./actions";
+import { cancelPremiumAction, resendVerificationAction } from "./actions";
 import { AutoRevealSwitch } from "./auto-reveal-switch";
 
 export const metadata: Metadata = { title: "Profil" };
@@ -116,6 +116,45 @@ export default async function ProfilPage({ searchParams }: Props) {
           </div>
           <AutoRevealSwitch initial={user.auto_reveal} />
         </div>
+
+        <h2 className="label">Mon abonnement</h2>
+        {user.premium_until ? (
+          <div className="sub-card">
+            <div className="sub-head">
+              <div>
+                <strong>Premium actif</strong>
+                <small>Jusqu&apos;au {user.premium_until.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</small>
+              </div>
+              <Link href="/premium" className="btn">Voir l&apos;offre</Link>
+            </div>
+            <details className="sub-cancel">
+              <summary>Résilier mon premium</summary>
+              <div className="sub-cancel-body">
+                <p>La résiliation prend effet <strong>tout de suite</strong>, même s&apos;il reste des jours. Tu perds immédiatement :</p>
+                <ul>
+                  <li>le stock de {MAX_STOCK_PREMIUM} packs (retour à {MAX_STOCK} ; les packs déjà en stock restent) ;</li>
+                  <li>la ligne premium du passe de combat ;</li>
+                  <li>les quêtes premium, même terminées et pas encore réclamées.</li>
+                </ul>
+                <p>Tes cartes, tes pièces et les packs déjà gagnés restent à toi.</p>
+                <form action={cancelPremiumAction} className="sub-cancel-form">
+                  <label className="radio">
+                    <input type="checkbox" name="confirm" required /> Je comprends que je perds mes avantages premium maintenant
+                  </label>
+                  <button type="submit" className="btn red">Résilier maintenant</button>
+                </form>
+              </div>
+            </details>
+          </div>
+        ) : (
+          <div className="item">
+            <div className="l">
+              <strong>Compte gratuit</strong>
+              <small>Premium : plus de packs, quêtes et passe en plus. 1er mois offert.</small>
+            </div>
+            <Link href="/premium" className="btn gold">Découvrir</Link>
+          </div>
+        )}
 
         <h2 className="label">Compte</h2>
         <div className="stack">

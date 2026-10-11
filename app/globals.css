@@ -423,8 +423,29 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .dlx-notes { margin: 14px 0 0; max-width: 62ch; font-size: 14px; line-height: 1.6; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .dlx-disc { animation: none; } }
 /* Quêtes premium */
-.quest.premium { border-color: color-mix(in srgb, var(--gold) 35%, var(--line)); background: linear-gradient(100deg, color-mix(in srgb, var(--gold) 10%, var(--night-2)), var(--night-2) 55%); }
-.q-tag { display: block; font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.quest.premium { position: relative; border-color: color-mix(in srgb, var(--gold) 35%, var(--line)); background: linear-gradient(100deg, color-mix(in srgb, var(--gold) 10%, var(--night-2)), var(--night-2) 55%); }
+/* Drapeau doré accroché au bord haut, à gauche : un ruban qui passe par-dessus le cadre (le petit pli sombre fait le repli) */
+.q-flag { position: absolute; top: -6px; left: -7px; z-index: 1; width: 22px; height: 30px; box-sizing: border-box; display: grid; justify-items: center; align-content: start; padding-top: 8px; background: linear-gradient(180deg, #ffd57a, var(--gold) 60%); color: #2b1d02; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); }
+.q-flag svg { width: 12px; height: 9px; }
+.quest.premium::before { content: ""; position: absolute; top: -6px; left: 15px; width: 5px; height: 6px; background: var(--gold-deep); clip-path: polygon(0 0, 0 100%, 100% 100%); }
+/* Profil : rubrique Mon abonnement */
+.sub-card { border-radius: 16px; border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--line)); background: var(--night-2); overflow: hidden; }
+.sub-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; }
+.sub-head strong { display: block; color: var(--gold); font-family: var(--f-display); font-weight: 400; font-size: 17px; }
+.sub-head small { color: var(--muted); font-size: 13px; }
+.sub-cancel { border-top: 1px solid var(--line); }
+.sub-cancel summary { cursor: pointer; padding: 12px 14px; min-height: 20px; font-family: var(--f-ui); font-weight: 600; font-size: 13px; color: var(--muted); list-style: none; }
+.sub-cancel summary::-webkit-details-marker { display: none; }
+.sub-cancel summary::after { content: " ▾"; }
+.sub-cancel[open] summary::after { content: " ▴"; }
+.sub-cancel summary:hover { color: var(--coral); }
+.sub-cancel-body { padding: 0 14px 14px; font-size: 13px; color: var(--muted); }
+.sub-cancel-body p { margin: 0 0 8px; }
+.sub-cancel-body strong { color: var(--coral); }
+.sub-cancel-body ul { margin: 0 0 8px; padding-left: 18px; }
+.sub-cancel-form { display: grid; gap: 10px; justify-items: start; margin-top: 4px; }
+.sub-cancel-form .radio { align-items: flex-start; color: var(--ink); font-size: 13px; }
+.sub-cancel-form input { margin-top: 2px; }
 .q-lock { color: var(--gold); }
 .q-lock svg { width: 14px; height: 14px; }
 @keyframes spin { to { rotate: 360deg; } }

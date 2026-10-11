@@ -18,6 +18,14 @@ export async function isPremium(userId: string) {
   return (await getPremiumUntil(userId)) !== null;
 }
 
+// Résiliation par le joueur : effet immédiat, tous les avantages premium s'arrêtent tout de suite
+// (pas de premium jusqu'à la fin de la période). Les cartes, packs et pièces déjà obtenus restent.
+// Renvoie false si le joueur n'était pas premium.
+export async function cancelPremium(userId: string): Promise<boolean> {
+  const { rowCount } = await db.query("update users set premium_until = null where id = $1 and premium_until > now()", [userId]);
+  return (rowCount ?? 0) > 0;
+}
+
 // Ajoute `days` jours à partir de la fin du premium en cours (ou de maintenant) ; 0 retire le premium.
 // Renvoie la nouvelle date de fin (null si retiré).
 export async function setPremium(email: string, days: number): Promise<Date | null> {

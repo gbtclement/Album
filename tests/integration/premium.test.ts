@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
 import { MAX_STOCK, MAX_STOCK_PREMIUM, PACK_INTERVAL_MS } from "@/lib/pack-rules";
 import { getPackState } from "@/lib/packs";
-import { isPremium, PremiumError, setPremium } from "@/lib/premium";
+import { cancelPremium, isPremium, PremiumError, setPremium } from "@/lib/premium";
 import { createTestUser, resetDatabase } from "./helpers";
 
 beforeEach(resetDatabase);
@@ -44,6 +44,17 @@ describe("premium", () => {
     await emptyStockSince(premium.id, longAgo);
     expect(await getPackState(free.id)).toMatchObject({ stock: MAX_STOCK, max: MAX_STOCK });
     expect(await getPackState(premium.id)).toMatchObject({ stock: MAX_STOCK_PREMIUM, max: MAX_STOCK_PREMIUM });
+  });
+
+  it("cancelPremium : tous les avantages s'arrêtent tout de suite, les packs gagnés restent", async () => {
+    const user = await createTestUser();
+    await setPremium(user.email, 30);
+    await db.query("insert into pack_stocks (user_id, stock, last_recharged_at, epic_packs) values ($1, 15, now(), 2)", [user.id]);
+
+    expect(await cancelPremium(user.id)).toBe(true);
+    expect(await isPremium(user.id)).toBe(false);
+    expect(await getPackState(user.id)).toMatchObject({ max: MAX_STOCK, epic: 2 });
+    expect(await cancelPremium(user.id)).toBe(false);
   });
 
   it("premium expiré : le stock au-dessus de 10 est gardé, sans recharge", async () => {

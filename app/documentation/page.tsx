@@ -278,6 +278,9 @@ export default function DocumentationPage() {
               (<code>lib/premium.ts</code>). Avantage : stock de 15 packs au lieu de 10. Un premium expiré garde ses packs au-dessus de 10,
               la recharge reprend quand il redescend sous 10. La page <code>/premium</code> présente l&apos;offre (2,99 € par mois,
               <code>lib/premium-offer.ts</code>) ; son bouton de paiement reste désactivé tant que Stripe n&apos;est pas branché.
+              Le profil a une rubrique « Mon abonnement » : date de fin et résiliation (case à cocher puis bouton). La résiliation prend
+              effet tout de suite (<code>cancelPremium</code> remet <code>premium_until</code> à null) : plus de stock à 15, de ligne
+              premium ni de quêtes premium, même s&apos;il restait des jours ; les cartes, pièces et packs déjà gagnés restent.
             </li>
             <li>
               <strong>Passe de combat</strong> (<code>lib/pass-rules.ts</code>, <code>lib/pass.ts</code>) : chaque carte obtenue rapporte de
