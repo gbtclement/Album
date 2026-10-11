@@ -89,6 +89,7 @@ const COMMANDS = [
   { command: "npm run import:catalog -- --listenbrainz", description: "Importer les albums les plus écoutés sur ListenBrainz (sans clé)" },
   { command: "npm run import:catalog -- --listenbrainz --artists 1000 --similar 5 --min-listens 1000", description: "Catalogue élargi : discographies des 1 000 artistes les plus écoutés de chaque période et de leurs artistes proches (plusieurs heures la première fois : une requête MusicBrainz par seconde)" },
   { command: "npm run import:catalog -- --listens", description: "Mettre à jour les écoutes et recalculer la rareté de tout le catalogue" },
+  { command: "npm run import:lastfm", description: "Récupérer les écoutes Last.fm des albums jamais vérifiés ou vérifiés il y a plus de 30 jours (clé LASTFM_API_KEY dans .env, environ 4 albums par seconde). Options --days 0 pour tout le catalogue, --max 200 pour un essai" },
   { command: "npm run check:covers", description: "Vérifier que chaque pochette s'affiche encore et remplacer celles en panne (Cover Art Archive, sinon Deezer). Option --max 200 pour un essai" },
   { command: "npm run seed:demo", description: "Créer des données de démonstration (compte demo@demo.invalid / demo-album, 8 autres joueurs, marché, bourse, échanges). Refusé en production" },
 ];
@@ -126,6 +127,7 @@ const LOTS = [
   { lot: "G3", name: "Succès et badges : 22 objectifs permanents (collection, raretés, packs, artistes, social, pioche), pièces versées au déblocage, notification dorée, grille sur le profil, nombre de succès des amis", status: "Terminé", branch: "jeu3-succes" },
   { lot: "G4", name: "Économie : les quêtes rapportent des packs (Solo d'un album, ou classiques), réserve de packs gagnés sans maximum, plus de pièces de remplacement ; raccourci de la pioche dans la barre du haut ; vinyle de chargement centré et ouverture de pack sans clignotement", status: "Terminé", branch: "jeu4-economie" },
   { lot: "G5", name: "Ouverture des packs une carte à la fois : flèches pour avancer et revenir, points de progression, clavier et glissement ; « Tout ouvrir » retiré", status: "Terminé", branch: "jeu5-ouverture-carte" },
+  { lot: "C12", name: "Correctif : écoutes Last.fm sur la fiche album (chiffres plus parlants, source indiquée), npm run import:lastfm, récupérées aussi à la fin de l'import du catalogue ; la rareté reste sur ListenBrainz", status: "Terminé", branch: "correctif12-lastfm" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -287,7 +289,7 @@ export default function DocumentationPage() {
 
         <Section title="Catalogue">
           <p>
-            Sources, toutes sans clé : ListenBrainz (albums et artistes les plus écoutés, nombre d&apos;écoutes de chaque album),
+            Sources, toutes sans clé sauf Last.fm : ListenBrainz (albums et artistes les plus écoutés, nombre d&apos;écoutes de chaque album),
             MusicBrainz (identifiants, type d&apos;album, année ; une requête par seconde), Cover Art Archive (pochettes) et
             Deezer (liens d&apos;écoute exacts, pochette de secours). Quand un lien exact n&apos;est pas trouvé, un lien de recherche est proposé.
           </p>
@@ -297,7 +299,14 @@ export default function DocumentationPage() {
             <li>Un album déjà présent n&apos;est pas réimporté : relancer l&apos;import reprend là où il s&apos;était arrêté.</li>
             <li>La rareté est recalculée à la fin de chaque import, et à la demande avec <code>npm run import:catalog -- --listens</code> (écoutes remises à jour).</li>
             <li>Pochettes : celle choisie par ListenBrainz, sinon l&apos;image principale sur Cover Art Archive, sinon celle de Deezer (même titre et même artiste). Une pochette peut tomber en panne après l&apos;import (image retirée, serveur en erreur) : <code>npm run check:covers</code> les vérifie toutes et remplace celles qui ne répondent plus.</li>
-            <li>Last.fm n&apos;est plus utilisé : son API ne permet pas de lister les albums les plus écoutés.</li>
+            <li>
+              Last.fm sert seulement à afficher les écoutes sur la fiche album (sa communauté est bien plus grande que celle de
+              ListenBrainz, ses chiffres sont plus parlants). Il demande une clé gratuite, <code>LASTFM_API_KEY</code> dans <code>.env</code>.
+              La recherche se fait par artiste et titre (Last.fm ne connaît pas nos identifiants d&apos;album), une fois par mois au plus
+              par album. Sans chiffre Last.fm, la fiche affiche celui de ListenBrainz. Il ne sert pas à la rareté, qui reste
+              calculée avec ListenBrainz (son API ne permet pas de lister les albums les plus écoutés). Spotify n&apos;est pas utilisé :
+              son API ne donne pas le nombre d&apos;écoutes, seulement une note de popularité qui suit les tendances du moment.
+            </li>
           </ul>
         </Section>
 

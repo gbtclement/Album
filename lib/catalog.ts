@@ -15,6 +15,9 @@ export type AlbumRow = {
   // Écoutes ListenBrainz (bigint : renvoyé en texte par PostgreSQL)
   listen_count: string | null;
   listener_count: string | null;
+  // Écoutes Last.fm, affichées en priorité sur la fiche (null si pas encore récupérées ou album inconnu)
+  lastfm_playcount: string | null;
+  lastfm_listeners: string | null;
   rarity_tier: RarityTier;
   links: AlbumLinks;
 };

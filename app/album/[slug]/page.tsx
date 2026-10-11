@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 import { CoverImage } from "@/components/cover-image";
 import { PriceChart } from "@/components/price-chart";
 import { SiteNav } from "@/components/site-nav";
-import { smallCover } from "@/components/game-ui";
+import { formatCompact, smallCover } from "@/components/game-ui";
 import { findAlbumBySlug, findAlbumsByArtist, type AlbumLinks } from "@/lib/catalog";
 import { getOwnedCount } from "@/lib/collection";
 import { getAlbumCote } from "@/lib/market";
@@ -55,7 +55,10 @@ export default async function AlbumPage({ params }: Props) {
     getAlbumCote(album.id),
     findAlbumsByArtist(album.artist, album.id),
   ]);
-  const listens = album.listen_count ? Number(album.listen_count) : null;
+  // Écoutes affichées : Last.fm (grande communauté) si on les a, sinon ListenBrainz
+  const lastfm = album.lastfm_playcount ? Number(album.lastfm_playcount) : null;
+  const listens = lastfm ?? (album.listen_count ? Number(album.listen_count) : null);
+  const listensSource = lastfm !== null ? "Last.fm" : "ListenBrainz";
 
   // Données structurées (schema.org) : aident les moteurs à comprendre la fiche
   // Fil d'Ariane : Accueil > Albums de l'artiste > Album
@@ -106,11 +109,16 @@ export default async function AlbumPage({ params }: Props) {
         </div>
 
         <div className="facts" style={{ marginTop: 14 }}>
-          <div className="fact"><b>{listens !== null ? listens.toLocaleString("fr-FR") : "—"}</b><small>Écoutes</small></div>
+          <div className="fact"><b>{listens !== null ? formatCompact(listens) : "—"}</b><small>Écoutes {listensSource}</small></div>
           <div className="fact"><b><i className="coin-i" aria-hidden="true" />{cote.cote ? Number(cote.cote).toLocaleString("fr-FR") : "—"}</b><small>Cote</small></div>
           <div className="fact"><b>{RARITY_POINTS[album.rarity_tier]}</b><small>Points</small></div>
         </div>
-        <p className="sub" style={{ marginTop: 6 }}>Écoutes ListenBrainz : plus un album est écouté, plus sa carte est rare (les écoutes en boucle d&apos;une poignée de fans comptent moins).</p>
+        <p className="sub" style={{ marginTop: 6 }}>
+          {lastfm !== null
+            ? `Écoutes comptées sur Last.fm${album.lastfm_listeners ? ` par ${formatCompact(Number(album.lastfm_listeners))} auditeurs` : ""} (et non sur Spotify, qui ne publie pas ses chiffres). `
+            : "Écoutes comptées sur ListenBrainz, un service d'écoutes ouvert (et non sur Spotify, qui ne publie pas ses chiffres). "}
+          Plus un album est écouté, plus sa carte est rare.
+        </p>
 
         <div className="listen" style={{ marginTop: 8 }}>
           {PLATFORMS.map(({ key, label }) => {

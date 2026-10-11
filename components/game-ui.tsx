@@ -46,3 +46,8 @@ export function Thumb({ cover, tier, title }: { cover: string | null; tier: Rari
 export function formatNumber(value: number) {
   return value.toLocaleString("fr-FR");
 }
+
+// Grands nombres en abrégé : 1 208 000 -> « 1,2 M », 45 300 -> « 45,3 k »
+export function formatCompact(value: number) {
+  return new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+}
