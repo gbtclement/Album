@@ -32,8 +32,8 @@ export default async function ProfilPage({ searchParams }: Props) {
   // les pièces et la grille de succès de la page soient déjà à jour
   await syncAchievements(session.user.id);
   const [userResult, cards, achievements] = await Promise.all([
-    db.query<{ email: string; pseudo: string; coins: number; auto_reveal: boolean; email_verified_at: Date | null; created_at: Date; premium_until: Date | null }>(
-      `select email, pseudo, coins, auto_reveal, email_verified_at, created_at,
+    db.query<{ email: string; pseudo: string; coins: number; auto_reveal: boolean; email_verified_at: Date | null; created_at: Date; premium_until: Date | null; trial_available: boolean }>(
+      `select email, pseudo, coins, auto_reveal, email_verified_at, created_at, premium_trial_used_at is null as trial_available,
               case when premium_until > now() then premium_until end as premium_until
        from users where id = $1`,
       [session.user.id],
@@ -150,7 +150,7 @@ export default async function ProfilPage({ searchParams }: Props) {
           <div className="item">
             <div className="l">
               <strong>Compte gratuit</strong>
-              <small>Premium : plus de packs, quêtes et passe en plus. 1er mois offert.</small>
+              <small>Premium : plus de packs, quêtes et passe en plus.{user.trial_available ? " 1er mois offert." : ""}</small>
             </div>
             <Link href="/premium" className="btn gold">Découvrir</Link>
           </div>

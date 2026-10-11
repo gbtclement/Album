@@ -50,7 +50,7 @@ const ROUTES = [
 ];
 
 const TABLES = [
-  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement), dates d'acceptation des CGU, de dernière visite et d'avertissement d'inactivité, fin du premium (premium_until, null si jamais premium)" },
+  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement), dates d'acceptation des CGU, de dernière visite et d'avertissement d'inactivité, fin du premium (premium_until, null si jamais premium), date du premier premium (premium_trial_used_at : rempli = plus de mois offert)" },
   { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
   { name: "password_resets", description: "Lien de réinitialisation du mot de passe en cours par joueur (empreinte SHA-256 du jeton, expiration 1 h)" },
   { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
@@ -280,7 +280,10 @@ export default function DocumentationPage() {
               <code>lib/premium-offer.ts</code>) ; son bouton de paiement reste désactivé tant que Stripe n&apos;est pas branché.
               Le profil a une rubrique « Mon abonnement » : date de fin et résiliation (case à cocher puis bouton). La résiliation prend
               effet tout de suite (<code>cancelPremium</code> remet <code>premium_until</code> à null) : plus de stock à 15, de ligne
-              premium ni de quêtes premium, même s&apos;il restait des jours ; les cartes, pièces et packs déjà gagnés restent.
+              premium ni de quêtes premium, même s&apos;il restait des jours ; les cartes, pièces et packs déjà gagnés restent. Le premier mois offert ne sert
+              qu&apos;une fois : dès qu&apos;un compte est premium (essai, abonnement ou <code>npm run premium</code>),
+              <code>premium_trial_used_at</code> est rempli et la page premium et le profil n&apos;affichent plus le mois offert, même après
+              une résiliation (migration 025).
             </li>
             <li>
               <strong>Passe de combat</strong> (<code>lib/pass-rules.ts</code>, <code>lib/pass.ts</code>) : chaque carte obtenue rapporte de

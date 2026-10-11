@@ -39,7 +39,8 @@ export async function exportUserData(userId: string) {
     `select pseudo, email, email_verified_at as email_verifie_le, created_at as inscrit_le,
             terms_accepted_at as cgu_acceptees_le, last_seen_at as derniere_visite,
             case when password_hash is null then 'Google' else 'e-mail et mot de passe' end as connexion,
-            coins as pieces, auto_reveal as reglage_revelation_auto, premium_until as premium_jusqu_au
+            coins as pieces, auto_reveal as reglage_revelation_auto, premium_until as premium_jusqu_au,
+            premium_trial_used_at as mois_offert_utilise_le
      from users where id = $1`,
     userId,
   );

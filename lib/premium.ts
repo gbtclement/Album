@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 
 // Compte premium (lot P1) : pas encore de paiement, attribué à la main avec npm run premium.
-// Premium tant que premium_until est dans le futur.
+// Premium tant que premium_until est dans le futur. premium_trial_used_at (rempli au premier premium) retire le mois offert.
 
 export class PremiumError extends Error {}
 
@@ -16,6 +16,12 @@ export async function getPremiumUntil(userId: string): Promise<Date | null> {
 
 export async function isPremium(userId: string) {
   return (await getPremiumUntil(userId)) !== null;
+}
+
+// Premier mois offert encore disponible : seulement pour un compte qui n'a jamais été premium (essai, abonnement ou offert)
+export async function isTrialAvailable(userId: string) {
+  const { rows } = await db.query("select 1 from users where id = $1 and premium_trial_used_at is null", [userId]);
+  return rows.length > 0;
 }
 
 // Résiliation par le joueur : effet immédiat, tous les avantages premium s'arrêtent tout de suite
@@ -34,7 +40,8 @@ export async function setPremium(email: string, days: number): Promise<Date | nu
   }
   const { rows } = await db.query<{ premium_until: Date | null }>(
     `update users set premium_until = case when $2::int = 0 then null
-       else greatest(now(), coalesce(premium_until, now())) + make_interval(days => $2::int) end
+       else greatest(now(), coalesce(premium_until, now())) + make_interval(days => $2::int) end,
+       premium_trial_used_at = case when $2::int = 0 then premium_trial_used_at else coalesce(premium_trial_used_at, now()) end
      where lower(email) = lower($1) returning premium_until`,
     [email, days],
   );

@@ -168,6 +168,9 @@ export function Dock({ stock, extra, nextPackAt, questsReady, social, collection
             aria-label={`Packs : ${available} disponible${available > 1 ? "s" : ""}`}
             aria-current={isActive(pathname, "/packs") ? "page" : undefined}
             style={{ "--p": `${progress}%` } as CSSProperties}
+            // Comme le compteur : l'anneau dépend de l'heure, qui diffère entre le rendu serveur et le navigateur.
+            // La valeur se corrige à la mise à jour suivante (chaque seconde).
+            suppressHydrationWarning
           >
             <span className="ring" />
             <span className="vinyl"><span className="hub" /></span>

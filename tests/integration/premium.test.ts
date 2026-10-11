@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
 import { MAX_STOCK, MAX_STOCK_PREMIUM, PACK_INTERVAL_MS } from "@/lib/pack-rules";
 import { getPackState } from "@/lib/packs";
-import { cancelPremium, isPremium, PremiumError, setPremium } from "@/lib/premium";
+import { cancelPremium, isPremium, isTrialAvailable, PremiumError, setPremium } from "@/lib/premium";
 import { createTestUser, resetDatabase } from "./helpers";
 
 beforeEach(resetDatabase);
@@ -55,6 +55,17 @@ describe("premium", () => {
     expect(await isPremium(user.id)).toBe(false);
     expect(await getPackState(user.id)).toMatchObject({ max: MAX_STOCK, epic: 2 });
     expect(await cancelPremium(user.id)).toBe(false);
+  });
+
+  it("le mois offert disparaît dès qu'un compte a été premium, même résilié", async () => {
+    const user = await createTestUser();
+    expect(await isTrialAvailable(user.id)).toBe(true);
+    await setPremium(user.email, 30);
+    expect(await isTrialAvailable(user.id)).toBe(false);
+    await cancelPremium(user.id);
+    expect(await isTrialAvailable(user.id)).toBe(false);
+    await setPremium(user.email, 0);
+    expect(await isTrialAvailable(user.id)).toBe(false);
   });
 
   it("premium expiré : le stock au-dessus de 10 est gardé, sans recharge", async () => {

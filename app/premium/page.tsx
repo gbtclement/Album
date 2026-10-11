@@ -7,7 +7,7 @@ import { SiteNav } from "@/components/site-nav";
 import { MAX_STOCK, MAX_STOCK_PREMIUM, rewardLabel } from "@/lib/pack-rules";
 import { passRewardLabel, passTrackTotal } from "@/lib/pass-rules";
 import { formatEuros, PREMIUM_PRICE_CENTS, PREMIUM_TRIAL_DAYS } from "@/lib/premium-offer";
-import { getPremiumUntil } from "@/lib/premium";
+import { getPremiumUntil, isTrialAvailable } from "@/lib/premium";
 import { QUESTS, type Period } from "@/lib/quests";
 
 export const metadata: Metadata = { title: "Premium" };
@@ -19,7 +19,7 @@ const PERIOD_NAMES: Record<Period, string> = { daily: "du jour", weekly: "de la 
 export default async function PremiumPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
-  const premiumUntil = await getPremiumUntil(session.user.id);
+  const [premiumUntil, trial] = await Promise.all([getPremiumUntil(session.user.id), isTrialAvailable(session.user.id)]);
   const price = formatEuros(PREMIUM_PRICE_CENTS);
 
   const tracks = [
@@ -30,7 +30,8 @@ export default async function PremiumPage() {
       value: rewardLabel(quest.reward),
     })),
     { title: "Ligne premium du passe", detail: "30 paliers en plus chaque saison, à côté de la ligne gratuite", value: passRewardLabel(passTrackTotal("premium")) },
-    { title: "Premier mois offert", detail: `${PREMIUM_TRIAL_DAYS} jours pour essayer, une fois par compte`, value: "0 €" },
+    // Le mois offert n'apparaît que pour un compte qui n'a jamais été premium
+    ...(trial ? [{ title: "Premier mois offert", detail: `${PREMIUM_TRIAL_DAYS} jours pour essayer, une fois par compte`, value: "0 €" }] : []),
     { title: "Rien de perdu", detail: "Devenu premium en cours de mois, tu récupères les paliers déjà atteints", value: "Rattrapage" },
   ];
 
@@ -47,7 +48,7 @@ export default async function PremiumPage() {
               <span className="dlx-ref">PRM · {tracks.length} titres</span>
             </div>
             <span className="dlx-sticker">
-              {premiumUntil ? <b>Actif</b> : <><small>1er mois</small><b>offert</b></>}
+              {premiumUntil ? <b>Actif</b> : trial ? <><small>1er mois</small><b>offert</b></> : <><b>{price}</b><small>par mois</small></>}
             </span>
           </div>
 
@@ -62,12 +63,19 @@ export default async function PremiumPage() {
               </div>
             ) : (
               <div className="dlx-cta">
-                <p className="dlx-price"><b>1er mois offert</b> puis {price} par mois</p>
+                {trial ? (
+                  <p className="dlx-price"><b>1er mois offert</b> puis {price} par mois</p>
+                ) : (
+                  <p className="dlx-price"><b>{price}</b> par mois</p>
+                )}
                 <button type="button" className="btn gold lg" disabled>
                   <LockIcon /> Bientôt disponible
                 </button>
                 <p className="dlx-fine">
-                  Sans engagement : résilie pendant le mois offert et tu ne paies rien. Paiement par Stripe, Album ne voit jamais ta carte.{" "}
+                  {trial
+                    ? "Sans engagement : résilie pendant le mois offert et tu ne paies rien."
+                    : "Sans engagement, résiliable à tout moment. Le mois offert a déjà servi sur ce compte."}{" "}
+                  Paiement par Stripe, Album ne voit jamais ta carte.{" "}
                   <Link href="/cgv">Conditions de vente</Link>
                 </p>
               </div>
