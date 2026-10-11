@@ -41,7 +41,7 @@ const ROUTES = [
   { path: "/profil/donnees", description: "Téléchargement de toutes les données du joueur en JSON (RGPD, protégée)" },
   { path: "/profil/supprimer", description: "Suppression définitive du compte, confirmée par le pseudo et le mot de passe (RGPD, protégée)" },
   { path: "/mentions-legales, /confidentialite, /cgu, /cgv", description: "Pages légales : éditeur et hébergeur, politique de confidentialité, conditions d'utilisation, conditions de vente de l'abonnement premium (prix, mois offert, résiliation, rétractation, médiation)" },
-  { path: "/documentation", description: "Cette page" },
+  { path: "/documentation", description: "Cette page, protégée par identifiant et mot de passe demandés par le navigateur (DOC_HTPASSWD, format .htpasswd ; 30 essais par adresse IP et par quart d'heure)" },
   { path: "/sitemap.xml", description: "Plan du site : pages publiques et fiches d'albums (SEO)" },
   { path: "/robots.txt", description: "Règles pour les robots d'indexation (bloqué tant que SEO_INDEXING n'est pas true)" },
   { path: "/manifest.webmanifest", description: "Manifeste (nom, couleurs, icônes) pour l'ajout à l'écran d'accueil" },
@@ -80,6 +80,7 @@ const ENV_VARS = [
   { name: "AUTH_URL", description: "Adresse publique du site, utilisée par Auth.js" },
   { name: "SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS", description: "Serveur d'envoi des e-mails (Brevo : smtp-relay.brevo.com, port 587, identifiant et clé SMTP du compte). SMTP_HOST vide en développement : les e-mails sont affichés dans les logs" },
   { name: "MAIL_FROM", description: "Expéditeur des e-mails (ex. Musicodex <no-reply@musicodex.fr>)" },
+  { name: "DOC_HTPASSWD", description: "Accès à /documentation : une ligne .htpasswd (identifiant:empreinte bcrypt, ex. htpasswd -nbB nom motdepasse). Dans .env, un \\ devant chaque $ ; dans .env.prod, la ligne entre apostrophes. Vide = documentation inaccessible" },
   { name: "PUBLIC_BASE_URL", description: "Adresse publique pour les URLs canoniques et le sitemap" },
   { name: "SEO_INDEXING", description: "\"true\" pour autoriser l'indexation par les moteurs de recherche. Désactivé tant que le domaine n'est pas en ligne" },
   { name: "GOOGLE_SITE_VERIFICATION", description: "Code de vérification Google Search Console (facultatif, une fois le domaine en ligne)" },
@@ -155,6 +156,7 @@ const LOTS = [
   { lot: "SEC1", name: "Sécurité : contrôle complet du site ; une carte ne peut plus être dupliquée par un échange et un achat simultanés ; Nodemailer 10 (failles connues) ; connexion Google retirée pour l'instant ; réglages séparés .env (local) et .env.prod (serveur, envoyé par deploy/envoyer-env.sh) ; e-mails par Brevo (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "MAIL1", name: "E-mails : logo vinyle (PNG) à la place de la note ; e-mails de l'abonnement premium (début avec ou sans mois offert, reçu mensuel, rappel de fin du mois offert, résiliation envoyée dès maintenant, paiement refusé)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PHOTO1", name: "Photos d'artistes : photo Deezer à la place de l'initiale dans l'onglet Artistes de la collection (table artist_photos, migration 026, npm run import:photos, lancé aussi à la fin de import:catalog). Anti-homonyme : on ne garde un artiste Deezer du même nom que si l'un de ses albums porte le titre d'un album du catalogue ; sinon l'initiale reste", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "DOC1", name: "La page /documentation est protégée par identifiant et mot de passe (Basic Auth, ligne .htpasswd dans DOC_HTPASSWD, vérifiée dans proxy.ts, essais limités)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
