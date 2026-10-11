@@ -109,10 +109,13 @@ export async function moveAlbum(client: PoolClient, fromId: string, toId: string
     [fromId, albumId],
   );
   if (removed.rowCount === 0) {
-    await client.query(
-      "update user_albums set count = count - 1 where user_id = $1 and album_id = $2",
+    const decremented = await client.query(
+      "update user_albums set count = count - 1 where user_id = $1 and album_id = $2 and count > 1",
       [fromId, albumId],
     );
+    // Plus aucun exemplaire (parti entre-temps dans un autre échange ou une autre vente) : on annule tout,
+    // sinon le receveur gagnerait une carte que personne n'a perdue
+    if (decremented.rowCount === 0) throw new TradeError("L'album n'est plus dans la collection de son propriétaire.");
   }
   await client.query(
     `insert into user_albums (user_id, album_id, count) values ($1, $2, 1)

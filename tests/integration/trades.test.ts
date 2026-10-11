@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/lib/db";
-import { acceptTrade, closeTrade, createTrade, TradeError } from "@/lib/trades";
+import { db, withTransaction } from "@/lib/db";
+import { buyListing, createListing } from "@/lib/market";
+import { acceptTrade, closeTrade, createTrade, moveAlbum, TradeError } from "@/lib/trades";
 import { coinsOf, createAlbum, createTestUser, giveAlbum, makeFriends, ownedCount, resetDatabase, warmPool } from "./helpers";
 
 beforeEach(resetDatabase);
@@ -96,5 +97,35 @@ describe("échanges entre amis", () => {
     await expect(closeTrade(bob.id, id, "cancel")).rejects.toBeInstanceOf(TradeError);
     await closeTrade(alice.id, id, "cancel");
     await expect(acceptTrade(bob.id, id)).rejects.toBeInstanceOf(TradeError);
+  });
+});
+
+describe("une carte ne peut pas être dupliquée", () => {
+  it("refuse de donner une carte que le joueur ne possède plus", async () => {
+    const alice = await createTestUser();
+    const bob = await createTestUser();
+    const album = await createAlbum();
+
+    await expect(withTransaction((client) => moveAlbum(client, alice.id, bob.id, album.id))).rejects.toBeInstanceOf(TradeError);
+    expect(await ownedCount(bob.id, album.id)).toBe(0);
+  });
+
+  it("le dernier exemplaire, vendu au marché et échangé en même temps, ne part qu'une fois", async () => {
+    const alice = await createTestUser();
+    const bob = await createTestUser();
+    const carol = await createTestUser();
+    await makeFriends(alice.id, bob.id);
+    const album = await createAlbum();
+    await giveAlbum(alice.id, album.id);
+    await createTrade(alice.id, bob.id, { albumSlug: album.slug, coins: 0 }, { albumSlug: null, coins: 100 });
+    const tradeId = await lastTradeId();
+    await createListing(alice.id, album.slug, { kind: "coins", price: 50 });
+    const { rows } = await db.query<{ id: string }>("select id from listings where seller_id = $1", [alice.id]);
+
+    await warmPool();
+    await Promise.allSettled([acceptTrade(bob.id, tradeId), buyListing(carol.id, rows[0].id, null)]);
+
+    const copies = (await ownedCount(alice.id, album.id)) + (await ownedCount(bob.id, album.id)) + (await ownedCount(carol.id, album.id));
+    expect(copies).toBe(1);
   });
 });

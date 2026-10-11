@@ -2,7 +2,7 @@ import type { PoolClient } from "pg";
 import { db, withTransaction } from "@/lib/db";
 import { sellerReceives } from "@/lib/market-rules";
 import type { RarityTier } from "@/lib/rarity";
-import { moveAlbum } from "@/lib/trades";
+import { moveAlbum, TradeError } from "@/lib/trades";
 import { recordEvent } from "@/lib/quests";
 import { isEmailVerified, VERIFIED_EMAIL_REQUIRED } from "@/lib/users";
 
@@ -157,6 +157,9 @@ export async function buyListing(buyerId: string, listingId: string, offeredSlug
     await recordEvent(client, buyerId, "trade", 1);
     await recordEvent(client, listing.seller_id, "trade", 1);
     return "sold" as const;
+  }).catch((error) => {
+    // Carte partie entre-temps (échange simultané) : message affiché au joueur, comme les autres refus du marché
+    throw error instanceof TradeError ? new MarketError(error.message) : error;
   });
 
   if (outcome === "orphaned") {
