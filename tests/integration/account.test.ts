@@ -39,7 +39,11 @@ describe("données personnelles (RGPD)", () => {
     expect(data?.compte.premium_jusqu_au).toBeInstanceOf(Date);
     await db.query("insert into pass_progress (user_id, season, xp) values ($1, '2026-10-01', 2100)", [user.id]);
     await db.query("insert into pass_claims (user_id, season, tier, track) values ($1, '2026-10-01', 1, 'free')", [user.id]);
-    expect((await exportUserData(user.id))?.passe_de_combat).toEqual([{ saison: "2026-10", xp: 2100, paliers_recuperes: ["1 gratuit"] }]);
+    await db.query("update pass_progress set season_points = 40 where user_id = $1", [user.id]);
+    await db.query("insert into season_awards (user_id, season, rank, points) values ($1, '2026-10-01', 7, 40)", [user.id]);
+    expect((await exportUserData(user.id))?.passe_de_combat).toEqual([
+      { saison: "2026-10", xp: 2100, points_classement_saison: 40, place_finale_recompensee: 7, paliers_recuperes: ["1 gratuit"] },
+    ]);
     expect(data?.compte).toMatchObject({ pseudo: user.pseudo, email: user.email, connexion: "e-mail et mot de passe" });
     expect(data?.collection).toEqual([expect.objectContaining({ exemplaires: 2, artiste: "Artiste de test" })]);
     expect(data?.ouvertures_de_packs[0].albums).toEqual([expect.stringContaining("Artiste de test")]);

@@ -5,6 +5,7 @@ import { isDrawPending } from "@/lib/daily-draw";
 import { getPackState } from "@/lib/packs";
 import { getPassState, settlePastSeasons } from "@/lib/pass";
 import { PASS_TIERS, XP_PER_TIER } from "@/lib/pass-rules";
+import { settleSeasonRanking, type SeasonAward } from "@/lib/season";
 import { getQuestStatus } from "@/lib/quests";
 
 // Données de la barre d'infos (haut) et des pastilles de la barre de jeu (bas), pour le joueur connecté
@@ -29,6 +30,8 @@ export type HudData = {
   passReady: number;
   // Récompenses d'une saison passée versées pendant ce chargement de page (notification)
   seasonRewards: number;
+  // Récompense du classement saisonnier versée pendant ce chargement de page (notification)
+  seasonAward: SeasonAward | null;
   // Succès débloqués pendant ce chargement de page (notification)
   unlocked: Array<{ key: string; title: string; reward: number }>;
 };
@@ -37,6 +40,7 @@ export async function getHudData(userId: string): Promise<HudData> {
   // D'abord les succès et la fin de saison du passe : pièces et packs doivent apparaître dans les soldes affichés
   await syncAchievements(userId);
   const seasonRewards = await settlePastSeasons(userId);
+  const seasonAward = await settleSeasonRanking(userId);
   const unlocked = await takeAchievementNotices(userId);
   const [user, pack, quests, social, drawPending, setsReady, pass] = await Promise.all([
     db.query<{ coins: number; cards: number }>(
@@ -74,6 +78,7 @@ export async function getHudData(userId: string): Promise<HudData> {
     passTierXp: pass.level >= PASS_TIERS ? XP_PER_TIER : pass.xp % XP_PER_TIER,
     passReady: pass.claimable,
     seasonRewards,
+    seasonAward,
     unlocked: unlocked.map(({ key, title, reward }) => ({ key, title, reward })),
   };
 }

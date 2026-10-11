@@ -25,6 +25,7 @@ export const USER_TABLES = [
   "user_achievements",
   "pass_progress",
   "pass_claims",
+  "season_awards",
 ] as const;
 
 async function rows<T>(sql: string, userId: string) {
@@ -112,7 +113,8 @@ export async function exportUserData(userId: string) {
       userId,
     ),
     rows(
-      `select to_char(season, 'YYYY-MM') as saison, xp,
+      `select to_char(season, 'YYYY-MM') as saison, xp, season_points as points_classement_saison,
+              (select a.rank from season_awards a where a.user_id = p.user_id and a.season = p.season) as place_finale_recompensee,
               array(select c.tier || ' ' || case c.track when 'free' then 'gratuit' else 'premium' end
                       || case when c.auto then ' (versé en fin de saison)' else '' end
                     from pass_claims c where c.user_id = p.user_id and c.season = p.season order by c.tier, c.track) as paliers_recuperes

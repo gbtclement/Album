@@ -37,6 +37,10 @@ export default function CguPage() {
         Les échanges directs entre joueurs ne sont pas taxés.
       </p>
       <p>
+        Chaque mois, le classement saisonnier récompense les 20 premiers joueurs (pièces et packs), selon les points gagnés en
+        ouvrant des packs pendant le mois. Un compte qui triche peut perdre sa place et ses récompenses.
+      </p>
+      <p>
         Le statut premium est pour l&apos;instant attribué gratuitement par l&apos;éditeur, sans paiement. Il donne des avantages de jeu
         (stock de packs plus grand, ligne premium du passe de combat) et peut être retiré ou modifié.
       </p>

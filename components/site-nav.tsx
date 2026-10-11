@@ -6,6 +6,7 @@ import { Avatar, formatNumber } from "@/components/game-ui";
 import { SparkIcon } from "@/components/icons";
 import { getHudData } from "@/lib/hud";
 import { PASS_TIERS, XP_PER_TIER } from "@/lib/pass-rules";
+import { seasonName, seasonRewardLabel } from "@/lib/season-rules";
 
 // Habillage commun des pages : barre d'infos en haut (profil, pièces, packs), barre de jeu en bas,
 // et message de retour éventuel (?message=...). Un visiteur voit seulement Connexion et Inscription.
@@ -93,10 +94,16 @@ export async function SiteNav({ message }: { message?: string } = {}) {
       </header>
       <Dock stock={hud.stock} extra={hud.extraPacks} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} collection={hud.setsReady} />
       <Toast key={message} message={message} />
-      {hud.seasonRewards > 0 && (
+      {/* Fin de mois : un seul message pour le passe (paliers versés) et le classement saisonnier (top 20) */}
+      {(hud.seasonRewards > 0 || hud.seasonAward) && (
         <Toast
-          key={`saison-${hud.seasonRewards}`}
-          message={`Saison du passe terminée : ${hud.seasonRewards} récompense${hud.seasonRewards > 1 ? "s" : ""} ajoutée${hud.seasonRewards > 1 ? "s" : ""} à tes packs`}
+          key={`fin-de-saison-${hud.seasonAward?.season ?? ""}-${hud.seasonRewards}`}
+          message={[
+            hud.seasonAward &&
+              `${seasonName(hud.seasonAward.season)} terminée : tu finis ${hud.seasonAward.rank === 1 ? "1er" : `${hud.seasonAward.rank}e`} du classement ! ${seasonRewardLabel(hud.seasonAward.reward)}.`,
+            hud.seasonRewards > 0 &&
+              `Passe : ${hud.seasonRewards} récompense${hud.seasonRewards > 1 ? "s" : ""} ajoutée${hud.seasonRewards > 1 ? "s" : ""} à tes packs.`,
+          ].filter(Boolean).join(" ")}
           variant="achievement"
         />
       )}
