@@ -17,6 +17,8 @@ export type ArtistSet = {
   total: number;
   reward: SetReward;
   claimed: boolean;
+  // Photo Deezer de l'artiste (null : l'initiale est affichée)
+  photo: string | null;
 };
 
 const STARTED_ARTISTS = `
@@ -25,7 +27,7 @@ const STARTED_ARTISTS = `
   select artist from artist_set_rewards where user_id = $1`;
 
 export async function getArtistSets(userId: string): Promise<ArtistSet[]> {
-  const [albums, rewards] = await Promise.all([
+  const [albums, rewards, photos] = await Promise.all([
     db.query<{ artist: string; slug: string; title: string; cover_url: string | null; rarity_tier: RarityTier; owned: boolean }>(
       `with sized as (
          select artist from albums where artist in (${STARTED_ARTISTS}) group by artist having count(*) >= $2
@@ -38,8 +40,13 @@ export async function getArtistSets(userId: string): Promise<ArtistSet[]> {
       [userId, SET_MIN_ALBUMS],
     ),
     db.query<{ artist: string }>("select artist from artist_set_rewards where user_id = $1", [userId]),
+    db.query<{ artist: string; photo_url: string }>(
+      `select artist, photo_url from artist_photos where photo_url is not null and artist in (${STARTED_ARTISTS})`,
+      [userId],
+    ),
   ]);
   const claimed = new Set(rewards.rows.map((row) => row.artist));
+  const photoOf = new Map(photos.rows.map((row) => [row.artist, row.photo_url]));
 
   const byArtist = new Map<string, SetAlbum[]>();
   for (const row of albums.rows) {
@@ -55,6 +62,7 @@ export async function getArtistSets(userId: string): Promise<ArtistSet[]> {
     total: list.length,
     reward: setReward(list.map((album) => album.tier)),
     claimed: claimed.has(artist),
+    photo: photoOf.get(artist) ?? null,
   }));
 
   // D'abord les récompenses à récupérer, puis les sets les plus avancés, les sets récompensés à la fin

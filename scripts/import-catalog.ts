@@ -14,8 +14,10 @@
 // Sources sans clé : ListenBrainz et MusicBrainz (une requête par seconde), Cover Art Archive, Deezer.
 // Pochettes en panne après coup : npm run check:covers (scripts/check-covers.ts).
 // À la fin, si LASTFM_API_KEY est dans .env, les écoutes Last.fm des nouveaux albums sont récupérées (scripts/import-lastfm.ts).
+// Puis les photos des nouveaux artistes sont cherchées sur Deezer (scripts/import-artist-photos.ts).
 
 import { readFile } from "node:fs/promises";
+import { syncArtistPhotos } from "@/lib/artist-photos";
 import { db } from "@/lib/db";
 import { existingMbids, recomputeRarity, saveListens, upsertAlbum } from "@/lib/catalog";
 import { lastfmKey, syncLastfm } from "@/lib/lastfm";
@@ -207,6 +209,8 @@ async function main() {
   // Écoutes Last.fm des nouveaux albums (affichées sur les fiches), si la clé est configurée
   if (lastfmKey()) await syncLastfm();
   else console.log("Écoutes Last.fm non récupérées : ajoute LASTFM_API_KEY dans .env puis lance npm run import:lastfm.");
+  // Photos des nouveaux artistes (onglet Artistes de la collection)
+  await syncArtistPhotos();
 }
 
 main()

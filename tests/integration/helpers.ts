@@ -11,7 +11,7 @@ export async function resetDatabase() {
     throw new Error(`Refus de vider la base "${rows[0].name}" : seules les bases *_test sont vidées par les tests.`);
   }
   // CASCADE vide aussi toutes les tables qui pointent vers les joueurs ou les albums
-  await db.query("truncate users, albums cascade");
+  await db.query("truncate users, albums, artist_photos cascade");
   await redis.flushdb();
 }
 

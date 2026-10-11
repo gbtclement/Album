@@ -1,4 +1,5 @@
 // Petits éléments d'interface partagés par les pages du jeu (rendus côté serveur ou client)
+import Image from "next/image";
 import type { CSSProperties } from "react";
 import { CoverImage } from "@/components/cover-image";
 import type { RarityTier } from "@/lib/rarity";
@@ -11,10 +12,11 @@ export function avatarBackground(name: string) {
   return `linear-gradient(135deg, hsl(${hue} 80% 62%), hsl(${(hue + 50) % 360} 65% 45%))`;
 }
 
-export function Avatar({ name, className = "" }: { name: string; className?: string }) {
+// Pastille avec l'initiale, ou la photo quand on en a une (photos d'artistes Deezer)
+export function Avatar({ name, photo = null, className = "" }: { name: string; photo?: string | null; className?: string }) {
   return (
-    <span className={`avatar ${className}`} style={{ "--av": avatarBackground(name) } as CSSProperties} aria-hidden="true">
-      {name.slice(0, 1).toUpperCase()}
+    <span className={`avatar${photo ? " has-photo" : ""} ${className}`} style={{ "--av": avatarBackground(name) } as CSSProperties} aria-hidden="true">
+      {photo ? <Image src={photo} alt="" width={96} height={96} sizes="48px" /> : name.slice(0, 1).toUpperCase()}
     </span>
   );
 }

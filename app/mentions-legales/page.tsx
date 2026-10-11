@@ -30,10 +30,10 @@ export default function MentionsLegalesPage() {
         Les informations sur les albums viennent de <a href="https://musicbrainz.org">MusicBrainz</a> et de{" "}
         <a href="https://listenbrainz.org">ListenBrainz</a> (projets de la fondation MetaBrainz), le nombre d&apos;écoutes de{" "}
         <a href="https://www.last.fm">Last.fm</a>, et les pochettes du <a href="https://coverartarchive.org">Cover Art Archive</a> ou de{" "}
-        <a href="https://www.deezer.com">Deezer</a>.
+        <a href="https://www.deezer.com">Deezer</a>, d&apos;où viennent aussi les photos des artistes.
       </p>
       <p>
-        Les noms d&apos;albums et d&apos;artistes et les pochettes appartiennent à leurs auteurs et ayants droit. Ils sont montrés pour
+        Les noms d&apos;albums et d&apos;artistes, les pochettes et les photos d&apos;artistes appartiennent à leurs auteurs et ayants droit. Ils sont montrés pour
         illustrer chaque carte, sans usage commercial. Musicodex n&apos;est lié à aucun de ces services, artistes ou labels. Un ayant droit
         qui souhaite le retrait d&apos;une pochette peut écrire à l&apos;adresse de contact ci-dessus.
       </p>

@@ -665,6 +665,8 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .set summary { display: flex; gap: 12px; align-items: center; padding: 12px; cursor: pointer; list-style: none; }
 .set summary::-webkit-details-marker { display: none; }
 .set .set-av { width: 44px; height: 44px; }
+.avatar.has-photo { overflow: hidden; background: var(--dock-edge); }
+.avatar.has-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .set .reward em { font-style: normal; color: var(--ink); margin-left: 2px; }
 .set-body { padding: 0 12px 12px; display: grid; gap: 8px; }
 .set-thumbs { display: flex; flex-wrap: wrap; gap: 6px; }

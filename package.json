@@ -9,6 +9,7 @@
     "lint": "eslint",
     "import:catalog": "tsx --env-file-if-exists=.env scripts/import-catalog.ts",
     "import:lastfm": "tsx --env-file-if-exists=.env scripts/import-lastfm.ts",
+    "import:photos": "tsx --env-file-if-exists=.env scripts/import-artist-photos.ts",
     "check:covers": "tsx --env-file-if-exists=.env scripts/check-covers.ts",
     "purge:inactive": "tsx --env-file-if-exists=.env scripts/purge-inactive.ts",
     "premium": "tsx --env-file-if-exists=.env scripts/premium.ts",

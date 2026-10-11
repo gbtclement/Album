@@ -25,7 +25,7 @@ export function ArtistSets({ sets }: { sets: ArtistSet[] }) {
         return (
           <details key={set.artist} className={`quest set${done ? " done" : ""}${set.claimed ? " claimed" : ""}`}>
             <summary>
-              <Avatar name={set.artist} className="set-av" />
+              <Avatar name={set.artist} photo={set.photo} className="set-av" />
               <div className="l">
                 <strong>{set.artist}</strong>
                 <div className="bar">
