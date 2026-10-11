@@ -114,6 +114,23 @@ describe("packs gagnés", () => {
     expect(cards).toHaveLength(PACK_SIZE);
     expect(state).toMatchObject({ stock: 0, bonus: MAX_STOCK + 4 });
   });
+
+  it("seuls les packs du stock qui se recharge font avancer les quêtes « Ouvre N packs »", async () => {
+    const user = await createTestUser();
+    await setStock(user.id, 1, 0);
+    await withTransaction((client) => grantPacks(client, user.id, { classic: 2, solo: 2 }));
+
+    await openPack(user.id);
+    await openPack(user.id);
+    await openPack(user.id, "solo");
+
+    const { rows } = await db.query<{ quest_key: string; progress: number }>(
+      "select quest_key, progress from user_quests where user_id = $1 and quest_key like '%_packs'",
+      [user.id],
+    );
+    expect(rows).toHaveLength(3);
+    for (const row of rows) expect(row.progress).toBe(1);
+  });
 });
 
 describe("récompenses des quêtes", () => {
