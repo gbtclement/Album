@@ -50,7 +50,7 @@ export async function SiteNav({ message }: { message?: string } = {}) {
           </Link>
         </div>
       </header>
-      <Dock stock={hud.stock} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} />
+      <Dock stock={hud.stock} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} collection={hud.setsReady} />
       <Toast key={message} message={message} />
     </>
   );

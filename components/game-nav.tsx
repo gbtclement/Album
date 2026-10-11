@@ -76,10 +76,12 @@ type DockProps = {
   nextPackAt: string | null;
   questsReady: number;
   social: number;
+  // Collections d'artiste terminées dont la récompense attend
+  collection: number;
 };
 
 // Barre de jeu en bas de l'écran : Collection, Marché (plateau), vinyle des packs, Quêtes, Social (plateau)
-export function Dock({ stock, nextPackAt, questsReady, social }: DockProps) {
+export function Dock({ stock, nextPackAt, questsReady, social, collection }: DockProps) {
   const pathname = usePathname();
   const remaining = useNextPack(nextPackAt);
   // Le plateau retient la page où il a été ouvert : il se ferme de lui-même quand on change de page
@@ -151,6 +153,7 @@ export function Dock({ stock, nextPackAt, questsReady, social }: DockProps) {
         )}
         <nav className="dock" aria-label="Menu principal">
           <Link href="/collection" className="tab" style={{ "--tab-color": "var(--r-rare)" } as CSSProperties} aria-current={isActive(pathname, "/collection") ? "page" : undefined}>
+            {collection > 0 && <span className="badge">{collection}</span>}
             <CardsIcon />
             <span className="lbl">Collection</span>
           </Link>

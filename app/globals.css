@@ -431,6 +431,20 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .auth-footer a { color: var(--gold); font-weight: 700; text-decoration: none; }
 .auth-footer a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
+/* Collections d'artiste : une ligne de quête qui se déplie */
+.quest.set { display: block; padding: 0; }
+.set summary { display: flex; gap: 12px; align-items: center; padding: 12px; cursor: pointer; list-style: none; }
+.set summary::-webkit-details-marker { display: none; }
+.set .set-av { width: 44px; height: 44px; }
+.set .reward em { font-style: normal; color: var(--ink); margin-left: 2px; }
+.set-body { padding: 0 12px 12px; display: grid; gap: 8px; }
+.set-thumbs { display: flex; flex-wrap: wrap; gap: 6px; }
+.set-missing { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.6; }
+.set-missing > span:first-child { font-family: var(--f-ui); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 10px; }
+.set-missing a { color: var(--rar); text-decoration: none; font-weight: 700; }
+.set-missing a:hover { text-decoration: underline; }
+.set-note { margin: 0; font-size: 12px; color: var(--gold); }
+
 /* Pioche du jour */
 .draw { position: relative; display: grid; justify-items: center; gap: 14px; margin-top: 14px; padding: 18px 16px 20px; border-radius: 20px; background: radial-gradient(circle at 50% 0, color-mix(in srgb, var(--rar) 22%, transparent), transparent 70%), var(--night-2); border: 1px solid color-mix(in srgb, var(--rar) 45%, var(--line)); }
 .draw-tier { font-size: 12px; }

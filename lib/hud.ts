@@ -1,3 +1,4 @@
+import { countClaimableSets } from "@/lib/artist-sets";
 import { db } from "@/lib/db";
 import { isDrawPending } from "@/lib/daily-draw";
 import { getPackState } from "@/lib/packs";
@@ -11,10 +12,11 @@ export type HudData = {
   nextPackAt: string | null;
   questsReady: number;
   social: number;
+  setsReady: number;
 };
 
 export async function getHudData(userId: string): Promise<HudData> {
-  const [user, pack, quests, social, drawPending] = await Promise.all([
+  const [user, pack, quests, social, drawPending, setsReady] = await Promise.all([
     db.query<{ coins: number; cards: number }>(
       `select u.coins, coalesce((select sum(count) from user_albums where user_id = u.id), 0)::int as cards
        from users u where u.id = $1`,
@@ -29,6 +31,7 @@ export async function getHudData(userId: string): Promise<HudData> {
       [userId],
     ),
     isDrawPending(userId),
+    countClaimableSets(userId),
   ]);
 
   return {
@@ -39,5 +42,6 @@ export async function getHudData(userId: string): Promise<HudData> {
     // Pastille Quêtes : récompenses à réclamer, plus la pioche du jour tant qu'elle n'est pas jouée
     questsReady: quests.filter((quest) => !quest.claimed && quest.progress >= quest.target).length + (drawPending ? 1 : 0),
     social: social.rows[0]?.total ?? 0,
+    setsReady,
   };
 }

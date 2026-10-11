@@ -20,7 +20,7 @@ const ROUTES = [
   { path: "/apercu-emails/[modele]", description: "Aperçu des e-mails dans le navigateur (verification, mot-de-passe), en développement seulement" },
   { path: "/profil", description: "Profil : statistiques, vitrine, répartition par rareté, réglages du jeu, compte (protégée)" },
   { path: "/packs", description: "Ouverture d'un pack ou de tous les packs, animation de révélation, chances par rareté (protégée)" },
-  { path: "/collection", description: "Cartes possédées uniquement, recherche, filtre de rareté, fiche qui glisse depuis le bas (protégée)" },
+  { path: "/collection", description: "Cartes possédées uniquement, recherche, filtre de rareté, fiche qui glisse depuis le bas ; onglet Artistes (?vue=artistes) : collections d'artiste commencées, progression et récompenses (protégée)" },
   { path: "/amis", description: "Demandes d'amis, liste d'amis (protégée)" },
   { path: "/echanges", description: "Propositions reçues, envoyées et historique (protégée)" },
   { path: "/echanges/nouveau", description: "Création d'une proposition d'échange avec un ami (protégée)" },
@@ -57,6 +57,7 @@ const TABLES = [
   { name: "trades", description: "Propositions d'échange : album et/ou pièces de chaque côté, statut" },
   { name: "user_quests", description: "Progression des quêtes par joueur et par période, récompense récupérée ou non" },
   { name: "daily_draws", description: "Pioche du jour : album tiré par joueur et par jour (heure de Paris), position du morceau montré, réponse, réussite et série en cours" },
+  { name: "artist_set_rewards", description: "Collections d'artiste terminées : récompense récupérée par joueur et par artiste (taille du set, pièces, pack), une seule fois" },
   { name: "listings", description: "Annonces du marché : vente en pièces ou troc contre un album" },
   { name: "market_sales", description: "Ventes en pièces sur le marché, base de la cote des albums" },
 ];
@@ -120,6 +121,7 @@ const LOTS = [
   { lot: "C10", name: "Correctif : marché et échanges réservés aux adresses e-mail vérifiées, un seul compte par boîte mail (adresses avec « + » et points Gmail rattachées au compte d'origine)", status: "Terminé", branch: "correctif10-email-verifie" },
   { lot: "C11", name: "Correctif : catalogue élargi (discographies des artistes les plus écoutés de chaque période et de leurs artistes proches, 1 000 écoutes minimum)", status: "Terminé", branch: "correctif11-catalogue-elargi" },
   { lot: "G1", name: "Pioche du jour : un album par joueur et par jour, un morceau de pochette, une seule réponse avec recherche guidée, série de 7 = 1 pack", status: "Terminé", branch: "jeu1-pioche-du-jour" },
+  { lot: "G2", name: "Collections d'artiste : un set par artiste d'au moins 3 albums, progression dans la collection, récompense unique en pièces (et un pack pour les grands sets)", status: "Terminé", branch: "jeu2-collections-artiste" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -252,6 +254,9 @@ export default function DocumentationPage() {
             </li>
             <li>
               <strong>Pioche du jour :</strong> chaque jour à minuit (heure de Paris), chaque joueur tire son propre album, de préférence absent de sa collection et jamais pioché. Raretés plus généreuses que les packs : Commun 40 %, Peu commun 30 %, Rare 18 %, Épique 9 %, Légendaire 3 %. Seul un morceau de la pochette (30 % de la largeur) est montré, découpé par le serveur pour qu&apos;on ne puisse pas lire la réponse dans la page. Une seule réponse, choisie dans les suggestions (titres qui commencent par le texte tapé, puis ceux qui le contiennent) ; un album qui porte le même titre est accepté. Trouvé : la carte entre dans la collection. Raté : on ne gagne rien. Chaque série de 7 bonnes réponses d&apos;affilée offre un pack (300 pièces si le stock est plein).
+            </li>
+            <li>
+              <strong>Collections d&apos;artiste :</strong> chaque artiste qui a au moins 3 albums dans le catalogue est un set à compléter (onglet Artistes de la collection, seuls les sets commencés sont affichés). Set complet : 20 pièces par point de rareté de ses albums (100 au minimum), plus un pack pour les sets de 8 albums ou plus (300 pièces si le stock est plein). La récompense se récupère une seule fois par artiste, même si une carte est revendue ensuite ou si l&apos;artiste reçoit de nouveaux albums.
             </li>
             <li>
               <strong>Quêtes d&apos;échange :</strong> un échange entre amis ne compte que si au moins un album change de mains (pas de pièces contre pièces). Chaque achat sur le marché compte.
