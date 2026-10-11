@@ -1,9 +1,8 @@
 import { randomInt } from "node:crypto";
 import type { PoolClient } from "pg";
 import { db, withTransaction } from "@/lib/db";
-import { CROP_SIZE, DRAW_RATES, DRAW_TIME_ZONE, normalizeTitle, STREAK_BONUS_COINS, STREAK_BONUS_EVERY } from "@/lib/daily-draw-rules";
-import { MAX_STOCK } from "@/lib/pack-rules";
-import { drawTier } from "@/lib/packs";
+import { CROP_SIZE, DRAW_RATES, DRAW_TIME_ZONE, normalizeTitle, STREAK_BONUS_EVERY } from "@/lib/daily-draw-rules";
+import { drawTier, grantPacks } from "@/lib/packs";
 import { recordEvent } from "@/lib/quests";
 import { RARITY_TIERS, type RarityTier } from "@/lib/rarity";
 
@@ -134,7 +133,7 @@ export async function getDrawCrop(userId: string) {
   return draw ? { coverUrl: draw.cover_url, x: draw.crop_x, y: draw.crop_y, size: CROP_SIZE } : null;
 }
 
-export type GuessResult = { solved: boolean; streak: number; bonus: "pack" | "coins" | null; isNew: boolean };
+export type GuessResult = { solved: boolean; streak: number; bonus: "pack" | null; isNew: boolean };
 
 // Une seule réponse par jour : le joueur choisit un album dans les suggestions,
 // c'est juste si le titre est le même que celui de l'album pioché (majuscules et accents ignorés)
@@ -174,14 +173,10 @@ export async function submitGuess(userId: string, guessedAlbumId: string): Promi
       isNew = rows[0].is_new;
       if (isNew) await recordEvent(client, userId, "new_album", 1);
 
+      // Série de 7 : un pack classique dans les packs gagnés (sans maximum)
       if (streak % STREAK_BONUS_EVERY === 0) {
-        await client.query("insert into pack_stocks (user_id) values ($1) on conflict (user_id) do nothing", [userId]);
-        const pack = await client.query("update pack_stocks set stock = stock + 1 where user_id = $1 and stock < $2", [userId, MAX_STOCK]);
-        if (pack.rowCount) bonus = "pack";
-        else {
-          await client.query("update users set coins = coins + $2 where id = $1", [userId, STREAK_BONUS_COINS]);
-          bonus = "coins";
-        }
+        await grantPacks(client, userId, { classic: 1 });
+        bonus = "pack";
       }
     }
     return { solved, streak, bonus, isNew };

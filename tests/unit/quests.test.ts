@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { rewardLabel } from "@/lib/pack-rules";
 import { periodStart, QUESTS } from "@/lib/quests";
 
 describe("periodStart", () => {
@@ -27,7 +28,22 @@ describe("QUESTS", () => {
     expect(new Set(QUESTS.map((quest) => quest.key)).size).toBe(QUESTS.length);
     for (const quest of QUESTS) {
       expect(quest.target).toBeGreaterThan(0);
-      expect(quest.reward).toBeGreaterThan(0);
+      expect(quest.reward.coins + quest.reward.packs + quest.reward.solo).toBeGreaterThan(0);
     }
+  });
+
+  it("rapportent des packs : Solo par jour et par semaine, un pack classique par mois", () => {
+    for (const quest of QUESTS) {
+      if (quest.period === "daily") expect(quest.reward).toEqual({ coins: 0, packs: 0, solo: 1 });
+      if (quest.period === "weekly") expect(quest.reward).toEqual({ coins: 100, packs: 0, solo: 1 });
+      if (quest.period === "monthly") expect(quest.reward).toEqual({ coins: 500, packs: 1, solo: 0 });
+    }
+  });
+});
+
+describe("rewardLabel", () => {
+  it("décrit une récompense", () => {
+    expect(rewardLabel({ coins: 100, packs: 0, solo: 1 })).toBe("1 pack Solo + 100 pièces");
+    expect(rewardLabel({ coins: 500, packs: 1, solo: 0 })).toBe("1 pack + 500 pièces");
   });
 });

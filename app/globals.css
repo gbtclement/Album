@@ -71,6 +71,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .coin { width: 20px; height: 20px; }
 .coin-i { width: 15px; height: 15px; vertical-align: -2px; }
 .mini-vinyl { flex: none; width: 20px; height: 20px; border-radius: 50%; background: repeating-radial-gradient(circle, #1a1730 0 2px, #2c2850 2px 3px); border: 2px solid var(--gold); }
+.res-extra { font-family: var(--f-ui); font-weight: 700; font-size: 12px; color: var(--coral); }
+/* Raccourci de la pioche du jour : une pastille ronde, qui brille tant qu'elle n'est pas jouée */
+.draw-res { padding: 5px; color: var(--muted); }
+.draw-res svg { width: 20px; height: 20px; }
+.draw-res.pending { color: #2b1d02; background: var(--gold); box-shadow: 0 3px 0 var(--gold-deep); animation: glow 2.4s ease-in-out infinite; }
+@keyframes glow { 50% { box-shadow: 0 3px 0 var(--gold-deep), 0 0 16px rgba(244,183,64,.7); } }
 .res-timer { font-family: var(--f-ui); font-weight: 700; font-size: 11px; color: var(--gold); letter-spacing: .02em; }
 .guest-links { display: flex; gap: 8px; }
 
@@ -187,6 +193,10 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .quest strong { display: block; font-size: 14px; }
 .q-meta { display: flex; justify-content: space-between; font-family: var(--f-ui); font-size: 11px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
 .reward { display: inline-flex; align-items: center; gap: 4px; font-family: var(--f-display); color: var(--gold); }
+.reward > i:not(:first-child) { margin-left: 6px; }
+/* Petit vinyle des récompenses : bord doré pour un pack classique, corail pour un pack Solo */
+.vinyl-i { flex: none; display: inline-block; width: 15px; height: 15px; border-radius: 50%; background: radial-gradient(circle, var(--coral) 0 2px, #1a1730 2px 3px, #2c2850 3px); border: 2px solid var(--gold); }
+.vinyl-i.solo { border-color: var(--coral); }
 
 /* ---------- Classement ---------- */
 .podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 8px; margin: 8px auto 14px; max-width: 480px; }
@@ -246,6 +256,16 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .rate i { width: 10px; height: 10px; border-radius: 3px; background: var(--rar); }
 .rate b { font-family: var(--f-ui); font-variant-numeric: tabular-nums; }
 @keyframes spin { to { rotate: 360deg; } }
+.pack-stock { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: -6px; }
+.pack-stock span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--night-3); }
+.btn.lg.solo { background: var(--coral); color: #fff; box-shadow: 0 5px 0 var(--coral-deep); }
+
+/* Chargement d'une page : vinyle au centre de l'écran */
+.page-loader { position: fixed; inset: 0; z-index: 20; display: grid; place-content: center; justify-items: center; gap: 12px; }
+.page-loader .disc { position: relative; width: 90px; height: 90px; border-radius: 50%; border: 4px solid var(--gold); box-shadow: 0 6px 0 var(--gold-deep), 0 0 40px rgba(244,183,64,.2); overflow: hidden; }
+.page-loader .disc-rot { animation-duration: 1.4s; }
+.page-loader .hub { width: 30px; height: 30px; }
+.page-loader .sub { margin: 0; }
 
 /* ========== LA BARRE DE JEU ========== */
 .dock-wrap { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; justify-items: center; padding: 0 10px calc(14px + env(safe-area-inset-bottom, 0px)); pointer-events: none; }
@@ -316,10 +336,13 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .opening { position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px 16px; text-align: center; overflow-y: auto; isolation: isolate;
   background: radial-gradient(circle at 50% 45%, rgba(244,183,64,.16), transparent 55%), rgba(12,10,26,.96); animation: fade .25s ease-out; }
 .opening.multi { justify-content: flex-start; padding-top: 28px; }
-.op-disc { position: absolute; top: 50%; left: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; background: repeating-radial-gradient(circle, #1a1730 0 3px, #29244c 3px 5px); border: 6px solid var(--gold); box-shadow: 0 0 50px rgba(244,183,64,.35); display: grid; place-items: center; }
+/* Le vinyle tourne en attendant le serveur ; à l'arrivée des cartes, son cadre accélère et disparaît
+   (deux éléments imbriqués : la rotation continue sans à-coup) */
+.op-disc-wrap { position: absolute; top: 50%; left: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; }
+.op-disc-wrap.go { animation: spinup 1s cubic-bezier(.55,0,.25,1) forwards; }
+.op-disc { width: 100%; height: 100%; border-radius: 50%; background: repeating-radial-gradient(circle, #1a1730 0 3px, #29244c 3px 5px); border: 6px solid var(--gold); box-shadow: 0 0 50px rgba(244,183,64,.35); display: grid; place-items: center; }
 .op-disc::after { content: ""; width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle, var(--night) 0 5px, var(--coral) 6px); }
-.op-disc.waiting { animation: spin 1.2s linear infinite; }
-.op-disc.spin { animation: spinup 1s cubic-bezier(.55,0,.25,1) forwards; }
+.op-disc { animation: spin 1.2s linear infinite; }
 @keyframes spinup { 0% { rotate: 0deg; scale: 1; } 70% { scale: 1.1; opacity: 1; } 100% { rotate: 1000deg; scale: .2; opacity: 0; } }
 .op-title { font-family: var(--f-display); font-weight: 400; font-size: 26px; margin: 0; }
 .op-hint { margin: 0; color: var(--muted); font-family: var(--f-ui); font-size: 13px; min-height: 1.5em; }

@@ -14,9 +14,8 @@ export const DRAW_RATES: Record<RarityTier, number> = {
 // assez pour reconnaître une pochette connue, rarement assez pour lire le titre en entier
 export const CROP_SIZE = 0.3;
 
-// Une série de 7 bonnes réponses d'affilée rapporte un pack ; stock de packs plein : des pièces à la place
+// Une série de 7 bonnes réponses d'affilée rapporte un pack (ajouté aux packs gagnés)
 export const STREAK_BONUS_EVERY = 7;
-export const STREAK_BONUS_COINS = 300;
 
 // Nouvelle pioche chaque jour à minuit, heure de Paris
 export const DRAW_TIME_ZONE = "Europe/Paris";

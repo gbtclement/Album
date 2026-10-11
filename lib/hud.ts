@@ -11,6 +11,9 @@ export type HudData = {
   cards: number;
   stock: number;
   nextPackAt: string | null;
+  // Packs gagnés (classiques + Solo), en plus du stock qui se recharge
+  extraPacks: number;
+  drawPending: boolean;
   questsReady: number;
   social: number;
   setsReady: number;
@@ -45,6 +48,8 @@ export async function getHudData(userId: string): Promise<HudData> {
     cards: user.rows[0]?.cards ?? 0,
     stock: pack.stock,
     nextPackAt: pack.nextPackAt ? pack.nextPackAt.toISOString() : null,
+    extraPacks: pack.bonus + pack.solo,
+    drawPending,
     // Pastille Quêtes : récompenses à réclamer, plus la pioche du jour tant qu'elle n'est pas jouée
     questsReady: quests.filter((quest) => !quest.claimed && quest.progress >= quest.target).length + (drawPending ? 1 : 0),
     social: social.rows[0]?.total ?? 0,

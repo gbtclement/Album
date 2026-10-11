@@ -1,6 +1,6 @@
 import { db, withTransaction } from "@/lib/db";
-import { MAX_STOCK } from "@/lib/pack-rules";
-import { PACK_FALLBACK_COINS, SET_MIN_ALBUMS, setReward, type SetReward } from "@/lib/artist-set-rules";
+import { SET_MIN_ALBUMS, setReward, type SetReward } from "@/lib/artist-set-rules";
+import { grantPacks } from "@/lib/packs";
 import type { RarityTier } from "@/lib/rarity";
 
 // Collections d'artiste : un set par artiste d'au moins 3 albums. On n'affiche que les sets commencés
@@ -81,10 +81,8 @@ export async function countClaimableSets(userId: string): Promise<number> {
   return rows[0].total;
 }
 
-export type ClaimResult = SetReward & { packGiven: boolean };
-
 // Récupère la récompense d'un set complet, une seule fois par artiste
-export async function claimArtistSet(userId: string, artist: string): Promise<ClaimResult> {
+export async function claimArtistSet(userId: string, artist: string): Promise<SetReward> {
   return withTransaction(async (client) => {
     const { rows } = await client.query<{ rarity_tier: RarityTier; owned: boolean }>(
       `select a.rarity_tier, exists (select 1 from user_albums ua where ua.user_id = $1 and ua.album_id = a.id and ua.count > 0) as owned
@@ -103,15 +101,8 @@ export async function claimArtistSet(userId: string, artist: string): Promise<Cl
     );
     if (!inserted.rowCount) throw new ArtistSetError("Tu as déjà récupéré la récompense de cet artiste.");
 
-    let coins = reward.coins;
-    let packGiven = false;
-    if (reward.pack) {
-      await client.query("insert into pack_stocks (user_id) values ($1) on conflict (user_id) do nothing", [userId]);
-      const pack = await client.query("update pack_stocks set stock = stock + 1 where user_id = $1 and stock < $2", [userId, MAX_STOCK]);
-      packGiven = Boolean(pack.rowCount);
-      if (!packGiven) coins += PACK_FALLBACK_COINS;
-    }
-    await client.query("update users set coins = coins + $2 where id = $1", [userId, coins]);
-    return { coins, pack: reward.pack, packGiven };
+    await client.query("update users set coins = coins + $2 where id = $1", [userId, reward.coins]);
+    if (reward.pack) await grantPacks(client, userId, { classic: 1 });
+    return reward;
   });
 }

@@ -73,6 +73,8 @@ function isActive(pathname: string, href: string) {
 
 type DockProps = {
   stock: number;
+  // Packs gagnés (classiques + Solo)
+  extra: number;
   nextPackAt: string | null;
   questsReady: number;
   social: number;
@@ -81,7 +83,8 @@ type DockProps = {
 };
 
 // Barre de jeu en bas de l'écran : Collection, Marché (plateau), vinyle des packs, Quêtes, Social (plateau)
-export function Dock({ stock, nextPackAt, questsReady, social, collection }: DockProps) {
+export function Dock({ stock, extra, nextPackAt, questsReady, social, collection }: DockProps) {
+  const available = stock + extra;
   const pathname = usePathname();
   const remaining = useNextPack(nextPackAt);
   // Le plateau retient la page où il a été ouvert : il se ferme de lui-même quand on change de page
@@ -161,14 +164,14 @@ export function Dock({ stock, nextPackAt, questsReady, social, collection }: Doc
           <Link
             href="/packs"
             className="pack-btn"
-            aria-label={`Packs : ${stock} disponible${stock > 1 ? "s" : ""}`}
+            aria-label={`Packs : ${available} disponible${available > 1 ? "s" : ""}`}
             aria-current={isActive(pathname, "/packs") ? "page" : undefined}
             style={{ "--p": `${progress}%` } as CSSProperties}
           >
             <span className="ring" />
             <span className="vinyl"><span className="hub" /></span>
             <span className="sheen" />
-            {stock > 0 && <span className="count">{stock}</span>}
+            {available > 0 && <span className="count">{available}</span>}
           </Link>
           <Link href="/quetes" className="tab" style={{ "--tab-color": "var(--gold)" } as CSSProperties} aria-current={isActive(pathname, "/quetes") ? "page" : undefined}>
             {questsReady > 0 && <span className="badge">{questsReady}</span>}

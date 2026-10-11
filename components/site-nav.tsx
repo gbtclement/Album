@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { Dock, PackTimer, Toast } from "@/components/game-nav";
 import { Avatar, formatNumber } from "@/components/game-ui";
+import { SparkIcon } from "@/components/icons";
 import { MAX_STOCK } from "@/lib/pack-rules";
 import { getHudData } from "@/lib/hud";
 
@@ -39,6 +40,15 @@ export async function SiteNav({ message }: { message?: string } = {}) {
           </span>
         </Link>
         <div className="resources">
+          {/* Raccourci vers la pioche du jour : il brille tant qu'elle n'est pas jouée */}
+          <Link
+            href="/pioche"
+            className={`res draw-res${hud.drawPending ? " pending" : ""}`}
+            title={hud.drawPending ? "Pioche du jour : à jouer" : "Pioche du jour : déjà jouée"}
+            aria-label={hud.drawPending ? "Pioche du jour, à jouer" : "Pioche du jour, déjà jouée"}
+          >
+            <SparkIcon />
+          </Link>
           <span className="res" title="Pièces">
             <i className="coin" aria-hidden="true" />
             {formatNumber(hud.coins)}
@@ -46,11 +56,12 @@ export async function SiteNav({ message }: { message?: string } = {}) {
           <Link href="/packs" className="res" title="Packs disponibles">
             <i className="mini-vinyl" aria-hidden="true" />
             {hud.stock}/{MAX_STOCK}
+            {hud.extraPacks > 0 && <span className="res-extra" title="Packs gagnés">+{hud.extraPacks}</span>}
             <PackTimer nextPackAt={hud.nextPackAt} />
           </Link>
         </div>
       </header>
-      <Dock stock={hud.stock} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} collection={hud.setsReady} />
+      <Dock stock={hud.stock} extra={hud.extraPacks} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} collection={hud.setsReady} />
       <Toast key={message} message={message} />
       {hud.unlocked.length > 0 && (
         <Toast

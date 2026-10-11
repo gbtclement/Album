@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { rewardLabel } from "@/lib/pack-rules";
 import { claimQuest, QuestError } from "@/lib/quests";
 
 function backTo(message: string): never {
@@ -14,7 +15,7 @@ export async function claimQuestAction(formData: FormData) {
 
   try {
     const reward = await claimQuest(session.user.id, String(formData.get("questKey")));
-    backTo(`Récompense récupérée : +${reward} pièces.`);
+    backTo(`Récompense récupérée : ${rewardLabel(reward)}.`);
   } catch (error) {
     if (error instanceof QuestError) backTo(error.message);
     throw error;

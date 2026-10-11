@@ -24,10 +24,11 @@ export default async function PacksPage() {
     <>
       <SiteNav />
       <main className="game-page">
-        <PackRoom stock={state.stock} autoReveal={settings.rows[0]?.auto_reveal ?? false} />
-        <div style={{ maxWidth: 420, margin: "8px auto 0" }}>
+        {/* La pioche du jour en premier : sous les packs, il fallait faire défiler pour la voir */}
+        <div style={{ maxWidth: 420, margin: "0 auto 4px" }}>
           <DrawBanner pending={drawPending} />
         </div>
+        <PackRoom stocks={{ stock: state.stock, bonus: state.bonus, solo: state.solo }} autoReveal={settings.rows[0]?.auto_reveal ?? false} />
       </main>
     </>
   );

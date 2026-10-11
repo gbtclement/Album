@@ -50,7 +50,7 @@ const TABLES = [
   { name: "password_resets", description: "Lien de réinitialisation du mot de passe en cours par joueur (empreinte SHA-256 du jeton, expiration 1 h)" },
   { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
   { name: "albums", description: "Catalogue : identifiant MusicBrainz, titre, artiste, pochette, écoutes et auditeurs ListenBrainz, palier de rareté, liens d'écoute" },
-  { name: "pack_stocks", description: "Stock de packs par joueur et date de la dernière recharge" },
+  { name: "pack_stocks", description: "Stock de packs par joueur et date de la dernière recharge, plus les packs gagnés : bonus_packs (classiques) et solo_packs (1 album), sans maximum" },
   { name: "user_albums", description: "Collection : une ligne par album possédé, avec le nombre d'exemplaires" },
   { name: "pack_openings", description: "Historique des ouvertures de packs" },
   { name: "friendships", description: "Amitiés et demandes d'amis, une ligne par paire de joueurs" },
@@ -124,6 +124,7 @@ const LOTS = [
   { lot: "G1", name: "Pioche du jour : un album par joueur et par jour, un morceau de pochette, une seule réponse avec recherche guidée, série de 7 = 1 pack", status: "Terminé", branch: "jeu1-pioche-du-jour" },
   { lot: "G2", name: "Collections d'artiste : un set par artiste d'au moins 3 albums, progression dans la collection, récompense unique en pièces (et un pack pour les grands sets)", status: "Terminé", branch: "jeu2-collections-artiste" },
   { lot: "G3", name: "Succès et badges : 22 objectifs permanents (collection, raretés, packs, artistes, social, pioche), pièces versées au déblocage, notification dorée, grille sur le profil, nombre de succès des amis", status: "Terminé", branch: "jeu3-succes" },
+  { lot: "G4", name: "Économie : les quêtes rapportent des packs (Solo d'un album, ou classiques), réserve de packs gagnés sans maximum, plus de pièces de remplacement ; raccourci de la pioche dans la barre du haut ; vinyle de chargement centré et ouverture de pack sans clignotement", status: "Terminé", branch: "jeu4-economie" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -237,6 +238,15 @@ export default function DocumentationPage() {
               Un nouveau compte commence avec 3 packs.
             </li>
             <li>
+              <strong>Packs gagnés :</strong> les récompenses (quêtes, séries de la pioche, grands sets d&apos;artiste) vont dans une réserve à part,
+              sans maximum : packs classiques (5 albums) et packs Solo (1 album). « Ouvrir 1 » prend d&apos;abord un pack du stock qui se
+              recharge, puis un pack gagné ; « Tout ouvrir » en ouvre 20 au plus d&apos;un coup. La barre du haut affiche les packs gagnés en « +N ».
+            </li>
+            <li>
+              <strong>Quêtes :</strong> journalières = 1 pack Solo ; hebdomadaires = 1 pack Solo + 100 pièces ; mensuelles = 1 pack + 500 pièces.
+              Les pièces s&apos;obtiennent surtout avec les succès et les collections d&apos;artiste (et en vendant sur le marché).
+            </li>
+            <li>
               <strong>Raretés :</strong> Commun 65 %, Peu commun 25 %, Rare 8 %, Épique 1,5 %, Légendaire 0,5 % (par carte tirée).
               Le palier d&apos;un album dépend de son rang dans le catalogue selon ses écoutes ListenBrainz, plafonnées à 100 par
               auditeur (un auditeur écoute un album environ 23 fois ; au-delà, ce sont quelques fans qui le font tourner en boucle) : les 0,5 % les plus écoutés
@@ -255,10 +265,10 @@ export default function DocumentationPage() {
               <strong>Marché :</strong> une annonce active par exemplaire possédé (un album en un seul exemplaire ne peut être mis en vente qu&apos;une fois).
             </li>
             <li>
-              <strong>Pioche du jour :</strong> chaque jour à minuit (heure de Paris), chaque joueur tire son propre album, de préférence absent de sa collection et jamais pioché. Raretés plus généreuses que les packs : Commun 40 %, Peu commun 30 %, Rare 18 %, Épique 9 %, Légendaire 3 %. Seul un morceau de la pochette (30 % de la largeur) est montré, découpé par le serveur pour qu&apos;on ne puisse pas lire la réponse dans la page. Une seule réponse, choisie dans les suggestions (titres qui commencent par le texte tapé, puis ceux qui le contiennent) ; un album qui porte le même titre est accepté. Trouvé : la carte entre dans la collection. Raté : on ne gagne rien. Chaque série de 7 bonnes réponses d&apos;affilée offre un pack (300 pièces si le stock est plein).
+              <strong>Pioche du jour :</strong> chaque jour à minuit (heure de Paris), chaque joueur tire son propre album, de préférence absent de sa collection et jamais pioché. Raretés plus généreuses que les packs : Commun 40 %, Peu commun 30 %, Rare 18 %, Épique 9 %, Légendaire 3 %. Seul un morceau de la pochette (30 % de la largeur) est montré, découpé par le serveur pour qu&apos;on ne puisse pas lire la réponse dans la page. Une seule réponse, choisie dans les suggestions (titres qui commencent par le texte tapé, puis ceux qui le contiennent) ; un album qui porte le même titre est accepté. Trouvé : la carte entre dans la collection. Raté : on ne gagne rien. Chaque série de 7 bonnes réponses d&apos;affilée offre un pack gagné. Raccourci : la pastille dorée de la barre du haut, qui brille tant que la pioche n&apos;est pas jouée.
             </li>
             <li>
-              <strong>Collections d&apos;artiste :</strong> chaque artiste qui a au moins 3 albums dans le catalogue est un set à compléter (onglet Artistes de la collection, seuls les sets commencés sont affichés). Set complet : 20 pièces par point de rareté de ses albums (100 au minimum), plus un pack pour les sets de 8 albums ou plus (300 pièces si le stock est plein). La récompense se récupère une seule fois par artiste, même si une carte est revendue ensuite ou si l&apos;artiste reçoit de nouveaux albums.
+              <strong>Collections d&apos;artiste :</strong> chaque artiste qui a au moins 3 albums dans le catalogue est un set à compléter (onglet Artistes de la collection, seuls les sets commencés sont affichés). Set complet : 20 pièces par point de rareté de ses albums (100 au minimum), plus un pack gagné pour les sets de 8 albums ou plus. La récompense se récupère une seule fois par artiste, même si une carte est revendue ensuite ou si l&apos;artiste reçoit de nouveaux albums.
             </li>
             <li>
               <strong>Succès :</strong> 22 objectifs permanents (albums différents, raretés possédées, packs ouverts, collections d&apos;artiste, amis, échanges, ventes, pioches trouvées). Ils sont vérifiés à chaque page : un succès atteint est débloqué une seule fois, ses pièces (50 à 2 500) sont versées tout de suite et une notification dorée l&apos;annonce. Un succès débloqué ne se reperd pas. Les joueurs existants débloquent d&apos;un coup ceux qu&apos;ils remplissent déjà.

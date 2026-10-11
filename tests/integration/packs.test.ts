@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/lib/db";
-import { MAX_STOCK, PACK_INTERVAL_MS, PACK_SIZE } from "@/lib/pack-rules";
-import { getPackState, openPack, PackError } from "@/lib/packs";
+import { db, withTransaction } from "@/lib/db";
+import { MAX_STOCK, PACK_INTERVAL_MS, PACK_SIZE, SOLO_PACK_SIZE } from "@/lib/pack-rules";
+import { getPackState, grantPacks, openPack, PackError } from "@/lib/packs";
+import { claimQuest, periodStart, QUESTS } from "@/lib/quests";
 import { RARITY_TIERS } from "@/lib/rarity";
-import { createAlbum, createTestUser, resetDatabase, warmPool } from "./helpers";
+import { coinsOf, createAlbum, createTestUser, resetDatabase, warmPool } from "./helpers";
 
 beforeEach(async () => {
   await resetDatabase();
@@ -87,6 +88,54 @@ describe("recharge du stock", () => {
     const user = await createTestUser();
     await setStock(user.id, 0, (PACK_INTERVAL_MS / 60_000) * (MAX_STOCK + 20));
 
-    expect(await getPackState(user.id)).toEqual({ stock: MAX_STOCK, nextPackAt: null });
+    expect(await getPackState(user.id)).toEqual({ stock: MAX_STOCK, nextPackAt: null, bonus: 0, solo: 0 });
+  });
+});
+
+describe("packs gagnés", () => {
+  it("un pack Solo donne une seule carte", async () => {
+    const user = await createTestUser();
+    await expect(openPack(user.id, "solo")).rejects.toThrow("pack Solo");
+    await withTransaction((client) => grantPacks(client, user.id, { solo: 2 }));
+
+    const { cards, state } = await openPack(user.id, "solo");
+    expect(cards).toHaveLength(SOLO_PACK_SIZE);
+    expect(state.solo).toBe(1);
+  });
+
+  it("un pack classique se prend dans le stock, puis dans les packs gagnés, sans maximum", async () => {
+    const user = await createTestUser();
+    await setStock(user.id, 1, 0);
+    await withTransaction((client) => grantPacks(client, user.id, { classic: MAX_STOCK + 5 }));
+    expect(await getPackState(user.id)).toMatchObject({ stock: 1, bonus: MAX_STOCK + 5 });
+
+    expect((await openPack(user.id)).state).toMatchObject({ stock: 0, bonus: MAX_STOCK + 5 });
+    const { cards, state } = await openPack(user.id);
+    expect(cards).toHaveLength(PACK_SIZE);
+    expect(state).toMatchObject({ stock: 0, bonus: MAX_STOCK + 4 });
+  });
+});
+
+describe("récompenses des quêtes", () => {
+  async function finish(userId: string, key: string) {
+    await db.query(
+      "insert into user_quests (user_id, quest_key, period_start, progress) values ($1, $2, $3, 1000)",
+      [userId, key, periodStart(QUESTS.find((quest) => quest.key === key)!.period)],
+    );
+  }
+
+  it("journalière : un pack Solo, pas de pièces ; mensuelle : un pack et 500 pièces", async () => {
+    const user = await createTestUser({ coins: 0 });
+    await finish(user.id, "daily_new");
+    await finish(user.id, "monthly_legendary");
+
+    await claimQuest(user.id, "daily_new");
+    expect(await coinsOf(user.id)).toBe(0);
+    expect(await getPackState(user.id)).toMatchObject({ solo: 1, bonus: 0 });
+
+    await claimQuest(user.id, "monthly_legendary");
+    expect(await coinsOf(user.id)).toBe(500);
+    expect(await getPackState(user.id)).toMatchObject({ solo: 1, bonus: 1 });
+    await expect(claimQuest(user.id, "monthly_legendary")).rejects.toThrow("déjà récupéré");
   });
 });

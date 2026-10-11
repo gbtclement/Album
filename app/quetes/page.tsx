@@ -6,6 +6,7 @@ import { DiscIcon, SparkIcon, StarIcon, SwapIcon, CrownIcon } from "@/components
 import { DrawBanner } from "@/components/draw-banner";
 import { SiteNav } from "@/components/site-nav";
 import { isDrawPending } from "@/lib/daily-draw";
+import { rewardLabel } from "@/lib/pack-rules";
 import { getQuestStatus, PERIOD_LABELS, type Period, type QuestEvent } from "@/lib/quests";
 import { claimQuestAction } from "./actions";
 
@@ -77,7 +78,11 @@ export default async function QuetesPage({ searchParams }: Props) {
                         </div>
                         <div className="q-meta">
                           <span>{progress} / {quest.target}</span>
-                          <span className="reward"><i className="coin-i" aria-hidden="true" />{quest.reward.toLocaleString("fr-FR")}</span>
+                          <span className="reward" aria-label={`Récompense : ${rewardLabel(quest.reward)}`}>
+                            {quest.reward.packs > 0 && <><i className="vinyl-i" aria-hidden="true" />{quest.reward.packs} pack</>}
+                            {quest.reward.solo > 0 && <><i className="vinyl-i solo" aria-hidden="true" />{quest.reward.solo} Solo</>}
+                            {quest.reward.coins > 0 && <><i className="coin-i" aria-hidden="true" />{quest.reward.coins.toLocaleString("fr-FR")}</>}
+                          </span>
                         </div>
                       </div>
                       {quest.claimed ? (

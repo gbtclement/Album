@@ -15,7 +15,7 @@ export async function claimSetAction(formData: FormData) {
   const artist = String(formData.get("artist") ?? "");
   try {
     const result = await claimArtistSet(session.user.id, artist);
-    const pack = result.packGiven ? " et un pack" : "";
+    const pack = result.pack ? " et un pack" : "";
     backTo(`Collection ${artist} terminée : +${result.coins.toLocaleString("fr-FR")} pièces${pack} !`);
   } catch (error) {
     if (error instanceof ArtistSetError) backTo(error.message);

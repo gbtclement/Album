@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
 import { getDrawCrop, getTodayDraw, isDrawPending, searchAlbumTitles, submitGuess } from "@/lib/daily-draw";
-import { createAlbum, createTestUser, giveAlbum, ownedCount, resetDatabase } from "./helpers";
+import { coinsOf, createAlbum, createTestUser, giveAlbum, ownedCount, resetDatabase } from "./helpers";
 
 beforeEach(resetDatabase);
 
@@ -88,25 +88,19 @@ describe("pioche du jour", () => {
     expect((await submitGuess(user.id, homonym.id)).solved).toBe(true);
   });
 
-  it("le 7e jour d'affilée offre un pack, ou des pièces si le stock est plein", async () => {
-    const user = await createTestUser();
+  it("le 7e jour d'affilée offre un pack gagné, même quand le stock est plein", async () => {
+    const user = await createTestUser({ coins: 0 });
     const album = await createAlbum();
     const old = await createAlbum();
     await giveAlbum(user.id, old.id);
-    await yesterday(user.id, old.id, 6);
-    await db.query("insert into pack_stocks (user_id, stock) values ($1, 2)", [user.id]);
+    await yesterday(user.id, old.id, 13);
+    await db.query("insert into pack_stocks (user_id, stock) values ($1, 10)", [user.id]);
 
     await getTodayDraw(user.id);
-    expect(await submitGuess(user.id, album.id)).toMatchObject({ solved: true, streak: 7, bonus: "pack" });
-    const { rows } = await db.query<{ stock: number }>("select stock from pack_stocks where user_id = $1", [user.id]);
-    expect(rows[0].stock).toBe(3);
-
-    const full = await createTestUser();
-    await giveAlbum(full.id, old.id);
-    await yesterday(full.id, old.id, 13);
-    await db.query("insert into pack_stocks (user_id, stock) values ($1, 10)", [full.id]);
-    await getTodayDraw(full.id);
-    expect(await submitGuess(full.id, album.id)).toMatchObject({ streak: 14, bonus: "coins" });
+    expect(await submitGuess(user.id, album.id)).toMatchObject({ solved: true, streak: 14, bonus: "pack" });
+    const { rows } = await db.query<{ stock: number; bonus_packs: number }>("select stock, bonus_packs from pack_stocks where user_id = $1", [user.id]);
+    expect(rows[0]).toEqual({ stock: 10, bonus_packs: 1 });
+    expect(await coinsOf(user.id)).toBe(0);
   });
 
   it("propose d'abord les titres qui commencent par le texte tapé", async () => {

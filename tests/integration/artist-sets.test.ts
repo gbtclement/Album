@@ -65,13 +65,15 @@ describe("collections d'artiste", () => {
     expect(set).toMatchObject({ artist: "Muse", claimed: true, owned: 2 });
   });
 
-  it("un grand set offre un pack, ou 300 pièces si le stock est plein", async () => {
+  it("un grand set offre un pack gagné, même quand le stock est plein", async () => {
     const user = await createTestUser({ coins: 0 });
     const albums = await artistAlbums("Grand", Array(8).fill("commun"));
     for (const album of albums) await giveAlbum(user.id, album.id);
     await db.query("insert into pack_stocks (user_id, stock) values ($1, 10)", [user.id]);
 
-    expect(await claimArtistSet(user.id, "Grand")).toMatchObject({ coins: 460, packGiven: false });
-    expect(await coinsOf(user.id)).toBe(460);
+    expect(await claimArtistSet(user.id, "Grand")).toMatchObject({ coins: 160, pack: true });
+    expect(await coinsOf(user.id)).toBe(160);
+    const { rows } = await db.query<{ stock: number; bonus_packs: number }>("select stock, bonus_packs from pack_stocks where user_id = $1", [user.id]);
+    expect(rows[0]).toEqual({ stock: 10, bonus_packs: 1 });
   });
 });

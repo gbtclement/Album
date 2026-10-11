@@ -1,8 +1,11 @@
 import type { PoolClient } from "pg";
 import { db, withTransaction } from "@/lib/db";
+import type { Reward } from "@/lib/pack-rules";
+import { grantPacks } from "@/lib/packs";
 
 // Quêtes : chaque événement du jeu fait avancer les quêtes qui l'écoutent.
 // Les périodes sont en UTC : journalière (jour), hebdomadaire (lundi), mensuelle (1er du mois).
+// Les quêtes rapportent surtout des packs : les pièces viennent des succès et des collections d'artiste.
 
 export type QuestEvent = "pack_opened" | "rare_card" | "legendary_card" | "new_album" | "trade";
 export type Period = "daily" | "weekly" | "monthly";
@@ -13,8 +16,13 @@ export type QuestDef = {
   event: QuestEvent;
   title: string;
   target: number;
-  reward: number;
+  reward: Reward;
 };
+
+// Journalière : 1 pack Solo · hebdomadaire : 1 pack Solo + 100 pièces · mensuelle : 1 pack + 500 pièces
+const DAILY: Reward = { coins: 0, packs: 0, solo: 1 };
+const WEEKLY: Reward = { coins: 100, packs: 0, solo: 1 };
+const MONTHLY: Reward = { coins: 500, packs: 1, solo: 0 };
 
 export const PERIOD_LABELS: Record<Period, string> = {
   daily: "Journalières",
@@ -23,15 +31,15 @@ export const PERIOD_LABELS: Record<Period, string> = {
 };
 
 export const QUESTS: QuestDef[] = [
-  { key: "daily_packs", period: "daily", event: "pack_opened", title: "Ouvre 3 packs", target: 3, reward: 100 },
-  { key: "daily_new", period: "daily", event: "new_album", title: "Obtiens 2 albums nouveaux", target: 2, reward: 100 },
-  { key: "daily_trade", period: "daily", event: "trade", title: "Réalise un échange d'album ou un achat", target: 1, reward: 150 },
-  { key: "weekly_packs", period: "weekly", event: "pack_opened", title: "Ouvre 20 packs", target: 20, reward: 500 },
-  { key: "weekly_rare", period: "weekly", event: "rare_card", title: "Obtiens 3 cartes rares ou plus", target: 3, reward: 400 },
-  { key: "weekly_trade", period: "weekly", event: "trade", title: "Réalise 3 échanges d'albums ou achats", target: 3, reward: 400 },
-  { key: "monthly_packs", period: "monthly", event: "pack_opened", title: "Ouvre 100 packs", target: 100, reward: 1000 },
-  { key: "monthly_new", period: "monthly", event: "new_album", title: "Obtiens 30 albums nouveaux", target: 30, reward: 800 },
-  { key: "monthly_legendary", period: "monthly", event: "legendary_card", title: "Obtiens 1 carte légendaire", target: 1, reward: 1000 },
+  { key: "daily_packs", period: "daily", event: "pack_opened", title: "Ouvre 3 packs", target: 3, reward: DAILY },
+  { key: "daily_new", period: "daily", event: "new_album", title: "Obtiens 2 albums nouveaux", target: 2, reward: DAILY },
+  { key: "daily_trade", period: "daily", event: "trade", title: "Réalise un échange d'album ou un achat", target: 1, reward: DAILY },
+  { key: "weekly_packs", period: "weekly", event: "pack_opened", title: "Ouvre 20 packs", target: 20, reward: WEEKLY },
+  { key: "weekly_rare", period: "weekly", event: "rare_card", title: "Obtiens 3 cartes rares ou plus", target: 3, reward: WEEKLY },
+  { key: "weekly_trade", period: "weekly", event: "trade", title: "Réalise 3 échanges d'albums ou achats", target: 3, reward: WEEKLY },
+  { key: "monthly_packs", period: "monthly", event: "pack_opened", title: "Ouvre 100 packs", target: 100, reward: MONTHLY },
+  { key: "monthly_new", period: "monthly", event: "new_album", title: "Obtiens 30 albums nouveaux", target: 30, reward: MONTHLY },
+  { key: "monthly_legendary", period: "monthly", event: "legendary_card", title: "Obtiens 1 carte légendaire", target: 1, reward: MONTHLY },
 ];
 
 export class QuestError extends Error {}
@@ -114,7 +122,10 @@ export async function claimQuest(userId: string, questKey: string) {
       "update user_quests set claimed = true where user_id = $1 and quest_key = $2 and period_start = $3",
       [userId, quest.key, start],
     );
-    await client.query("update users set coins = coins + $2 where id = $1", [userId, quest.reward]);
+    if (quest.reward.coins > 0) {
+      await client.query("update users set coins = coins + $2 where id = $1", [userId, quest.reward.coins]);
+    }
+    await grantPacks(client, userId, { classic: quest.reward.packs, solo: quest.reward.solo });
     return quest.reward;
   });
 }

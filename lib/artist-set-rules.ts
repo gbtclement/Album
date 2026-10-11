@@ -6,9 +6,8 @@ export const SET_MIN_ALBUMS = 3;
 // Récompense : 20 pièces par point de rareté des albums du set (commun 20, légendaire 500), 100 au minimum
 export const COINS_PER_POINT = 20;
 export const MIN_SET_COINS = 100;
-// Les grands sets (8 albums et plus) offrent aussi un pack ; stock plein : des pièces à la place
+// Les grands sets (8 albums et plus) offrent aussi un pack (ajouté aux packs gagnés)
 export const PACK_SET_SIZE = 8;
-export const PACK_FALLBACK_COINS = 300;
 
 export type SetReward = { coins: number; pack: boolean };
 
