@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { auth } from "@/auth";
 import { Dock, PackTimer, Toast } from "@/components/game-nav";
 import { Avatar, formatNumber } from "@/components/game-ui";
@@ -48,6 +49,17 @@ export async function SiteNav({ message }: { message?: string } = {}) {
           >
             <SparkIcon />
           </Link>
+          {/* Passe de combat : niveau, anneau de progression vers le palier suivant, pastille s'il y a à réclamer */}
+          <Link
+            href="/passe"
+            className="res pass-res"
+            style={{ "--p": `${hud.passProgress}%` } as CSSProperties}
+            title={`Passe de combat : niveau ${hud.passLevel}${hud.passReady > 0 ? `, ${hud.passReady} récompense(s) à réclamer` : ""}`}
+            aria-label={`Passe de combat, niveau ${hud.passLevel}${hud.passReady > 0 ? `, ${hud.passReady} à réclamer` : ""}`}
+          >
+            <span className="pass-ring"><b>{hud.passLevel}</b></span>
+            {hud.passReady > 0 && <span className="pass-dot" aria-hidden="true" />}
+          </Link>
           <span className="res" title="Pièces">
             <i className="coin" aria-hidden="true" />
             {formatNumber(hud.coins)}
@@ -62,6 +74,13 @@ export async function SiteNav({ message }: { message?: string } = {}) {
       </header>
       <Dock stock={hud.stock} extra={hud.extraPacks} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} collection={hud.setsReady} />
       <Toast key={message} message={message} />
+      {hud.seasonRewards > 0 && (
+        <Toast
+          key={`saison-${hud.seasonRewards}`}
+          message={`Saison du passe terminée : ${hud.seasonRewards} récompense${hud.seasonRewards > 1 ? "s" : ""} ajoutée${hud.seasonRewards > 1 ? "s" : ""} à tes packs`}
+          variant="achievement"
+        />
+      )}
       {hud.unlocked.length > 0 && (
         <Toast
           key={hud.unlocked.map((item) => item.key).join()}
