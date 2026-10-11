@@ -642,8 +642,6 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .auth-success { margin: 0; border: 1px solid color-mix(in srgb, var(--r-peu_commun) 55%, transparent); background: color-mix(in srgb, var(--r-peu_commun) 12%, var(--night-2)); color: #d3f5e3; border-radius: 12px; padding: 10px 12px; font-size: 14px; }
 .auth-link { color: var(--gold); font-weight: 600; font-size: 12px; text-decoration: none; }
 .auth-link:hover { text-decoration: underline; text-underline-offset: 3px; }
-.auth-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .auth-footer { margin-top: 18px; color: var(--muted); font-size: 14px; }
 .auth-footer a { color: var(--gold); font-weight: 700; text-decoration: none; }
 .auth-footer a:hover { text-decoration: underline; text-underline-offset: 3px; }

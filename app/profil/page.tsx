@@ -161,8 +161,7 @@ export default async function ProfilPage({ searchParams }: Props) {
           {!user.email_verified_at && (
             <div className="notice">
               <p style={{ margin: 0 }}>
-                Ton adresse e-mail n&apos;est pas encore vérifiée : clique sur le lien reçu par e-mail. Tant qu&apos;elle ne l&apos;est pas,
-                une connexion Google avec cette adresse remplace ton mot de passe.
+                Ton adresse e-mail n&apos;est pas encore vérifiée : clique sur le lien reçu par e-mail. Tant qu&apos;elle ne l&apos;est pas, tu ne peux ni échanger ni vendre au marché.
               </p>
               <form action={resendVerificationAction} style={{ marginTop: 8 }}>
                 <button type="submit" className="btn-link">Renvoyer le lien</button>

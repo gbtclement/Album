@@ -1,14 +1,17 @@
 # Environnement de production : l'application est construite à partir du Dockerfile,
-# sans montage du code source. Les variables viennent du fichier .env du serveur.
+# sans montage du code source. Les variables viennent du fichier .env.prod, préparé sur ton ordinateur
+# puis envoyé au serveur avec deploy/envoyer-env.sh (jamais modifié directement sur le serveur).
 #
-#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+#
+# --env-file : les mots de passe de la base (${POSTGRES_PASSWORD}...) plus bas viennent aussi de .env.prod
 #
 # Derrière un reverse proxy (HTTPS), le port 3000 n'est pas exposé publiquement.
 
 services:
   app:
     build: .
-    env_file: .env
+    env_file: .env.prod
     # Dans Docker, la base et Redis s'appellent "db" et "redis" (et non localhost comme en dev).
     # Le mot de passe doit rester sans caractères spéciaux d'URL (@, :, /, #).
     environment:

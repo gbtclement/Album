@@ -27,7 +27,3 @@ export async function loginAction(_previous: FormState, formData: FormData): Pro
   }
   return {};
 }
-
-export async function googleLoginAction(formData: FormData) {
-  await signIn("google", { redirectTo: safeCallbackUrl(formData.get("callbackUrl")) });
-}

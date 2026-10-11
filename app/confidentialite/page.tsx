@@ -32,10 +32,6 @@ export default function ConfidentialitePage() {
           ta dernière visite. Ton mot de passe n&apos;est jamais enregistré tel quel, seulement une empreinte chiffrée qui ne permet pas de le retrouver.
         </li>
         <li>
-          <strong>Si tu te connectes avec Google</strong> : Google nous transmet ton adresse e-mail (et ton nom, qui sert seulement à te
-          proposer un pseudo). Nous ne recevons jamais ton mot de passe Google.
-        </li>
-        <li>
           <strong>Ta partie</strong> : cartes, pièces, packs ouverts et gagnés, quêtes, Disque d&apos;Or (passe du mois : XP et paliers récupérés), points et place au classement saisonnier, succès, pioches du jour, amis, échanges et annonces du marché, et tes réglages.
         </li>
         <li>
@@ -71,8 +67,7 @@ export default function ConfidentialitePage() {
         </li>
         <li>
           <strong>Les prestataires techniques</strong> qui font tourner le site, uniquement pour ce service : l&apos;hébergeur (voir les mentions
-          légales), le service d&apos;envoi d&apos;e-mails, Stripe pour le paiement si tu t&apos;abonnes et, si tu l&apos;utilises, Google
-          pour la connexion.
+          légales), le service d&apos;envoi d&apos;e-mails (Brevo) et Stripe pour le paiement si tu t&apos;abonnes.
         </li>
       </ul>
       <p>

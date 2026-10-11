@@ -7,7 +7,7 @@ Jeu de collection de cartes d'albums de musique, inspiré de Wikimaster. Interfa
 - Next.js 16 (App Router, TypeScript, Turbopack) : pages et API dans `app/`
 - PostgreSQL (`lib/db.ts`) et Redis (`lib/redis.ts`), tous deux dans Docker
 - Tailwind CSS 4
-- Auth.js (e-mail/mot de passe ; Google seulement si `AUTH_GOOGLE_ID` et `AUTH_GOOGLE_SECRET` sont renseignés), Lightweight Charts (lot 6)
+- Auth.js (e-mail et mot de passe ; connexion Google retirée pour l'instant), Lightweight Charts (lot 6)
 - Catalogue : ListenBrainz (albums les plus écoutés, écoutes = rareté) et MusicBrainz, sans clé (`lib/listenbrainz.ts`, `lib/musicbrainz.ts`)
 
 Next.js 16 a des changements par rapport aux versions habituelles : lire le guide correspondant dans `node_modules/next/dist/docs/` avant d'écrire du code.
@@ -19,7 +19,8 @@ Toutes les commandes se lancent dans WSL (Ubuntu-24.04), depuis `~/Album`.
 - Lancer le site : `npm run dev` (puis http://localhost:3000). Le terminal affiche les logs. Rechargement à chaud natif.
 - Arrêter : Ctrl+C pour le site, `docker compose down` pour la base et Redis
 - Vérifier la santé : http://localhost:3000/api/health (200 si la base et Redis répondent)
-- E-mails en développement : sans `SMTP_URL`, ils ne sont pas envoyés mais affichés dans le terminal de `npm run dev` (lien de vérification à copier).
+- E-mails en développement : sans `SMTP_HOST`, ils ne sont pas envoyés mais affichés dans le terminal de `npm run dev` (lien de vérification à copier).
+- Réglages : `.env` pour l'ordinateur, `.env.prod` pour le serveur (jamais versionnés, même modèle `.env.example`). `.env.prod` se modifie en local puis s'envoie avec `deploy/envoyer-env.sh utilisateur@serveur`. E-mails de production par Brevo (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`).
 - Migrations : appliquées automatiquement par `npm run dev` (et au démarrage du conteneur en production) par `scripts/migrate.mjs` (suivi dans la table `schema_migrations`). À la main : `npm run migrate`. Ne jamais modifier une migration déjà appliquée : ajouter un nouveau fichier numéroté.
 - Tests : `npm test` (Vitest). `tests/unit/` sans base ; `tests/integration/` sur la base `album_test` et Redis n°15, vidés à chaque test.
 - CI : `.github/workflows/ci.yml` (lint, typage, tests, build) à chaque push et PR.

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 const ROUTES = [
   { path: "/", description: "Accueil (un joueur connecté est envoyé vers sa collection)" },
-  { path: "/connexion", description: "Connexion (e-mail/mot de passe, Google si configuré)" },
+  { path: "/connexion", description: "Connexion (e-mail et mot de passe)" },
   { path: "/inscription", description: "Création de compte (pseudo, e-mail, mot de passe et sa confirmation)" },
   { path: "/mot-de-passe-oublie", description: "Demande d'un lien pour choisir un nouveau mot de passe (même réponse que l'adresse soit inscrite ou non)" },
   { path: "/nouveau-mot-de-passe", description: "Choix du nouveau mot de passe depuis le lien reçu (?token=, usage unique, valable 1 h)" },
@@ -78,8 +78,7 @@ const ENV_VARS = [
   { name: "REDIS_URL", description: "Adresse de Redis (cache des API externes, compteurs de tentatives)" },
   { name: "AUTH_SECRET", description: "Clé de signature des sessions Auth.js (obligatoire)" },
   { name: "AUTH_URL", description: "Adresse publique du site, utilisée par Auth.js" },
-  { name: "AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET", description: "Identifiants OAuth Google (optionnels)" },
-  { name: "SMTP_URL", description: "Serveur d'envoi des e-mails (smtp://utilisateur:motdepasse@serveur:587). Vide en développement : les e-mails sont affichés dans les logs" },
+  { name: "SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS", description: "Serveur d'envoi des e-mails (Brevo : smtp-relay.brevo.com, port 587, identifiant et clé SMTP du compte). SMTP_HOST vide en développement : les e-mails sont affichés dans les logs" },
   { name: "MAIL_FROM", description: "Expéditeur des e-mails (ex. Musicodex <no-reply@musicodex.fr>)" },
   { name: "PUBLIC_BASE_URL", description: "Adresse publique pour les URLs canoniques et le sitemap" },
   { name: "SEO_INDEXING", description: "\"true\" pour autoriser l'indexation par les moteurs de recherche. Désactivé tant que le domaine n'est pas en ligne" },
@@ -98,7 +97,8 @@ const COMMANDS = [
   { command: "npm test", description: "Lancer les tests (Vitest)" },
   { command: "npm run migrate", description: "Appliquer à la main les migrations en attente" },
   { command: "docker compose down", description: "Arrêter PostgreSQL et Redis" },
-  { command: "docker compose -f docker-compose.prod.yml up -d --build", description: "Lancer la version de production (image construite à partir du Dockerfile)" },
+  { command: "docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build", description: "Lancer la version de production (image construite à partir du Dockerfile)" },
+  { command: "deploy/envoyer-env.sh utilisateur@serveur", description: "Envoyer .env.prod (réglages de production, modifiés sur ton ordinateur) au serveur et relancer l'application" },
   { command: "npm run import:catalog", description: "Importer le catalogue de test (data/seed-albums.json)" },
   { command: "npm run import:catalog -- --listenbrainz", description: "Importer les albums les plus écoutés sur ListenBrainz (sans clé)" },
   { command: "npm run import:catalog -- --listenbrainz --artists 1000 --similar 5 --min-listens 1000", description: "Catalogue élargi : discographies des 1 000 artistes les plus écoutés de chaque période et de leurs artistes proches (plusieurs heures la première fois : une requête MusicBrainz par seconde)" },
@@ -151,6 +151,7 @@ const LOTS = [
   { lot: "S1", name: "Classement saisonnier : onglet Saison, points du mois gagnés seulement en ouvrant des packs (1 / 2 / 5 / 10 / 25 par carte, doublons compris), top 20 récompensé en pièces et packs à la première visite du mois suivant", status: "Terminé", branch: "saison1-classement" },
   { lot: "PAY1", name: "Préparation du paiement Stripe : variables STRIPE_* dans .env, page /premium façon édition deluxe d'un album (pochette, prix, liste des avantages) avec bouton de paiement désactivé, liens depuis le passe et le profil ; une quête premium par période (journalière, hebdomadaire, mensuelle) ; premier mois offert (30 jours, une fois par compte) et page /cgv ; adresse de l'API ListenBrainz réglable (LISTENBRAINZ_API_URL)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "V1", name: "Disque d'Or : le passe de combat est renommé et sa page devient un vinyle (paliers sur le sillon, bras de platine sur la position actuelle) ; l'ancienne vue reste sur /passe/liste", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "SEC1", name: "Sécurité : contrôle complet du site ; une carte ne peut plus être dupliquée par un échange et un achat simultanés ; Nodemailer 10 (failles connues) ; connexion Google retirée pour l'instant ; réglages séparés .env (local) et .env.prod (serveur, envoyé par deploy/envoyer-env.sh) ; e-mails par Brevo (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
@@ -206,7 +207,7 @@ export default function DocumentationPage() {
             <li>Next.js 16 (App Router, TypeScript, Turbopack) et React 19, en configuration standard : les options avancées (<code>cacheComponents</code>, <code>partialPrefetching</code>) sont désactivées. Le layout racine rend tout le site à chaque requête (<code>dynamic = &quot;force-dynamic&quot;</code>) : la session, la base et les variables de <code>.env</code> sont lues au lancement, pas au build.</li>
             <li>Tailwind CSS 4 pour le style</li>
             <li>PostgreSQL 16 pour les données, Redis 7 pour le cache des API externes</li>
-            <li>Auth.js (next-auth 5 bêta) : e-mail/mot de passe et Google</li>
+            <li>Auth.js (next-auth 5 bêta) : e-mail et mot de passe (connexion Google retirée pour l&apos;instant, à refaire plus tard)</li>
             <li>bcryptjs pour le hachage des mots de passe</li>
             <li>Docker Compose pour l&apos;environnement local</li>
           </ul>
@@ -382,11 +383,11 @@ export default function DocumentationPage() {
         <Section title="Mise en production">
           <ol className="list-decimal space-y-2 pl-6">
             <li>Faire pointer le domaine vers le serveur (enregistrements DNS A et AAAA, avec et sans <code>www</code>).</li>
-            <li>Remplir le fichier <code>.env</code> du serveur, avec <code>PUBLIC_BASE_URL</code> et <code>AUTH_URL</code> sur l&apos;adresse publique (https, sans <code>www</code> ni barre finale).</li>
-            <li>Lancer <code>docker compose -f docker-compose.prod.yml up -d --build</code>. L&apos;image ne contient pas le <code>.env</code> et tourne en utilisateur non root. Le port 3000 n&apos;écoute que sur le serveur lui-même ; les pochettes optimisées sont gardées dans le volume <code>image_cache</code>.</li>
+            <li>Réglages : deux fichiers jamais versionnés. <code>.env</code> sert à ton ordinateur ; <code>.env.prod</code> (même modèle : <code>.env.example</code>) sert au serveur. On modifie <code>.env.prod</code> sur son ordinateur puis on l&apos;envoie avec <code>deploy/envoyer-env.sh utilisateur@serveur</code> (copie par SSH et relance de l&apos;application), sans jamais l&apos;éditer sur le serveur. Il ne s&apos;appelle pas <code>.env.production</code> : Next.js chargerait ce nom tout seul lors d&apos;un build local. <code>PUBLIC_BASE_URL</code> et <code>AUTH_URL</code> y valent https://musicodex.fr.</li>
+            <li>Lancer <code>docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build</code>. L&apos;image ne contient aucun fichier <code>.env</code> et tourne en utilisateur non root. Le port 3000 n&apos;écoute que sur le serveur lui-même ; les pochettes optimisées sont gardées dans le volume <code>image_cache</code>.</li>
             <li>Les migrations sont appliquées automatiquement au démarrage du conteneur, avant le serveur. Si l&apos;une échoue, le serveur ne démarre pas (voir <code>docker compose -f docker-compose.prod.yml logs app</code>).</li>
             <li>Installer Caddy et copier <code>deploy/Caddyfile</code> (remplacer <code>musicodex.fr</code> par le domaine) : HTTPS automatique (Let&apos;s Encrypt), compression, redirection de <code>www</code> vers le domaine principal, cache long des fichiers de build. Caddy place l&apos;adresse du visiteur en dernier dans <code>X-Forwarded-For</code>, ce que lisent les limites par adresse IP (avec nginx : <code>proxy_add_x_forwarded_for</code>).</li>
-            <li>Renseigner <code>SMTP_URL</code> et <code>MAIL_FROM</code> (adresse du domaine, avec SPF, DKIM et DMARC configurés chez le fournisseur d&apos;e-mails pour ne pas finir en indésirables) : sans eux, aucun e-mail ne part.</li>
+            <li>E-mails avec Brevo : créer le compte, ajouter le domaine musicodex.fr (Expéditeurs, domaines) et recopier chez le registrar les enregistrements DNS donnés (code Brevo, DKIM, DMARC), créer une clé SMTP, puis renseigner <code>SMTP_USER</code>, <code>SMTP_PASS</code> et <code>MAIL_FROM</code> dans <code>.env.prod</code> (adresse du domaine, avec SPF, DKIM et DMARC configurés pour ne pas finir en indésirables) : sans eux, aucun e-mail ne part.</li>
             <li>Vérifier <code>https://domaine/api/health</code>, l&apos;inscription, la réception des deux e-mails et le changement de mot de passe.</li>
             <li>Passer <code>SEO_INDEXING</code> à <code>true</code> et redémarrer l&apos;application. Dans Google Search Console : ajouter le site, coller le code de vérification dans <code>GOOGLE_SITE_VERIFICATION</code> (puis redémarrer), soumettre <code>https://domaine/sitemap.xml</code>. Faire de même dans Bing Webmaster Tools.</li>
             <li>Garder <code>SEO_INDEXING=false</code> sur une éventuelle préproduction, pour qu&apos;elle ne soit jamais indexée.</li>
@@ -397,7 +398,7 @@ export default function DocumentationPage() {
         <Section title="Comptes et sécurité">
           <ul className="list-disc space-y-2 pl-6">
             <li>
-              <strong>Vérification de l&apos;e-mail :</strong> à l&apos;inscription, un lien (valable 24 h, utilisable une fois) est envoyé. Le compte est jouable tout de suite ; seuls le marché et les échanges attendent la confirmation (règle dans <code>lib/market.ts</code> et <code>lib/trades.ts</code>, écran <code>components/verify-gate.tsx</code> ; annuler une annonce ou refuser un échange reste possible). Un échange ne peut pas non plus être proposé à un ami non vérifié ; le profil affiche un bandeau tant que l&apos;adresse n&apos;est pas vérifiée, avec un bouton pour renvoyer le lien. Les comptes Google sont vérifiés d&apos;office (Google ne transmet que des adresses qu&apos;il a vérifiées, les autres sont refusées).
+              <strong>Vérification de l&apos;e-mail :</strong> à l&apos;inscription, un lien (valable 24 h, utilisable une fois) est envoyé. Le compte est jouable tout de suite ; seuls le marché et les échanges attendent la confirmation (règle dans <code>lib/market.ts</code> et <code>lib/trades.ts</code>, écran <code>components/verify-gate.tsx</code> ; annuler une annonce ou refuser un échange reste possible). Un échange ne peut pas non plus être proposé à un ami non vérifié ; le profil affiche un bandeau tant que l&apos;adresse n&apos;est pas vérifiée, avec un bouton pour renvoyer le lien.
             </li>
             <li>
               <strong>Une boîte mail, un compte :</strong> la base calcule la « vraie » boîte de chaque adresse (<code>canonical_email</code>, colonne <code>users.email_canonical</code>, migration 013) : minuscules, sans ce qui suit un « + », et chez Gmail sans les points (<code>googlemail.com</code> = <code>gmail.com</code>). Elle est unique : <code>test+1@gmail.com</code> ou <code>t.est@gmail.com</code> ne peuvent pas créer un second compte, et se connecter avec l&apos;une de ces variantes ouvre le compte d&apos;origine. Les limites de tentatives comptent aussi par vraie boîte.
@@ -407,9 +408,6 @@ export default function DocumentationPage() {
             </li>
             <li>
               <strong>E-mails</strong> (<code>lib/email-templates.ts</code>) : vérification de l&apos;adresse et mot de passe oublié, chacun en version texte et HTML (tableaux et styles écrits sur chaque balise, seule mise en page fiable dans les messageries). Aperçu : <code>/apercu-emails/verification</code> et <code>/apercu-emails/mot-de-passe</code> en développement.
-            </li>
-            <li>
-              <strong>Connexion Google sur un compte existant :</strong> si l&apos;adresse du compte est vérifiée, Google se connecte au même compte. Sinon, rien ne prouve que le mot de passe a été choisi par le titulaire de l&apos;adresse (n&apos;importe qui peut s&apos;inscrire avec l&apos;e-mail d&apos;un autre) : le titulaire, prouvé par Google, récupère le compte. Le mot de passe est supprimé et toutes les sessions ouvertes sont coupées.
             </li>
             <li>
               <strong>Sessions :</strong> toutes les minutes, la session est revérifiée en base. Si le compte a disparu ou si <code>users.session_version</code> a changé, le joueur est déconnecté.
@@ -426,7 +424,7 @@ export default function DocumentationPage() {
               <strong>Pages légales</strong> (publiques, liens en bas de l&apos;accueil, des pages de connexion et du profil, <code>components/legal-links.tsx</code>) : <code>/mentions-legales</code>, <code>/confidentialite</code>, <code>/cgu</code>. Coordonnées de l&apos;éditeur et de l&apos;hébergeur lues dans <code>LEGAL_PUBLISHER</code>, <code>LEGAL_CONTACT_EMAIL</code>, <code>LEGAL_HOST</code> (sinon « à compléter »). Date de version et durées dans <code>lib/legal.ts</code> : changer <code>LEGAL_UPDATED_AT</code> à chaque modification des textes. Pas de CGV : rien n&apos;est vendu.
             </li>
             <li>
-              <strong>Acceptation :</strong> case obligatoire à l&apos;inscription (âge minimum 15 ans ou accord parental, CGU et politique de confidentialité), revérifiée par le serveur ; phrase équivalente sous le bouton Google. Date dans <code>users.terms_accepted_at</code> (vide pour les comptes antérieurs au lot R1).
+              <strong>Acceptation :</strong> case obligatoire à l&apos;inscription (âge minimum 15 ans ou accord parental, CGU et politique de confidentialité), revérifiée par le serveur. Date dans <code>users.terms_accepted_at</code> (vide pour les comptes antérieurs au lot R1).
             </li>
             <li>
               <strong>Accès et portabilité :</strong> <code>/profil/donnees</code> télécharge un fichier JSON de toutes les données du joueur (<code>exportUserData</code>, <code>lib/account.ts</code>), sans empreinte de mot de passe ni de lien ; 5 téléchargements par heure.
@@ -482,7 +480,7 @@ export default function DocumentationPage() {
               <strong>Lancer les tests :</strong> <code>npm test</code> (Vitest). Les tests unitaires
               (<code>tests/unit/</code>) vérifient les règles pures : tirage des packs, raretés, périodes des quêtes, liens de
               redirection, adresses IP. Les tests d&apos;intégration (<code>tests/integration/</code>) utilisent une vraie base et
-              un vrai Redis : migrations, vérification d&apos;e-mail, reprise de compte Google, limites de tentatives, packs,
+              un vrai Redis : migrations, vérification d&apos;e-mail, limites de tentatives, packs,
               marché et échanges, y compris des demandes simultanées (un pack ou une annonce ne part qu&apos;une fois).
             </li>
             <li>

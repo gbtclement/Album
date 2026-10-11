@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { DEFAULT_AFTER_LOGIN, safeCallbackUrl } from "@/lib/callback-url";
 import { AuthShell } from "../auth-ui";
-import { GoogleOption } from "../google-option";
 import { SignupForm } from "./signup-form";
 
 export const metadata: Metadata = {
@@ -38,7 +37,6 @@ export default async function InscriptionPage({ searchParams }: Props) {
         </>
       }
     >
-      <GoogleOption callbackUrl={callbackUrl} />
       <SignupForm callbackUrl={callbackUrl} />
     </AuthShell>
   );

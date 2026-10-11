@@ -44,7 +44,3 @@ export function ErrorMessage({ message }: { message?: string }) {
     </p>
   );
 }
-
-export function Divider() {
-  return <div className="auth-divider">ou</div>;
-}

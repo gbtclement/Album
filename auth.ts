@@ -1,12 +1,8 @@
 import bcrypt from "bcryptjs";
 import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
 import { clientIp, isRateLimited, MINUTE, resetRateLimit } from "@/lib/rate-limit";
-import { canonicalEmail, claimAccountWithGoogle, createGoogleUser, findUserByEmail, findUserById, touchLastSeen } from "@/lib/users";
-
-// Google n'apparaît sur la page de connexion que si les clés sont renseignées dans .env
-const googleEnabled = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
+import { canonicalEmail, findUserByEmail, findUserById, touchLastSeen } from "@/lib/users";
 
 // Code renvoyé quand un joueur (ou un robot) essaie trop de mots de passe
 export const TOO_MANY_ATTEMPTS = "trop_de_tentatives";
@@ -21,7 +17,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/connexion" },
   providers: [
-    ...(googleEnabled ? [Google] : []),
     Credentials({
       credentials: {
         email: {},
@@ -52,21 +47,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (account?.provider !== "google") return true;
-      // On n'accepte que les adresses que Google a lui-même vérifiées
-      if (!user.email || profile?.email_verified !== true) return false;
-
-      const existing = await findUserByEmail(user.email);
-      if (!existing) {
-        // Premier passage avec Google : on crée le compte en base
-        await createGoogleUser(user.email, user.name ?? user.email.split("@")[0]);
-      } else if (!existing.email_verified_at) {
-        // Compte créé avec un mot de passe mais adresse jamais vérifiée : le titulaire de l'adresse le récupère
-        await claimAccountWithGoogle(existing.id);
-      }
-      return true;
-    },
     async jwt({ token, user }) {
       // À la connexion, on récupère l'identifiant et le pseudo de notre base
       if (user?.email) {

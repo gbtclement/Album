@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { DEFAULT_AFTER_LOGIN, safeCallbackUrl } from "@/lib/callback-url";
 import { AuthShell } from "../auth-ui";
-import { GoogleOption } from "../google-option";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
@@ -42,7 +41,6 @@ export default async function ConnexionPage({ searchParams }: Props) {
           Mot de passe changé. Connecte-toi avec le nouveau.
         </p>
       )}
-      <GoogleOption callbackUrl={callbackUrl} />
       <LoginForm callbackUrl={callbackUrl} />
     </AuthShell>
   );
