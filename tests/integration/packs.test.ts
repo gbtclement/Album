@@ -88,7 +88,7 @@ describe("recharge du stock", () => {
     const user = await createTestUser();
     await setStock(user.id, 0, (PACK_INTERVAL_MS / 60_000) * (MAX_STOCK + 20));
 
-    expect(await getPackState(user.id)).toEqual({ stock: MAX_STOCK, nextPackAt: null, bonus: 0, solo: 0 });
+    expect(await getPackState(user.id)).toEqual({ stock: MAX_STOCK, nextPackAt: null, bonus: 0, solo: 0, epic: 0, legendary: 0 });
   });
 });
 
@@ -130,6 +130,32 @@ describe("packs gagnés", () => {
     );
     expect(rows).toHaveLength(3);
     for (const row of rows) expect(row.progress).toBe(2);
+  });
+
+  it("un pack Épique contient 5 cartes dont au moins une épique, et compte pour les quêtes d'ouverture", async () => {
+    const user = await createTestUser();
+    await expect(openPack(user.id, "epic")).rejects.toThrow("pack Épique");
+    await withTransaction((client) => grantPacks(client, user.id, { epic: 1, legendary: 1 }));
+
+    const epic = await openPack(user.id, "epic");
+    expect(epic.cards).toHaveLength(PACK_SIZE);
+    expect(epic.cards.some((card) => card.tier === "epique")).toBe(true);
+    const legendary = await openPack(user.id, "legendary");
+    expect(legendary.cards.some((card) => card.tier === "legendaire")).toBe(true);
+    expect(legendary.state).toMatchObject({ epic: 0, legendary: 0 });
+
+    const { rows } = await db.query<{ progress: number }>(
+      "select progress from user_quests where user_id = $1 and quest_key = 'daily_packs'",
+      [user.id],
+    );
+    expect(rows[0].progress).toBe(2);
+  });
+
+  it("un pack Légendaire s'ouvre même sans album légendaire au catalogue", async () => {
+    await db.query("delete from albums where rarity_tier = 'legendaire'");
+    const user = await createTestUser();
+    await withTransaction((client) => grantPacks(client, user.id, { legendary: 1 }));
+    expect((await openPack(user.id, "legendary")).cards).toHaveLength(PACK_SIZE);
   });
 });
 

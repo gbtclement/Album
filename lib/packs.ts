@@ -2,7 +2,7 @@ import { randomInt } from "node:crypto";
 import type { PoolClient } from "pg";
 import { withTransaction } from "@/lib/db";
 import { RARITY_TIERS, type RarityTier } from "@/lib/rarity";
-import { MAX_STOCK, PACK_INTERVAL_MS, PACK_RATES, PACK_SIZE, SOLO_PACK_SIZE, type PackKind } from "@/lib/pack-rules";
+import { GUARANTEED_TIER, MAX_STOCK, PACK_INTERVAL_MS, PACK_RATES, packSize, type PackKind } from "@/lib/pack-rules";
 import { recordEvent } from "@/lib/quests";
 
 export class PackError extends Error {}
@@ -21,9 +21,11 @@ export type PackState = {
   stock: number;
   // Moment où le prochain pack sera disponible (null si le stock est plein)
   nextPackAt: Date | null;
-  // Packs gagnés, sans maximum : classiques et Solo
+  // Packs gagnés, sans maximum : classiques, Solo, Épique et Légendaire
   bonus: number;
   solo: number;
+  epic: number;
+  legendary: number;
 };
 
 // Tire un palier selon les taux donnés (ceux des packs par défaut ; la pioche du jour a les siens)
@@ -42,12 +44,14 @@ export function drawTier(rates: Record<RarityTier, number> = PACK_RATES): Rarity
 async function rechargeStock(client: PoolClient, userId: string): Promise<PackState> {
   await client.query("insert into pack_stocks (user_id) values ($1) on conflict (user_id) do nothing", [userId]);
 
-  const { rows } = await client.query<{ stock: number; bonus_packs: number; solo_packs: number; last_recharged_at: Date; now: Date }>(
-    "select stock, bonus_packs, solo_packs, last_recharged_at, now() as now from pack_stocks where user_id = $1 for update",
+  const { rows } = await client.query<{
+    stock: number; bonus_packs: number; solo_packs: number; epic_packs: number; legendary_packs: number; last_recharged_at: Date; now: Date;
+  }>(
+    "select stock, bonus_packs, solo_packs, epic_packs, legendary_packs, last_recharged_at, now() as now from pack_stocks where user_id = $1 for update",
     [userId],
   );
   const row = rows[0];
-  const extra = { bonus: row.bonus_packs, solo: row.solo_packs };
+  const extra = { bonus: row.bonus_packs, solo: row.solo_packs, epic: row.epic_packs, legendary: row.legendary_packs };
 
   // Stock plein : le compteur repart de maintenant, pour qu'un pack dépensé soit recréé 5 minutes plus tard
   if (row.stock >= MAX_STOCK) {
@@ -82,16 +86,27 @@ export async function getPackState(userId: string): Promise<PackState> {
 }
 
 // Ajoute des packs gagnés à la réserve du joueur, dans la transaction de la récompense
-export async function grantPacks(client: PoolClient, userId: string, packs: { classic?: number; solo?: number }) {
-  const classic = packs.classic ?? 0;
-  const solo = packs.solo ?? 0;
-  if (classic <= 0 && solo <= 0) return;
+export async function grantPacks(
+  client: PoolClient,
+  userId: string,
+  packs: { classic?: number; solo?: number; epic?: number; legendary?: number },
+) {
+  const values = [packs.classic ?? 0, packs.solo ?? 0, packs.epic ?? 0, packs.legendary ?? 0];
+  if (values.every((value) => value <= 0)) return;
   await client.query(
-    `insert into pack_stocks (user_id, bonus_packs, solo_packs) values ($1, $2, $3)
-     on conflict (user_id) do update set bonus_packs = pack_stocks.bonus_packs + $2, solo_packs = pack_stocks.solo_packs + $3`,
-    [userId, classic, solo],
+    `insert into pack_stocks (user_id, bonus_packs, solo_packs, epic_packs, legendary_packs) values ($1, $2, $3, $4, $5)
+     on conflict (user_id) do update set bonus_packs = pack_stocks.bonus_packs + $2, solo_packs = pack_stocks.solo_packs + $3,
+       epic_packs = pack_stocks.epic_packs + $4, legendary_packs = pack_stocks.legendary_packs + $5`,
+    [userId, ...values],
   );
 }
+
+// Réserves des packs gagnés autres que classiques : colonne et message quand il n'y en a plus
+const RESERVES = {
+  solo: { column: "solo_packs", empty: "Tu n'as plus de pack Solo. Les quêtes en rapportent." },
+  epic: { column: "epic_packs", empty: "Tu n'as plus de pack Épique." },
+  legendary: { column: "legendary_packs", empty: "Tu n'as plus de pack Légendaire." },
+} as const;
 
 // Packs classiques disponibles : le stock qui se recharge plus les packs gagnés
 export function classicAvailable(state: PackState) {
@@ -121,9 +136,10 @@ async function pickAlbum(client: PoolClient, tier: RarityTier) {
 export async function openPack(userId: string, kind: PackKind = "classic"): Promise<{ cards: PackCard[]; state: PackState }> {
   return withTransaction(async (client) => {
     const before = await rechargeStock(client, userId);
-    if (kind === "solo") {
-      if (before.solo < 1) throw new PackError("Tu n'as plus de pack Solo. Les quêtes en rapportent.");
-      await client.query("update pack_stocks set solo_packs = solo_packs - 1 where user_id = $1", [userId]);
+    if (kind !== "classic") {
+      const reserve = RESERVES[kind];
+      if (before[kind] < 1) throw new PackError(reserve.empty);
+      await client.query(`update pack_stocks set ${reserve.column} = ${reserve.column} - 1 where user_id = $1`, [userId]);
     } else if (before.stock >= 1) {
       await client.query("update pack_stocks set stock = stock - 1 where user_id = $1", [userId]);
     } else if (before.bonus >= 1) {
@@ -134,9 +150,10 @@ export async function openPack(userId: string, kind: PackKind = "classic"): Prom
 
     const cards: PackCard[] = [];
     const albumIds: string[] = [];
-    const size = kind === "solo" ? SOLO_PACK_SIZE : PACK_SIZE;
-    for (let i = 0; i < size; i++) {
-      const album = await pickAlbum(client, drawTier());
+    // Packs Épique et Légendaire : la première carte est tirée dans le palier garanti
+    const guaranteed = GUARANTEED_TIER[kind];
+    for (let i = 0; i < packSize(kind); i++) {
+      const album = await pickAlbum(client, i === 0 && guaranteed ? guaranteed : drawTier());
       albumIds.push(album.id);
       // xmax = 0 signifie que la ligne vient d'être insérée : c'est un nouvel album pour le joueur
       const { rows } = await client.query<{ is_new: boolean }>(
@@ -159,7 +176,7 @@ export async function openPack(userId: string, kind: PackKind = "classic"): Prom
 
     // Progression des quêtes, dans la même transaction que l'ouverture
     // Quêtes « Ouvre N packs » : seuls les packs de 5 cartes comptent (stock ou gagnés), pas les Solo
-    if (kind === "classic") await recordEvent(client, userId, "pack_opened", 1);
+    if (kind !== "solo") await recordEvent(client, userId, "pack_opened", 1);
     await recordEvent(client, userId, "rare_card", cards.filter((card) => card.tier !== "commun" && card.tier !== "peu_commun").length);
     await recordEvent(client, userId, "legendary_card", cards.filter((card) => card.tier === "legendaire").length);
     await recordEvent(client, userId, "new_album", cards.filter((card) => card.isNew).length);

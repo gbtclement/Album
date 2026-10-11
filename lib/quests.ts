@@ -125,7 +125,12 @@ export async function claimQuest(userId: string, questKey: string) {
     if (quest.reward.coins > 0) {
       await client.query("update users set coins = coins + $2 where id = $1", [userId, quest.reward.coins]);
     }
-    await grantPacks(client, userId, { classic: quest.reward.packs, solo: quest.reward.solo });
+    await grantPacks(client, userId, {
+      classic: quest.reward.packs,
+      solo: quest.reward.solo,
+      epic: quest.reward.epic,
+      legendary: quest.reward.legendary,
+    });
     return quest.reward;
   });
 }
