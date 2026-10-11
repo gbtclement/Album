@@ -1,8 +1,12 @@
-// Modèles des e-mails envoyés par le site : vérification de l'adresse et mot de passe oublié.
+import { formatEuros } from "@/lib/premium-offer";
+import { absoluteUrl } from "@/lib/seo";
+
+// Modèles des e-mails envoyés par le site : compte (vérification, mot de passe oublié, inactivité)
+// et abonnement premium (début, reçu mensuel, fin du mois offert, résiliation, paiement refusé).
 // Chaque modèle donne un sujet, une version texte (lue par les messageries simples et les filtres anti-spam)
 // et une version HTML aux couleurs du jeu. Le HTML d'e-mail suit des règles à part : tableaux pour la mise
-// en page, styles écrits sur chaque balise, pas de police web ni d'image obligatoire.
-// Aperçu en développement : /apercu-emails/verification et /apercu-emails/mot-de-passe.
+// en page, styles écrits sur chaque balise, pas de police web, images en PNG à adresse complète (pas de SVG).
+// Aperçu en développement : /apercu-emails/<modèle> (la liste s'affiche pour un nom inconnu).
 
 export type EmailContent = { subject: string; text: string; html: string };
 
@@ -13,12 +17,34 @@ function escapeHtml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// Cadre commun : logo, carte, bouton doré, lien de secours en clair, pied de page
-function layout(options: { preheader: string; title: string; paragraphs: string[]; button: { label: string; url: string }; note: string }) {
+// Date lisible, à l'heure de Paris : « 10 novembre 2026 »
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" }).format(date);
+}
+
+// Cadre commun : logo, carte, récapitulatif éventuel, bouton doré, lien de secours en clair, pied de page
+function layout(options: {
+  preheader: string;
+  title: string;
+  paragraphs: string[];
+  details?: Array<[label: string, value: string]>;
+  button: { label: string; url: string };
+  note: string;
+}) {
   const url = escapeHtml(options.button.url);
   const paragraphs = options.paragraphs
     .map((text) => `<p style="margin:0 0 14px;font:16px/1.55 ${FONT};color:${COLORS.ink};">${text}</p>`)
     .join("");
+  // Récapitulatif (offre, montant, dates) : une ligne par information, libellé à gauche, valeur à droite
+  const details = options.details?.length
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;border-top:1px solid ${COLORS.line};">${options.details
+        .map(
+          ([label, value]) =>
+            `<tr><td style="padding:10px 0;border-bottom:1px solid ${COLORS.line};font:14px ${FONT};color:${COLORS.muted};">${escapeHtml(label)}</td>` +
+            `<td align="right" style="padding:10px 0;border-bottom:1px solid ${COLORS.line};font:bold 14px ${FONT};color:${COLORS.ink};">${escapeHtml(value)}</td></tr>`,
+        )
+        .join("")}</table>`
+    : "";
   return `<!doctype html>
 <html lang="fr">
 <head>
@@ -33,12 +59,15 @@ function layout(options: { preheader: string; title: string; paragraphs: string[
   <tr><td align="center" style="padding:32px 16px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
       <tr><td align="center" style="padding-bottom:20px;">
-        <span style="display:inline-block;width:34px;height:34px;border-radius:50%;background:${COLORS.gold};vertical-align:middle;text-align:center;line-height:34px;font:bold 16px ${FONT};color:${COLORS.goldText};">&#9835;</span>
-        <span style="font:bold 24px ${FONT};color:${COLORS.ink};vertical-align:middle;padding-left:8px;">Musicodex</span>
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="vertical-align:middle;"><img src="${absoluteUrl("/email/logo.png")}" width="40" height="40" alt="" style="display:block;width:40px;height:40px;border:0;"></td>
+          <td style="vertical-align:middle;padding-left:10px;font:bold 24px ${FONT};color:${COLORS.ink};">Musicodex</td>
+        </tr></table>
       </td></tr>
       <tr><td style="background:${COLORS.card};border:1px solid ${COLORS.line};border-radius:18px;padding:28px 24px;">
         <h1 style="margin:0 0 16px;font:bold 24px/1.25 ${FONT};color:${COLORS.ink};">${escapeHtml(options.title)}</h1>
         ${paragraphs}
+        ${details}
         <table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px 0;"><tr>
           <td style="background:${COLORS.gold};border-radius:12px;border-bottom:3px solid #b9801c;">
             <a href="${url}" style="display:inline-block;padding:13px 26px;font:bold 16px ${FONT};color:${COLORS.goldText};text-decoration:none;">${escapeHtml(options.button.label)}</a>
@@ -119,6 +148,137 @@ export function passwordResetEmail({ pseudo, link, minutes }: { pseudo: string; 
       ],
       button: { label: "Choisir un nouveau mot de passe", url: link },
       note: "Tu n'as rien demandé ? Ignore ce message : ton mot de passe actuel reste valable.",
+    }),
+  };
+}
+
+// ——— Abonnement premium ———
+// Envoyés à partir des événements de paiement (lot PAY2, webhook Stripe), sauf la résiliation, envoyée dès maintenant.
+// `link` : page où gérer l'abonnement (profil, rubrique « Mon abonnement »).
+
+const CANCEL_HOW = "Tu peux résilier à tout moment depuis ton profil, rubrique « Mon abonnement ».";
+
+// Début de l'abonnement : avec le mois offert (aucun prélèvement avant renewsAt) ou payé tout de suite
+export function premiumStartEmail({ pseudo, link, trial, renewsAt, priceCents }: { pseudo: string; link: string; trial: boolean; renewsAt: Date; priceCents: number }): EmailContent {
+  const price = formatEuros(priceCents);
+  const date = formatDate(renewsAt);
+  const intro = trial
+    ? `Ton mois offert commence aujourd'hui : rien ne sera prélevé avant le ${date}. Ensuite, l'abonnement continue à ${price} par mois.`
+    : `Ton paiement de ${price} est bien reçu. Ton abonnement sera renouvelé le ${date}, au même prix.`;
+  return {
+    subject: "Bienvenue dans Musicodex Premium",
+    text:
+      `Bonjour ${pseudo},\n\n` +
+      `Ton compte est passé en premium : packs en plus, quêtes premium et récompenses premium du Disque d'Or.\n\n${intro}\n\n` +
+      `${CANCEL_HOW}\nGérer mon abonnement : ${link}`,
+    html: layout({
+      preheader: trial ? `Ton mois offert commence : aucun prélèvement avant le ${date}.` : `Paiement de ${price} reçu, bienvenue dans Premium.`,
+      title: `Bienvenue dans Premium, ${pseudo} !`,
+      paragraphs: [
+        "Ton compte est passé en premium : packs en plus, quêtes premium et récompenses premium du Disque d&#39;Or.",
+        escapeHtml(intro),
+      ],
+      details: trial
+        ? [["Offre", "Musicodex Premium"], ["Mois offert jusqu'au", date], ["Ensuite", `${price} / mois`]]
+        : [["Offre", "Musicodex Premium"], ["Montant payé", price], ["Prochain renouvellement", date]],
+      button: { label: "Gérer mon abonnement", url: link },
+      note: CANCEL_HOW,
+    }),
+  };
+}
+
+// Reçu de chaque renouvellement mensuel
+export function premiumReceiptEmail({ pseudo, link, amountCents, paidAt, renewsAt }: { pseudo: string; link: string; amountCents: number; paidAt: Date; renewsAt: Date }): EmailContent {
+  const amount = formatEuros(amountCents);
+  return {
+    subject: "Paiement reçu : Musicodex Premium",
+    text:
+      `Bonjour ${pseudo},\n\n` +
+      `Nous avons bien reçu ton paiement de ${amount} le ${formatDate(paidAt)} pour Musicodex Premium.\n` +
+      `Prochain renouvellement : ${formatDate(renewsAt)}.\n\n` +
+      `${CANCEL_HOW}\nGérer mon abonnement : ${link}`,
+    html: layout({
+      preheader: `Paiement de ${amount} reçu, merci !`,
+      title: "Paiement reçu, merci !",
+      paragraphs: [`Bonjour ${escapeHtml(pseudo)},`, "Ton abonnement premium continue pour un mois de plus. Voici le récapitulatif :"],
+      details: [["Offre", "Musicodex Premium"], ["Montant", amount], ["Payé le", formatDate(paidAt)], ["Prochain renouvellement", formatDate(renewsAt)]],
+      button: { label: "Gérer mon abonnement", url: link },
+      note: CANCEL_HOW,
+    }),
+  };
+}
+
+// Rappel avant la fin du mois offert : le premier prélèvement approche
+export function trialEndingEmail({ pseudo, link, endsAt, priceCents }: { pseudo: string; link: string; endsAt: Date; priceCents: number }): EmailContent {
+  const price = formatEuros(priceCents);
+  const date = formatDate(endsAt);
+  return {
+    subject: `Ton mois offert se termine le ${date}`,
+    text:
+      `Bonjour ${pseudo},\n\n` +
+      `Ton mois offert de Musicodex Premium se termine le ${date}. Ce jour-là, l'abonnement continue à ${price} par mois ` +
+      "et le premier paiement sera prélevé.\n\n" +
+      `Tu veux continuer ? Tu n'as rien à faire.\nTu ne veux pas payer ? Pense à résilier avant le ${date} depuis ton profil, rubrique « Mon abonnement » : ${link}`,
+    html: layout({
+      preheader: `Premier prélèvement de ${price} le ${date}, sauf si tu résilies avant.`,
+      title: "Ton mois offert se termine bientôt",
+      paragraphs: [
+        `Bonjour ${escapeHtml(pseudo)},`,
+        `Ton mois offert se termine le <strong>${date}</strong>. Ce jour-là, l&#39;abonnement continue à ${price} par mois et le premier paiement sera prélevé.`,
+        `Tu veux continuer ? Tu n&#39;as rien à faire. Sinon, pense à résilier avant le ${date}.`,
+      ],
+      details: [["Fin du mois offert", date], ["Ensuite", `${price} / mois`]],
+      button: { label: "Gérer mon abonnement", url: link },
+      note: "Nous t'envoyons ce rappel pour que le premier paiement ne soit jamais une surprise.",
+    }),
+  };
+}
+
+// Résiliation : effet immédiat (voir les CGV), plus aucun prélèvement
+export function premiumCancelledEmail({ pseudo, link }: { pseudo: string; link: string }): EmailContent {
+  return {
+    subject: "Ton abonnement premium est résilié",
+    text:
+      `Bonjour ${pseudo},\n\n` +
+      "Ton abonnement Musicodex Premium est résilié. Plus aucun prélèvement ne sera fait.\n" +
+      "Comme prévu dans les conditions de vente, la résiliation prend effet tout de suite : ton compte est redevenu gratuit. " +
+      "Ta collection, tes pièces et tes packs déjà gagnés restent à toi.\n\n" +
+      `Tu pourras te réabonner quand tu veux : ${link}\n\n` +
+      "Tu n'as pas demandé cette résiliation ? Écris-nous à l'adresse de contact indiquée dans les mentions légales du site.",
+    html: layout({
+      preheader: "Plus aucun prélèvement : ton compte est redevenu gratuit.",
+      title: "Abonnement résilié",
+      paragraphs: [
+        `Bonjour ${escapeHtml(pseudo)},`,
+        "Ton abonnement Musicodex Premium est résilié. <strong>Plus aucun prélèvement ne sera fait.</strong>",
+        "La résiliation prend effet tout de suite : ton compte est redevenu gratuit. Ta collection, tes pièces et tes packs déjà gagnés restent à toi.",
+      ],
+      button: { label: "Revenir sur Premium", url: link },
+      note: "Tu n'as pas demandé cette résiliation ? Écris-nous à l'adresse de contact des mentions légales du site.",
+    }),
+  };
+}
+
+// Paiement mensuel refusé (carte expirée, plafond...) : le premium est suspendu jusqu'au paiement
+export function paymentFailedEmail({ pseudo, link, amountCents }: { pseudo: string; link: string; amountCents: number }): EmailContent {
+  const amount = formatEuros(amountCents);
+  return {
+    subject: "Paiement refusé : ton premium est en pause",
+    text:
+      `Bonjour ${pseudo},\n\n` +
+      `Le paiement de ${amount} pour Musicodex Premium a été refusé par ta banque (carte expirée ou plafond atteint, par exemple).\n` +
+      "Ton premium est en pause tant que le paiement n'est pas passé.\n\n" +
+      `Mets à jour ton moyen de paiement ici : ${link}\n\n` +
+      "Tu ne veux plus de premium ? Tu n'as rien à faire : sans paiement, l'abonnement s'arrête de lui-même.",
+    html: layout({
+      preheader: `Le paiement de ${amount} n'est pas passé : mets à jour ta carte.`,
+      title: "Ton paiement n'est pas passé",
+      paragraphs: [
+        `Bonjour ${escapeHtml(pseudo)},`,
+        `Le paiement de <strong>${amount}</strong> pour Musicodex Premium a été refusé par ta banque (carte expirée ou plafond atteint, par exemple). Ton premium est en pause tant que le paiement n&#39;est pas passé.`,
+      ],
+      button: { label: "Mettre à jour ma carte", url: link },
+      note: "Tu ne veux plus de premium ? Tu n'as rien à faire : sans paiement, l'abonnement s'arrête de lui-même.",
     }),
   };
 }
