@@ -38,6 +38,7 @@ export const config = {
     "/marche/:path*",
     "/bourse/:path*",
     "/classement/:path*",
+    "/premium/:path*",
     "/pioche/:path*",
     "/quetes/:path*",
     "/profil/:path*",

@@ -131,7 +131,7 @@ export default async function PassePage({ searchParams }: Props) {
             <CrownIcon />
             <p>
               <strong>Ligne premium</strong> : des packs en plus à chaque palier, 2 packs Épiques et un pack Légendaire au palier 30,
-              et un stock de 15 packs. Devenu premium en cours de mois, tu récupères les paliers déjà atteints.
+              et un stock de 15 packs. Devenu premium en cours de mois, tu récupères les paliers déjà atteints. <Link href="/premium">Découvrir le premium</Link>
             </p>
           </div>
         )}

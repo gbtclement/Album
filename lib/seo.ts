@@ -22,6 +22,7 @@ export const PRIVATE_PATHS = [
   "/classement",
   "/quetes",
   "/passe",
+  "/premium",
   "/pioche",
   "/profil",
   "/verifier-email",

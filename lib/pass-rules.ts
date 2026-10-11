@@ -52,3 +52,16 @@ export function passRewardLabel({ classic = 0, solo = 0, epic = 0, legendary = 0
   if (solo > 0) parts.push(`${solo} pack${solo > 1 ? "s" : ""} Solo`);
   return parts.join(" + ");
 }
+
+// Total des récompenses d'une ligne sur les 30 paliers (affiché sur la page premium)
+export function passTrackTotal(track: PassTrack): Required<PassReward> {
+  return PASS_REWARDS.reduce(
+    (sum, row) => ({
+      classic: sum.classic + (row[track].classic ?? 0),
+      solo: sum.solo + (row[track].solo ?? 0),
+      epic: sum.epic + (row[track].epic ?? 0),
+      legendary: sum.legendary + (row[track].legendary ?? 0),
+    }),
+    { classic: 0, solo: 0, epic: 0, legendary: 0 },
+  );
+}

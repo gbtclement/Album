@@ -147,6 +147,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .game-page input::placeholder { color: var(--muted); }
 .form-grid { display: grid; gap: 14px; }
 .form-card { background: var(--night-2); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 10px; }
+a.premium-tag { text-decoration: none; }
 .premium-tag { display: inline-block; margin: 6px 0 0; padding: 3px 10px; border-radius: 999px; background: var(--gold); color: #2b1d02; font-family: var(--f-ui); font-weight: 700; font-size: 12px; box-shadow: 0 2px 0 var(--gold-deep); }
 .field-hint { color: var(--muted); font-size: 13px; margin-top: -4px; }
 .form-card legend, .form-card h2 { font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 4px; }
@@ -376,6 +377,40 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .pass-xp-chip span { flex: 1; }
 .pass-xp-chip b { font-family: var(--f-display); font-weight: 400; color: var(--rar); }
 .pass-xp-chip b::after { content: " XP"; font-family: var(--f-ui); font-size: 11px; color: var(--muted); }
+.pass-upsell a { color: var(--gold); font-weight: 700; }
+
+/* ---------- Premium ---------- */
+.prem-hero { position: relative; overflow: hidden; display: grid; justify-items: center; text-align: center; gap: 4px; margin-top: 8px; padding: 28px 18px 22px; border-radius: 24px; border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line)); background: radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--gold) 22%, transparent), transparent 70%), repeating-radial-gradient(circle at 50% -40%, transparent 0 14px, rgba(255,255,255,.025) 14px 15px), var(--night-2); }
+.prem-hero h1 { margin-top: 10px; }
+.prem-hero .sub { max-width: 420px; }
+.prem-badge { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe08a, var(--gold) 55%, var(--gold-deep)); box-shadow: 0 4px 0 var(--gold-deep), 0 0 28px rgba(244,183,64,.45); color: #2b1d02; }
+.prem-badge svg { width: 32px; height: 22px; }
+.prem-offer { box-sizing: border-box; display: grid; justify-items: center; gap: 8px; width: 100%; max-width: 360px; margin-top: 10px; padding: 18px 16px; border-radius: 18px; background: rgba(0,0,0,.22); border: 1px solid var(--line); }
+.prem-offer .btn { box-sizing: border-box; width: 100%; white-space: normal; padding-inline: 14px; font-size: 18px; }
+.prem-offer .btn svg { width: 16px; height: 16px; }
+.prem-offer .field-hint { margin: 2px 0 0; font-size: 12px; }
+.prem-price { display: flex; align-items: baseline; gap: 6px; margin: 0; }
+.prem-price b { font-family: var(--f-display); font-weight: 400; font-size: 44px; line-height: 1; color: var(--gold); }
+.prem-price span { font-family: var(--f-ui); font-weight: 600; color: var(--muted); }
+.prem-terms { margin: 0 0 6px; font-family: var(--f-ui); font-size: 13px; color: var(--muted); }
+.prem-until { margin: 0 0 6px; color: var(--muted); }
+.prem-until strong { color: var(--ink); }
+.prem-offer.active .premium-tag { margin: 0; }
+.prem-perks { display: grid; gap: 10px; }
+@media (min-width: 640px) { .prem-perks { grid-template-columns: repeat(3, 1fr); } }
+.prem-perk { display: flex; gap: 12px; padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--night-2); }
+@media (min-width: 640px) { .prem-perk { flex-direction: column; } }
+.prem-perk-i { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--gold) 16%, var(--night-3)); color: var(--gold); }
+.prem-perk-i svg { width: 22px; height: 22px; }
+.prem-perk strong { font-family: var(--f-display); font-weight: 400; font-size: 17px; }
+.prem-perk p { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+.prem-compare { border-radius: 16px; border: 1px solid var(--line); background: var(--night-2); overflow: hidden; }
+.prem-row { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 10px; align-items: center; padding: 12px 14px; font-size: 13px; color: var(--muted); }
+.prem-row + .prem-row { border-top: 1px solid var(--line); }
+.prem-row.head { padding-block: 8px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; background: var(--night-3); }
+.prem-row [role="rowheader"] { color: var(--ink); font-family: var(--f-ui); font-weight: 600; }
+.prem-row .gold { color: var(--gold); font-weight: 700; }
+.prem-fair { margin-top: 12px; }
 @keyframes spin { to { rotate: 360deg; } }
 .pack-stock { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .pack-stock span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--night-3); }

@@ -62,8 +62,10 @@ export default async function ProfilPage({ searchParams }: Props) {
           <div>
             <h1 style={{ margin: 0 }}>{user.pseudo}</h1>
             <p className="sub" style={{ margin: 0 }}>Collectionneur depuis {since}</p>
-            {user.premium_until && (
+            {user.premium_until ? (
               <p className="premium-tag">Premium jusqu&apos;au {user.premium_until.toLocaleDateString("fr-FR")} · stock de {MAX_STOCK_PREMIUM} packs</p>
+            ) : (
+              <Link href="/premium" className="premium-tag">Passer premium</Link>
             )}
           </div>
         </div>

@@ -30,6 +30,7 @@ const ROUTES = [
   { path: "/api/market/history", description: "Historique des prix : ?album=<slug> et ?jours=<n> (30 par défaut, 365 max)" },
   { path: "/classement", description: "Podium et top 100 par score de rareté, onglet Amis (?vue=amis), onglet Saison (?vue=saison : points du mois, barème du top 20), position du joueur connecté (protégée)" },
   { path: "/quetes", description: "Quêtes journalières, hebdomadaires et mensuelles, avec récupération des récompenses (protégée)" },
+  { path: "/premium", description: "Offre premium : prix, avantages, comparaison gratuit / premium, date de fin si déjà premium ; paiement Stripe à venir (protégée)" },
   { path: "/passe", description: "Passe de combat : niveau, XP de la saison, 30 paliers gratuits et premium à réclamer, « Tout réclamer » (protégée)" },
   { path: "/pioche", description: "Pioche du jour : un morceau de pochette à deviner, une seule réponse par jour, série de bonnes réponses (protégée)" },
   { path: "/pioche/image", description: "Morceau de la pochette du jour, découpé par le serveur (jamais l'image entière avant la réponse)" },
@@ -84,6 +85,7 @@ const ENV_VARS = [
   { name: "GOOGLE_SITE_VERIFICATION", description: "Code de vérification Google Search Console (facultatif, une fois le domaine en ligne)" },
   { name: "MUSICBRAINZ_CONTACT", description: "Contact envoyé à MusicBrainz dans le User-Agent (optionnel)" },
   { name: "LASTFM_API_KEY", description: "Clé Last.fm pour les écoutes affichées sur les fiches album (optionnelle)" },
+  { name: "STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_PREMIUM", description: "Paiement Stripe de l'abonnement premium : clé secrète (sk_test_ ou sk_live_), secret de signature du webhook (whsec_) et identifiant du prix mensuel (price_). Vides = paiement désactivé. Secrets : jamais dans le code ni dans Git" },
   { name: "LEGAL_PUBLISHER, LEGAL_CONTACT_EMAIL, LEGAL_HOST", description: "Éditeur du site, adresse de contact (questions et droits RGPD) et hébergeur (nom, adresse, téléphone), affichés dans les pages légales. Obligatoires avant la mise en ligne" },
 ];
 
@@ -144,6 +146,8 @@ const LOTS = [
   { lot: "P1", name: "Packs Épique et Légendaire (5 cartes, une de leur rareté garantie), compte premium attribué à la main (npm run premium) avec un stock de 15 packs, taxe de 5 % détruite sur les ventes du marché", status: "Terminé", branch: "passe1-packs-premium" },
   { lot: "P2", name: "Passe de combat : XP par carte selon la rareté (tous les packs et la pioche du jour), 30 paliers par mois, ligne gratuite et ligne premium (packs uniquement, jamais de pièces), versement automatique en fin de saison, page /passe et jauge dans la barre du haut", status: "Terminé", branch: "passe2-combat" },
   { lot: "S1", name: "Classement saisonnier : onglet Saison, points du mois gagnés seulement en ouvrant des packs (1 / 2 / 5 / 10 / 25 par carte, doublons compris), top 20 récompensé en pièces et packs à la première visite du mois suivant", status: "Terminé", branch: "saison1-classement" },
+  { lot: "PAY1", name: "Préparation du paiement Stripe : variables STRIPE_* dans .env, page /premium (prix, avantages, comparaison gratuit / premium) avec bouton de paiement désactivé, liens depuis le passe et le profil", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -270,7 +274,8 @@ export default function DocumentationPage() {
             <li>
               <strong>Premium :</strong> attribué à la main (<code>npm run premium</code>), sans paiement pour l&apos;instant
               (<code>lib/premium.ts</code>). Avantage : stock de 15 packs au lieu de 10. Un premium expiré garde ses packs au-dessus de 10,
-              la recharge reprend quand il redescend sous 10.
+              la recharge reprend quand il redescend sous 10. La page <code>/premium</code> présente l&apos;offre (2,99 € par mois,
+              <code>lib/premium-offer.ts</code>) ; son bouton de paiement reste désactivé tant que Stripe n&apos;est pas branché.
             </li>
             <li>
               <strong>Passe de combat</strong> (<code>lib/pass-rules.ts</code>, <code>lib/pass.ts</code>) : chaque carte obtenue rapporte de
