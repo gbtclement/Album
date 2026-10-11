@@ -17,6 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/inscription"), changeFrequency: "yearly", priority: 0.6 },
     { url: absoluteUrl("/connexion"), changeFrequency: "yearly", priority: 0.4 },
     { url: absoluteUrl("/documentation"), changeFrequency: "monthly", priority: 0.2 },
+    ...["/mentions-legales", "/confidentialite", "/cgu"].map((path) => ({ url: absoluteUrl(path), changeFrequency: "yearly" as const, priority: 0.1 })),
     ...albums.rows.map((album) => ({
       url: absoluteUrl(`/album/${album.slug}`),
       lastModified: album.updated_at,

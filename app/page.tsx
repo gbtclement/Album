@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { CoverImage } from "@/components/cover-image";
+import { LegalLinks } from "@/components/legal-links";
 import { smallCover } from "@/components/game-ui";
 import { db } from "@/lib/db";
 import { MAX_STOCK, PACK_SIZE } from "@/lib/pack-rules";
@@ -23,10 +24,16 @@ const STEPS = [
   { title: "Grimpe au classement", text: "Chaque album possédé rapporte des points selon sa rareté. Les quêtes donnent des pièces et des packs." },
 ];
 
-export default async function Home() {
+type Props = {
+  searchParams: Promise<{ compte?: string }>;
+};
+
+export default async function Home({ searchParams }: Props) {
   // Un joueur connecté arrive directement dans sa collection
   const session = await auth();
   if (session?.user?.id) redirect("/collection");
+  // Retour ici juste après la suppression d'un compte (app/profil/supprimer)
+  const accountDeleted = (await searchParams).compte === "supprime";
 
   // Quelques légendaires du catalogue : de vraies pages à découvrir (et des liens internes pour les moteurs)
   const { rows: legends } = await db.query<{ slug: string; title: string; artist: string; cover_url: string | null; rarity_tier: RarityTier }>(
@@ -65,6 +72,9 @@ export default async function Home() {
     <main className="landing">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
       <section className="landing-hero">
+        {accountDeleted && (
+          <p role="status" className="auth-success landing-notice">Ton compte et toutes ses données ont été supprimés. À bientôt peut-être !</p>
+        )}
         <div className="big-pack" aria-hidden="true">
           <div className="disc">
             <div className="disc-rot"><span className="hub" /></div>
@@ -114,7 +124,8 @@ export default async function Home() {
 
       <footer className="landing-foot">
         <Link href="/inscription" className="btn gold">Commencer à jouer</Link>
-        <p>Pièces 100 % virtuelles, sans achat. Données musicales : ListenBrainz, MusicBrainz, Cover Art Archive.</p>
+        <p>Pièces 100 % virtuelles, sans achat. Données musicales : ListenBrainz, MusicBrainz, Last.fm, Cover Art Archive.</p>
+        <LegalLinks />
       </footer>
     </main>
   );

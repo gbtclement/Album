@@ -10,7 +10,8 @@
     "import:catalog": "tsx --env-file-if-exists=.env scripts/import-catalog.ts",
     "import:lastfm": "tsx --env-file-if-exists=.env scripts/import-lastfm.ts",
     "check:covers": "tsx --env-file-if-exists=.env scripts/check-covers.ts",
-    "seed:demo": "tsx --env-file-if-exists=.env scripts/seed-demo.ts",
+    "purge:inactive": "tsx --env-file-if-exists=.env scripts/purge-inactive.ts",
+    "seed:demo":"tsx --env-file-if-exists=.env scripts/seed-demo.ts",
     "migrate": "node --env-file-if-exists=.env scripts/migrate.mjs",
     "test": "vitest run",
     "test:watch": "vitest"

@@ -35,6 +35,9 @@ const ROUTES = [
   { path: "/pioche/recherche", description: "Suggestions de titres pour la pioche : ?q=<texte> (2 caractères minimum)" },
   { path: "/album/[slug]", description: "Fiche d'un album : pochette, rareté, liens d'écoute" },
   { path: "/verifier-email", description: "Validation de l'adresse e-mail depuis le lien reçu (lien à usage unique, valable 24 h)" },
+  { path: "/profil/donnees", description: "Téléchargement de toutes les données du joueur en JSON (RGPD, protégée)" },
+  { path: "/profil/supprimer", description: "Suppression définitive du compte, confirmée par le pseudo et le mot de passe (RGPD, protégée)" },
+  { path: "/mentions-legales, /confidentialite, /cgu", description: "Pages légales : éditeur et hébergeur, politique de confidentialité, conditions d'utilisation" },
   { path: "/documentation", description: "Cette page" },
   { path: "/sitemap.xml", description: "Plan du site : pages publiques et fiches d'albums (SEO)" },
   { path: "/robots.txt", description: "Règles pour les robots d'indexation (bloqué tant que SEO_INDEXING n'est pas true)" },
@@ -45,7 +48,7 @@ const ROUTES = [
 ];
 
 const TABLES = [
-  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement)" },
+  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement), dates d'acceptation des CGU, de dernière visite et d'avertissement d'inactivité" },
   { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
   { name: "password_resets", description: "Lien de réinitialisation du mot de passe en cours par joueur (empreinte SHA-256 du jeton, expiration 1 h)" },
   { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
@@ -76,6 +79,8 @@ const ENV_VARS = [
   { name: "SEO_INDEXING", description: "\"true\" pour autoriser l'indexation par les moteurs de recherche. Désactivé tant que le domaine n'est pas en ligne" },
   { name: "GOOGLE_SITE_VERIFICATION", description: "Code de vérification Google Search Console (facultatif, une fois le domaine en ligne)" },
   { name: "MUSICBRAINZ_CONTACT", description: "Contact envoyé à MusicBrainz dans le User-Agent (optionnel)" },
+  { name: "LASTFM_API_KEY", description: "Clé Last.fm pour les écoutes affichées sur les fiches album (optionnelle)" },
+  { name: "LEGAL_PUBLISHER, LEGAL_CONTACT_EMAIL, LEGAL_HOST", description: "Éditeur du site, adresse de contact (questions et droits RGPD) et hébergeur (nom, adresse, téléphone), affichés dans les pages légales. Obligatoires avant la mise en ligne" },
 ];
 
 const COMMANDS = [
@@ -91,6 +96,7 @@ const COMMANDS = [
   { command: "npm run import:catalog -- --listens", description: "Mettre à jour les écoutes et recalculer la rareté de tout le catalogue" },
   { command: "npm run import:lastfm", description: "Récupérer les écoutes Last.fm des albums jamais vérifiés ou vérifiés il y a plus de 30 jours (clé LASTFM_API_KEY dans .env, environ 4 albums par seconde). Options --days 0 pour tout le catalogue, --max 200 pour un essai" },
   { command: "npm run check:covers", description: "Vérifier que chaque pochette s'affiche encore et remplacer celles en panne (Cover Art Archive, sinon Deezer). Option --max 200 pour un essai" },
+  { command: "npm run purge:inactive", description: "Comptes inactifs : e-mail d'avertissement à 3 ans moins 30 jours sans visite, suppression 30 jours après, liens e-mail expirés effacés. À lancer chaque jour en production. Option --dry-run pour compter sans rien faire" },
   { command: "npm run seed:demo", description: "Créer des données de démonstration (compte demo@demo.invalid / demo-album, 8 autres joueurs, marché, bourse, échanges). Refusé en production" },
 ];
 
@@ -128,6 +134,7 @@ const LOTS = [
   { lot: "G4", name: "Économie : les quêtes rapportent des packs (Solo d'un album, ou classiques), réserve de packs gagnés sans maximum, plus de pièces de remplacement ; raccourci de la pioche dans la barre du haut ; vinyle de chargement centré et ouverture de pack sans clignotement", status: "Terminé", branch: "jeu4-economie" },
   { lot: "G5", name: "Ouverture des packs une carte à la fois : flèches pour avancer et revenir, points de progression, clavier et glissement ; « Tout ouvrir » retiré", status: "Terminé", branch: "jeu5-ouverture-carte" },
   { lot: "C12", name: "Correctif : écoutes Last.fm sur la fiche album (chiffres plus parlants, source indiquée), npm run import:lastfm, récupérées aussi à la fin de l'import du catalogue ; la rareté reste sur ListenBrainz", status: "Terminé", branch: "correctif12-lastfm" },
+  { lot: "R1", name: "Données personnelles (RGPD) : mentions légales, politique de confidentialité, CGU, case d'acceptation à l'inscription, téléchargement des données, suppression du compte, suppression des comptes inactifs depuis 3 ans", status: "Terminé", branch: "rgpd1-donnees" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -347,6 +354,35 @@ export default function DocumentationPage() {
             </li>
             <li>
               <strong>Limites de tentatives</strong> (<code>lib/rate-limit.ts</code>, compteurs dans Redis) : connexion 10 essais par compte et 50 par adresse IP sur 15 minutes (appliqué aussi aux appels directs à <code>/api/auth/callback/credentials</code>) ; inscription 10 comptes par heure et par adresse IP ; renvoi du lien de vérification 3 fois par heure. Si Redis ne répond pas, les limites sont suspendues plutôt que de bloquer le site.
+            </li>
+          </ul>
+        </Section>
+
+        <Section title="Données personnelles (RGPD)">
+          <ul className="list-disc space-y-2 pl-6">
+            <li>
+              <strong>Pages légales</strong> (publiques, liens en bas de l&apos;accueil, des pages de connexion et du profil, <code>components/legal-links.tsx</code>) : <code>/mentions-legales</code>, <code>/confidentialite</code>, <code>/cgu</code>. Coordonnées de l&apos;éditeur et de l&apos;hébergeur lues dans <code>LEGAL_PUBLISHER</code>, <code>LEGAL_CONTACT_EMAIL</code>, <code>LEGAL_HOST</code> (sinon « à compléter »). Date de version et durées dans <code>lib/legal.ts</code> : changer <code>LEGAL_UPDATED_AT</code> à chaque modification des textes. Pas de CGV : rien n&apos;est vendu.
+            </li>
+            <li>
+              <strong>Acceptation :</strong> case obligatoire à l&apos;inscription (âge minimum 15 ans ou accord parental, CGU et politique de confidentialité), revérifiée par le serveur ; phrase équivalente sous le bouton Google. Date dans <code>users.terms_accepted_at</code> (vide pour les comptes antérieurs au lot R1).
+            </li>
+            <li>
+              <strong>Accès et portabilité :</strong> <code>/profil/donnees</code> télécharge un fichier JSON de toutes les données du joueur (<code>exportUserData</code>, <code>lib/account.ts</code>), sans empreinte de mot de passe ni de lien ; 5 téléchargements par heure.
+            </li>
+            <li>
+              <strong>Effacement :</strong> <code>/profil/supprimer</code>, confirmation par le pseudo et le mot de passe (s&apos;il y en a un). Suppression immédiate de la ligne <code>users</code> : toutes les tables liées sont en <code>ON DELETE CASCADE</code>, le cache du classement est vidé. Les ventes passées (<code>market_sales</code>) restent, sans lien avec un joueur. Retour sur l&apos;accueil avec un message.
+            </li>
+            <li>
+              <strong>Nouvelle table liée aux joueurs :</strong> l&apos;ajouter à <code>USER_TABLES</code> et à <code>exportUserData</code> (<code>lib/account.ts</code>), avec <code>ON DELETE CASCADE</code>. Un test compare cette liste aux clés étrangères de la base et échoue en cas d&apos;oubli.
+            </li>
+            <li>
+              <strong>Comptes inactifs :</strong> <code>users.last_seen_at</code> est mis à jour au plus une fois par jour pendant la navigation. <code>npm run purge:inactive</code> (à lancer chaque jour en production, par exemple par cron) prévient par e-mail les comptes sans visite depuis 3 ans moins 30 jours (<code>users.inactivity_notice_at</code>), supprime ceux qui ne sont pas revenus 30 jours après, et efface les liens e-mail expirés. Aperçu de l&apos;e-mail : <code>/apercu-emails/inactivite</code>.
+            </li>
+            <li>
+              <strong>Cookies :</strong> seulement ceux d&apos;Auth.js (session, sécurité de la connexion), strictement nécessaires : pas de bandeau. Polices et pochettes servies par le site (<code>next/font</code>, <code>next/image</code>) : le navigateur ne contacte aucun tiers. Ajouter une mesure d&apos;audience ou de la publicité imposerait un bandeau de consentement.
+            </li>
+            <li>
+              <strong>Avant la mise en ligne :</strong> remplir les trois variables <code>LEGAL_*</code> ; choisir un hébergeur et un service d&apos;e-mails situés dans l&apos;Union européenne ; garder les sauvegardes de la base 30 jours au plus (promis dans la politique) ; programmer <code>purge:inactive</code> ; tenir le registre des traitements (une page suffit : finalités, données, durées, prestataires, reprendre la politique de confidentialité).
             </li>
           </ul>
         </Section>

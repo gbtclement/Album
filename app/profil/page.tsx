@@ -6,6 +6,7 @@ import { auth, signOut } from "@/auth";
 import { AchievementBadges } from "@/components/achievement-badges";
 import { CoverImage } from "@/components/cover-image";
 import { Avatar, smallCover } from "@/components/game-ui";
+import { LegalLinks } from "@/components/legal-links";
 import { SiteNav } from "@/components/site-nav";
 import { getAchievements, syncAchievements } from "@/lib/achievements";
 import { collectionScore, getCollectionCards } from "@/lib/collection";
@@ -142,6 +143,25 @@ export default async function ProfilPage({ searchParams }: Props) {
             </form>
           </div>
         </div>
+
+        <h2 className="label">Mes données</h2>
+        <div className="stack">
+          <div className="item">
+            <div className="l">
+              <strong>Télécharger mes données</strong>
+              <small>Compte, collection, échanges... dans un fichier JSON</small>
+            </div>
+            <a href="/profil/donnees" download className="btn">Télécharger</a>
+          </div>
+          <div className="item">
+            <div className="l">
+              <strong>Supprimer mon compte</strong>
+              <small>Efface définitivement ton compte et ta collection</small>
+            </div>
+            <Link href="/profil/supprimer" className="btn red">Supprimer</Link>
+          </div>
+        </div>
+        <LegalLinks />
       </main>
     </>
   );

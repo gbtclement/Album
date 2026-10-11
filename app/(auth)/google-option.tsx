@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { MIN_AGE } from "@/lib/legal";
 import { Divider } from "./auth-ui";
 import { googleLoginAction } from "./connexion/actions";
 
@@ -15,6 +17,11 @@ export async function GoogleOption({ callbackUrl }: { callbackUrl: string }) {
           Continuer avec Google
         </button>
       </form>
+      {/* Un premier passage par Google crée le compte : on rappelle ce qui est accepté */}
+      <p className="auth-note">
+        En continuant avec Google, tu confirmes avoir au moins {MIN_AGE} ans (ou l&apos;accord d&apos;un parent) et accepter les{" "}
+        <Link href="/cgu">CGU</Link> et la <Link href="/confidentialite">politique de confidentialité</Link>.
+      </p>
       <Divider />
     </>
   );

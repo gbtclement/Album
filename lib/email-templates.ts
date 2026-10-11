@@ -79,6 +79,30 @@ export function verificationEmail({ pseudo, link, hours }: { pseudo: string; lin
   };
 }
 
+// Compte sans visite depuis longtemps : dernier avertissement avant la suppression (voir lib/account.ts)
+export function inactivityEmail({ pseudo, link, days, years }: { pseudo: string; link: string; days: number; years: number }): EmailContent {
+  return {
+    subject: "Ton compte Album va être supprimé",
+    text:
+      `Bonjour ${pseudo},\n\n` +
+      `Tu ne t'es pas connecté à Album depuis près de ${years} ans. Pour ne pas garder tes données sans raison, ` +
+      `ton compte et ta collection seront supprimés dans ${days} jours.\n\n` +
+      `Pour garder ton compte, il suffit de te connecter avant cette date :\n${link}\n\n` +
+      "Si tu ne veux plus jouer, tu n'as rien à faire.",
+    html: layout({
+      preheader: `Connecte-toi dans les ${days} jours pour garder ta collection.`,
+      title: "Tu nous manques !",
+      paragraphs: [
+        `Bonjour ${escapeHtml(pseudo)},`,
+        `Tu ne t&#39;es pas connecté à Album depuis près de ${years} ans. Pour ne pas garder tes données sans raison, ton compte et ta collection seront supprimés dans <strong>${days} jours</strong>.`,
+        "Pour garder ton compte, il suffit de te connecter avant cette date.",
+      ],
+      button: { label: "Garder mon compte", url: link },
+      note: "Tu ne veux plus jouer ? Tu n'as rien à faire : tout sera effacé automatiquement.",
+    }),
+  };
+}
+
 export function passwordResetEmail({ pseudo, link, minutes }: { pseudo: string; link: string; minutes: number }): EmailContent {
   return {
     subject: "Réinitialise ton mot de passe",

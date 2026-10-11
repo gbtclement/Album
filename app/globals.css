@@ -517,6 +517,28 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .draw-banner small { color: var(--muted); font-size: 12px; }
 @keyframes draw-in { from { transform: scale(.92) rotate(-2deg); opacity: 0; } }
 
+/* ---------- Données personnelles et pages légales (lot R1) ---------- */
+.legal { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+.legal-back { font-family: var(--f-display); font-size: 20px; color: var(--gold); text-decoration: none; }
+.legal h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(28px, 7vw, 38px); line-height: 1.1; margin: 18px 0 4px; }
+.legal-date { color: var(--muted); font-size: 13px; margin: 0 0 22px; }
+.legal-body { line-height: 1.6; font-size: 15px; }
+.legal-body h2 { font-family: var(--f-ui); font-size: 17px; margin: 28px 0 8px; color: var(--gold); }
+.legal-body p, .legal-body ul { margin: 0 0 12px; }
+.legal-body ul { padding-left: 20px; display: grid; gap: 6px; list-style: disc; }
+.legal-body li::marker { color: var(--gold); }
+.game-page .sub a { color: var(--gold); text-underline-offset: 3px; }
+.legal-body a { color: var(--gold); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.legal-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-top: 28px; font-size: 13px; }
+.legal-links a { color: var(--muted); text-decoration: none; }
+.legal-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.check-label { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.check-label input { flex: none; width: 18px; height: 18px; margin-top: 1px; accent-color: var(--gold); }
+.check-label a, .auth-note a { color: var(--gold); }
+.auth-note { margin: 10px 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.notice.danger { border-color: color-mix(in srgb, var(--coral) 55%, var(--line)); background: color-mix(in srgb, var(--coral) 10%, var(--night-2)); margin: 12px 0; }
+.landing .landing-notice { max-width: 420px; margin: 0 auto 18px; color: #d3f5e3; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

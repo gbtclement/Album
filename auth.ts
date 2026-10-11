@@ -3,7 +3,7 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { clientIp, isRateLimited, MINUTE, resetRateLimit } from "@/lib/rate-limit";
-import { canonicalEmail, claimAccountWithGoogle, createGoogleUser, findUserByEmail, findUserById } from "@/lib/users";
+import { canonicalEmail, claimAccountWithGoogle, createGoogleUser, findUserByEmail, findUserById, touchLastSeen } from "@/lib/users";
 
 // Google n'apparaît sur la page de connexion que si les clés sont renseignées dans .env
 const googleEnabled = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
@@ -76,6 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.pseudo = dbUser.pseudo;
           token.sv = dbUser.session_version;
           token.checkedAt = Date.now();
+          await touchLastSeen(dbUser.id);
         }
         return token;
       }
@@ -84,6 +85,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.uid && Date.now() - Number(token.checkedAt ?? 0) > SESSION_CHECK_MS) {
         const dbUser = await findUserById(String(token.uid));
         if (!dbUser || dbUser.session_version !== Number(token.sv ?? 0)) return null;
+        await touchLastSeen(dbUser.id);
         token.pseudo = dbUser.pseudo;
         token.checkedAt = Date.now();
       }

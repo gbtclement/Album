@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
+import { MIN_AGE } from "@/lib/legal";
 import { ErrorMessage } from "../auth-ui";
 import { SubmitButton } from "../submit-button";
 import { signUpAction, type FormState } from "./actions";
@@ -33,6 +35,15 @@ export function SignupForm({ callbackUrl }: { callbackUrl: string }) {
       <label className="field-label">
         Confirmation du mot de passe
         <input name="confirmation" type="password" required minLength={8} autoComplete="new-password" className="field" placeholder="Retape le même mot de passe" />
+      </label>
+
+      <label className="check-label">
+        <input name="terms" type="checkbox" required />
+        <span>
+          J&apos;ai au moins {MIN_AGE} ans (ou l&apos;accord d&apos;un parent) et j&apos;accepte les{" "}
+          <Link href="/cgu" target="_blank">conditions d&apos;utilisation</Link> et la{" "}
+          <Link href="/confidentialite" target="_blank">politique de confidentialité</Link>.
+        </span>
       </label>
 
       <SubmitButton label="Créer mon compte" pendingLabel="Création..." />

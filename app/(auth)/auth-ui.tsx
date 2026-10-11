@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LegalLinks } from "@/components/legal-links";
 
 // Cadre commun des pages connexion et inscription, aux couleurs du jeu (styles .auth* dans globals.css)
 export function AuthShell({
@@ -29,6 +30,7 @@ export function AuthShell({
         <div className="auth-card">{children}</div>
 
         <p className="auth-footer">{footer}</p>
+        <LegalLinks />
       </div>
     </main>
   );

@@ -49,6 +49,14 @@ export async function findUserById(id: string) {
   return result.rows[0] ?? null;
 }
 
+// Note la visite du joueur (au plus une écriture par jour) : un compte sans visite pendant 3 ans est supprimé (lib/account.ts)
+export async function touchLastSeen(id: string) {
+  await db.query(
+    "update users set last_seen_at = now() where id = $1 and (last_seen_at is null or last_seen_at < now() - interval '1 day')",
+    [id],
+  );
+}
+
 // Le marché et les échanges sont réservés aux adresses vérifiées : un compte jetable ne peut pas
 // servir à faire passer des cartes ou des pièces vers un autre compte.
 export const VERIFIED_EMAIL_REQUIRED =
@@ -76,8 +84,9 @@ export async function createUser({
   emailVerified?: boolean;
 }) {
   const result = await db.query<UserRow>(
-    `insert into users (email, pseudo, password_hash, email_verified_at)
-     values ($1, $2, $3, case when $4 then now() end)
+    // Les deux façons de s'inscrire (formulaire, bouton Google) font accepter les CGU avant de créer le compte
+    `insert into users (email, pseudo, password_hash, email_verified_at, terms_accepted_at, last_seen_at)
+     values ($1, $2, $3, case when $4 then now() end, now(), now())
      returning ${USER_COLUMNS}`,
     [email, pseudo, passwordHash, emailVerified],
   );

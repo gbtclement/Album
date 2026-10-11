@@ -32,6 +32,10 @@ export async function signUpAction(_previous: FormState, formData: FormData): Pr
   if (password !== String(formData.get("confirmation") ?? "")) {
     return { error: "Les deux mots de passe ne sont pas identiques.", values };
   }
+  // Case obligatoire aussi côté serveur (un formulaire peut être envoyé sans passer par le navigateur)
+  if (formData.get("terms") !== "on") {
+    return { error: "Coche la case pour accepter les conditions d'utilisation.", values };
+  }
 
   // Limite les créations de comptes en masse depuis une même adresse IP
   if (await isRateLimited(`signup:ip:${clientIp(await headers())}`, 10, HOUR)) {
