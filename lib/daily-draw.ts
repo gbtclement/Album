@@ -3,6 +3,7 @@ import type { PoolClient } from "pg";
 import { db, withTransaction } from "@/lib/db";
 import { CROP_SIZE, DRAW_RATES, DRAW_TIME_ZONE, normalizeTitle, STREAK_BONUS_EVERY } from "@/lib/daily-draw-rules";
 import { drawTier, grantPacks } from "@/lib/packs";
+import { addPassXp } from "@/lib/pass";
 import { recordEvent } from "@/lib/quests";
 import { RARITY_TIERS, type RarityTier } from "@/lib/rarity";
 
@@ -172,6 +173,7 @@ export async function submitGuess(userId: string, guessedAlbumId: string): Promi
       );
       isNew = rows[0].is_new;
       if (isNew) await recordEvent(client, userId, "new_album", 1);
+      await addPassXp(client, userId, [draw.rarity_tier]);
 
       // Série de 7 : un pack classique dans les packs gagnés (sans maximum)
       if (streak % STREAK_BONUS_EVERY === 0) {

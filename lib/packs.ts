@@ -3,6 +3,7 @@ import type { PoolClient } from "pg";
 import { withTransaction } from "@/lib/db";
 import { RARITY_TIERS, type RarityTier } from "@/lib/rarity";
 import { GUARANTEED_TIER, maxStock, PACK_INTERVAL_MS, PACK_RATES, packSize, type PackKind } from "@/lib/pack-rules";
+import { addPassXp } from "@/lib/pass";
 import { recordEvent } from "@/lib/quests";
 
 export class PackError extends Error {}
@@ -187,6 +188,8 @@ export async function openPack(userId: string, kind: PackKind = "classic"): Prom
     await recordEvent(client, userId, "rare_card", cards.filter((card) => card.tier !== "commun" && card.tier !== "peu_commun").length);
     await recordEvent(client, userId, "legendary_card", cards.filter((card) => card.tier === "legendaire").length);
     await recordEvent(client, userId, "new_album", cards.filter((card) => card.isNew).length);
+    // Passe de combat : chaque carte rapporte l'XP de sa rareté, quel que soit le pack
+    await addPassXp(client, userId, cards.map((card) => card.tier));
 
     // Recalcul du prochain pack après la dépense (sans gain de stock : le délai vient de démarrer)
     const state = await rechargeStock(client, userId);
