@@ -9,15 +9,15 @@ import { claimKey, getPassState } from "@/lib/pass";
 import { PASS_REWARDS, PASS_TIERS, PASS_XP, passRewardLabel, XP_PER_TIER, type PassReward, type PassTrack } from "@/lib/pass-rules";
 import { RARITY_LABELS, RARITY_TIERS } from "@/lib/rarity";
 import { claimAllPassAction } from "./actions";
-import { Sillon, type SillonCell } from "./sillon";
+import { PassVinyl, type PassCell } from "./pass-vinyl";
 
-export const metadata: Metadata = { title: "Le Sillon" };
+export const metadata: Metadata = { title: "Disque d'Or" };
 
 type Props = {
   searchParams: Promise<{ message?: string }>;
 };
 
-function rewardKind(reward: PassReward): SillonCell["kind"] {
+function rewardKind(reward: PassReward): PassCell["kind"] {
   if (reward.legendary) return "legendary";
   if (reward.epic) return "epic";
   if (reward.classic) return "classic";
@@ -31,7 +31,7 @@ function timeLeft(endsAt: Date) {
   return "moins d'une heure";
 }
 
-// Le Sillon (ancien « passe de combat ») : les paliers posés sur le sillon d'un vinyle.
+// Disque d'Or (ancien « passe de combat ») : les paliers posés sur le sillon d'un vinyle.
 // L'ancienne vue en colonnes reste disponible sur /passe/liste.
 export default async function PassePage({ searchParams }: Props) {
   const session = await auth();
@@ -43,7 +43,7 @@ export default async function PassePage({ searchParams }: Props) {
   const inTier = maxed ? XP_PER_TIER : pass.xp % XP_PER_TIER;
   const month = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" }).format(pass.endsAt.getTime() - 86_400_000);
 
-  const cell = (tier: number, track: PassTrack, reward: PassReward): SillonCell => {
+  const cell = (tier: number, track: PassTrack, reward: PassReward): PassCell => {
     const claimed = pass.claimed.has(claimKey(tier, track));
     const locked = track === "premium" && !pass.premium;
     return {
@@ -61,9 +61,9 @@ export default async function PassePage({ searchParams }: Props) {
         <header className="sillon-head">
           <div>
             <p className="pass-season">Saison {/^[aeiou]/.test(month) ? "d'" : "de "}{month} · fin dans {timeLeft(pass.endsAt)}</p>
-            <h1>Le Sillon</h1>
+            <h1>Disque d&apos;Or</h1>
             <p className="pass-hero-xp">
-              {maxed ? <>Sillon terminé · <b>{formatNumber(pass.xp)} XP</b></> : <><b>{formatNumber(inTier)}</b> / {formatNumber(XP_PER_TIER)} XP vers le palier {pass.level + 1}</>}
+              {maxed ? <>Disque d&apos;Or décroché · <b>{formatNumber(pass.xp)} XP</b></> : <><b>{formatNumber(inTier)}</b> / {formatNumber(XP_PER_TIER)} XP vers le palier {pass.level + 1}</>}
             </p>
           </div>
           {pass.claimable > 0 && (
@@ -73,7 +73,7 @@ export default async function PassePage({ searchParams }: Props) {
           )}
         </header>
 
-        <Sillon
+        <PassVinyl
           tiers={tiers}
           position={maxed ? PASS_TIERS : pass.level + inTier / XP_PER_TIER}
           level={pass.level}

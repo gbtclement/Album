@@ -12,8 +12,8 @@ import { RARITY_LABELS, RARITY_TIERS } from "@/lib/rarity";
 import { claimAllPassAction, claimPassTierAction } from "../actions";
 import { ScrollToCurrent } from "../scroll-to-current";
 
-// Ancienne vue du Sillon (colonnes défilantes), gardée en secours : la page principale /passe est le vinyle
-export const metadata: Metadata = { title: "Le Sillon (liste)" };
+// Ancienne vue du Disque d'Or (colonnes défilantes), gardée en secours : la page principale /passe est le vinyle
+export const metadata: Metadata = { title: "Disque d'Or (liste)" };
 
 type Props = {
   searchParams: Promise<{ message?: string }>;
@@ -85,7 +85,7 @@ export default async function PassePage({ searchParams }: Props) {
           </div>
           <div className="pass-hero-text">
             <p className="pass-season">Saison {/^[aeiou]/.test(month) ? "d'" : "de "}{month}</p>
-            <h1>Le Sillon</h1>
+            <h1>Disque d&apos;Or</h1>
             <p className="pass-hero-xp">
               {maxed ? <>Passe terminé · <b>{formatNumber(pass.xp)} XP</b></> : <><b>{formatNumber(inTier)}</b> / {formatNumber(XP_PER_TIER)} XP vers le palier {current}</>}
             </p>

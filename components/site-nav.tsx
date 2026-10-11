@@ -41,17 +41,17 @@ export async function SiteNav({ message }: { message?: string } = {}) {
             <small>{formatNumber(hud.cards)} carte{hud.cards > 1 ? "s" : ""}</small>
           </span>
         </Link>
-        {/* Le Sillon (passe du mois), version ordinateur : barre horizontale centrée (sur mobile, la pastille ronde plus bas) */}
+        {/* Disque d'Or (passe du mois), version ordinateur : barre horizontale centrée (sur mobile, la pastille ronde plus bas) */}
         <Link
           href="/passe"
           className="pass-strip"
           style={{ "--p": `${hud.passProgress}%` } as CSSProperties}
-          aria-label={`Le Sillon, niveau ${hud.passLevel}${hud.passReady > 0 ? `, ${hud.passReady} à réclamer` : ""}`}
+          aria-label={`Disque d'Or, niveau ${hud.passLevel}${hud.passReady > 0 ? `, ${hud.passReady} à réclamer` : ""}`}
         >
           <span className="pass-strip-level"><small>Niv.</small>{hud.passLevel}</span>
           <span className="pass-strip-main">
             <span className="pass-strip-top">
-              <span>Le Sillon</span>
+              <span>Disque d&apos;Or</span>
               <span>{hud.passLevel >= PASS_TIERS ? "Terminé" : `${formatNumber(hud.passTierXp)} / ${formatNumber(XP_PER_TIER)} XP`}</span>
             </span>
             <span className="pass-strip-bar"><i /></span>
@@ -69,13 +69,13 @@ export async function SiteNav({ message }: { message?: string } = {}) {
           >
             <SparkIcon />
           </Link>
-          {/* Le Sillon : niveau, anneau de progression vers le palier suivant, pastille s'il y a à réclamer */}
+          {/* Disque d'Or : niveau, anneau de progression vers le palier suivant, pastille s'il y a à réclamer */}
           <Link
             href="/passe"
             className="res pass-res"
             style={{ "--p": `${hud.passProgress}%` } as CSSProperties}
-            title={`Le Sillon : niveau ${hud.passLevel}${hud.passReady > 0 ? `, ${hud.passReady} récompense(s) à réclamer` : ""}`}
-            aria-label={`Le Sillon, niveau ${hud.passLevel}${hud.passReady > 0 ? `, ${hud.passReady} à réclamer` : ""}`}
+            title={`Disque d'Or : niveau ${hud.passLevel}${hud.passReady > 0 ? `, ${hud.passReady} récompense(s) à réclamer` : ""}`}
+            aria-label={`Disque d'Or, niveau ${hud.passLevel}${hud.passReady > 0 ? `, ${hud.passReady} à réclamer` : ""}`}
           >
             <span className="pass-ring"><b>{hud.passLevel}</b></span>
             {hud.passReady > 0 && <span className="pass-dot" aria-hidden="true" />}
@@ -102,7 +102,7 @@ export async function SiteNav({ message }: { message?: string } = {}) {
             hud.seasonAward &&
               `${seasonName(hud.seasonAward.season)} terminée : tu finis ${hud.seasonAward.rank === 1 ? "1er" : `${hud.seasonAward.rank}e`} du classement ! ${seasonRewardLabel(hud.seasonAward.reward)}.`,
             hud.seasonRewards > 0 &&
-              `Sillon : ${hud.seasonRewards} récompense${hud.seasonRewards > 1 ? "s" : ""} ajoutée${hud.seasonRewards > 1 ? "s" : ""} à tes packs.`,
+              `Disque d'Or : ${hud.seasonRewards} récompense${hud.seasonRewards > 1 ? "s" : ""} ajoutée${hud.seasonRewards > 1 ? "s" : ""} à tes packs.`,
           ].filter(Boolean).join(" ")}
           variant="achievement"
         />

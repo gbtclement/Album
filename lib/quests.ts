@@ -26,7 +26,7 @@ const DAILY: Reward = { coins: 0, packs: 0, solo: 1 };
 const WEEKLY: Reward = { coins: 100, packs: 0, solo: 1 };
 const MONTHLY: Reward = { coins: 500, packs: 1, solo: 0 };
 // Quêtes premium : un pack par jour, 2 packs + 200 pièces par semaine, un pack Épique + 1 000 pièces par mois.
-// Pas de pack Légendaire : la ligne premium du Sillon en donne déjà un par mois.
+// Pas de pack Légendaire : la ligne premium du Disque d'Or en donne déjà un par mois.
 export const PREMIUM_REWARDS: Record<Period, Reward> = {
   daily: { coins: 0, packs: 1, solo: 0 },
   weekly: { coins: 200, packs: 2, solo: 0 },

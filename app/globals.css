@@ -796,3 +796,7 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .sillon-state.ok { color: var(--r-peu_commun); }
 .sillon-state svg { width: 14px; height: 14px; }
 @media (prefers-reduced-motion: reduce) { .sillon-disc::after, .sillon-dot .pulse { animation: none; } .sillon-dot .pulse { opacity: .5; } }
+/* Disque d'Or : le disque tourne jusqu'à la position actuelle ; les numéros tournent à l'envers pour rester droits */
+.sillon-spin { transform-box: view-box; transform-origin: 200px 200px; transition: transform 2s cubic-bezier(.22,.75,.2,1); }
+.sillon-dot text { transform-box: fill-box; transform-origin: center; transition: transform 2s cubic-bezier(.22,.75,.2,1); }
+@media (prefers-reduced-motion: reduce) { .sillon-spin, .sillon-dot text { transition: none; } }
