@@ -38,7 +38,7 @@ export default function CguPage() {
       </p>
       <p>
         Le statut premium est pour l&apos;instant attribué gratuitement par l&apos;éditeur, sans paiement. Il donne des avantages de jeu
-        (stock de packs plus grand) et peut être retiré ou modifié.
+        (stock de packs plus grand, ligne premium du passe de combat) et peut être retiré ou modifié.
       </p>
       <p>
         Pour garder le jeu équilibré, les règles peuvent évoluer : rythme des packs, récompenses, prix, rareté des cartes (qui suit les écoutes

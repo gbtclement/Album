@@ -23,6 +23,8 @@ export const USER_TABLES = [
   "daily_draws",
   "artist_set_rewards",
   "user_achievements",
+  "pass_progress",
+  "pass_claims",
 ] as const;
 
 async function rows<T>(sql: string, userId: string) {
@@ -42,7 +44,7 @@ export async function exportUserData(userId: string) {
   );
   if (!account) return null;
 
-  const [packs, collection, openings, friends, trades, listings, quests, draws, sets, achievements, links] = await Promise.all([
+  const [packs, collection, openings, friends, trades, listings, quests, draws, sets, achievements, pass, links] = await Promise.all([
     rows(
       `select stock as packs_en_reserve, last_recharged_at as dernier_rechargement,
               bonus_packs as packs_gagnes, solo_packs as packs_solo,
@@ -110,6 +112,14 @@ export async function exportUserData(userId: string) {
       userId,
     ),
     rows(
+      `select to_char(season, 'YYYY-MM') as saison, xp,
+              array(select c.tier || ' ' || case c.track when 'free' then 'gratuit' else 'premium' end
+                      || case when c.auto then ' (versé en fin de saison)' else '' end
+                    from pass_claims c where c.user_id = p.user_id and c.season = p.season order by c.tier, c.track) as paliers_recuperes
+       from pass_progress p where p.user_id = $1 order by season`,
+      userId,
+    ),
+    rows(
       `select (select expires_at from email_verifications where user_id = $1) as lien_verification_expire_le,
               (select expires_at from password_resets where user_id = $1) as lien_mot_de_passe_expire_le`,
       userId,
@@ -130,6 +140,7 @@ export async function exportUserData(userId: string) {
     pioches_du_jour: draws,
     collections_artiste: sets,
     succes: achievements,
+    passe_de_combat: pass,
     liens_envoyes_par_email: links[0],
   };
 }

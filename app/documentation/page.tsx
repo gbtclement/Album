@@ -30,6 +30,7 @@ const ROUTES = [
   { path: "/api/market/history", description: "Historique des prix : ?album=<slug> et ?jours=<n> (30 par défaut, 365 max)" },
   { path: "/classement", description: "Podium et top 100 par score de rareté, onglet Amis (?vue=amis), position du joueur connecté (protégée)" },
   { path: "/quetes", description: "Quêtes journalières, hebdomadaires et mensuelles, avec récupération des récompenses (protégée)" },
+  { path: "/passe", description: "Passe de combat : niveau, XP de la saison, 30 paliers gratuits et premium à réclamer, « Tout réclamer » (protégée)" },
   { path: "/pioche", description: "Pioche du jour : un morceau de pochette à deviner, une seule réponse par jour, série de bonnes réponses (protégée)" },
   { path: "/pioche/image", description: "Morceau de la pochette du jour, découpé par le serveur (jamais l'image entière avant la réponse)" },
   { path: "/pioche/recherche", description: "Suggestions de titres pour la pioche : ?q=<texte> (2 caractères minimum)" },
@@ -59,6 +60,8 @@ const TABLES = [
   { name: "friendships", description: "Amitiés et demandes d'amis, une ligne par paire de joueurs" },
   { name: "trades", description: "Propositions d'échange : album et/ou pièces de chaque côté, statut" },
   { name: "user_quests", description: "Progression des quêtes par joueur et par période, récompense récupérée ou non" },
+  { name: "pass_progress", description: "Passe de combat : XP par joueur et par saison (mois, premier jour), settled = saison passée dont les paliers non réclamés ont été versés" },
+  { name: "pass_claims", description: "Paliers du passe récupérés : saison, palier (1 à 30), ligne (free ou premium), auto = versé en fin de saison" },
   { name: "daily_draws", description: "Pioche du jour : album tiré par joueur et par jour (heure de Paris), position du morceau montré, réponse, réussite et série en cours" },
   { name: "artist_set_rewards", description: "Collections d'artiste terminées : récompense récupérée par joueur et par artiste (taille du set, pièces, pack), une seule fois" },
   { name: "user_achievements", description: "Succès débloqués par joueur (clé du succès, pièces versées, date, notification déjà affichée ou non). La liste des succès est dans lib/achievement-rules.ts" },
@@ -138,6 +141,7 @@ const LOTS = [
   { lot: "R1", name: "Données personnelles (RGPD) : mentions légales, politique de confidentialité, CGU, case d'acceptation à l'inscription, téléchargement des données, suppression du compte, suppression des comptes inactifs depuis 3 ans", status: "Terminé", branch: "rgpd1-donnees" },
   { lot: "C13", name: "Correctif : les packs Solo (1 album) ne font plus avancer les quêtes « Ouvre N packs » ; les packs de 5 cartes, du stock ou gagnés, comptent toujours", status: "Terminé", branch: "correctif13-quetes-packs" },
   { lot: "P1", name: "Packs Épique et Légendaire (5 cartes, une de leur rareté garantie), compte premium attribué à la main (npm run premium) avec un stock de 15 packs, taxe de 5 % détruite sur les ventes du marché", status: "Terminé", branch: "passe1-packs-premium" },
+  { lot: "P2", name: "Passe de combat : XP par carte selon la rareté (tous les packs et la pioche du jour), 30 paliers par mois, ligne gratuite et ligne premium (packs uniquement, jamais de pièces), versement automatique en fin de saison, page /passe et jauge dans la barre du haut", status: "Terminé", branch: "passe2-combat" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -265,6 +269,16 @@ export default function DocumentationPage() {
               <strong>Premium :</strong> attribué à la main (<code>npm run premium</code>), sans paiement pour l&apos;instant
               (<code>lib/premium.ts</code>). Avantage : stock de 15 packs au lieu de 10. Un premium expiré garde ses packs au-dessus de 10,
               la recharge reprend quand il redescend sous 10.
+            </li>
+            <li>
+              <strong>Passe de combat</strong> (<code>lib/pass-rules.ts</code>, <code>lib/pass.ts</code>) : chaque carte obtenue rapporte de
+              l&apos;XP (commun 10, peu commun 20, rare 50, épique 120, légendaire 300), dans la même transaction que l&apos;ouverture du pack
+              ou la pioche trouvée ; les cartes achetées ou échangées n&apos;en rapportent pas. 1 000 XP par palier, 30 paliers, saison = mois
+              UTC. Récompenses en packs uniquement (gratuit : Solo, classiques, 2 Épiques ; premium : classiques, 2 Épiques, 1 Légendaire),
+              jamais de pièces. La ligne premium se réclame si le joueur est premium au moment de réclamer. À la première visite d&apos;un
+              nouveau mois, la barre du haut verse les paliers atteints et non réclamés des saisons passées (premium seulement si le
+              premium couvrait la fin de la saison) et l&apos;annonce. Sous 430 px de large, la barre du haut masque le pseudo pour faire
+              de la place à la jauge du passe.
             </li>
             <li>
               <strong>Taxe du marché :</strong> le vendeur reçoit le prix moins 5 % (arrondi à l&apos;unité inférieure,

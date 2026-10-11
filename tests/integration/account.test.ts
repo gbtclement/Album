@@ -37,6 +37,9 @@ describe("données personnelles (RGPD)", () => {
     const data = await exportUserData(user.id);
     expect(data?.packs).toMatchObject({ packs_epiques: 2, packs_legendaires: 1 });
     expect(data?.compte.premium_jusqu_au).toBeInstanceOf(Date);
+    await db.query("insert into pass_progress (user_id, season, xp) values ($1, '2026-10-01', 2100)", [user.id]);
+    await db.query("insert into pass_claims (user_id, season, tier, track) values ($1, '2026-10-01', 1, 'free')", [user.id]);
+    expect((await exportUserData(user.id))?.passe_de_combat).toEqual([{ saison: "2026-10", xp: 2100, paliers_recuperes: ["1 gratuit"] }]);
     expect(data?.compte).toMatchObject({ pseudo: user.pseudo, email: user.email, connexion: "e-mail et mot de passe" });
     expect(data?.collection).toEqual([expect.objectContaining({ exemplaires: 2, artiste: "Artiste de test" })]);
     expect(data?.ouvertures_de_packs[0].albums).toEqual([expect.stringContaining("Artiste de test")]);
