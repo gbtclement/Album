@@ -133,7 +133,7 @@ export default async function ProfilPage({ searchParams }: Props) {
                 <p>La résiliation prend effet <strong>tout de suite</strong>, même s&apos;il reste des jours. Tu perds immédiatement :</p>
                 <ul>
                   <li>le stock de {MAX_STOCK_PREMIUM} packs (retour à {MAX_STOCK} ; les packs déjà en stock restent) ;</li>
-                  <li>la ligne premium du passe de combat ;</li>
+                  <li>la ligne premium du Sillon (le passe du mois) ;</li>
                   <li>les quêtes premium, même terminées et pas encore réclamées.</li>
                 </ul>
                 <p>Tes cartes, tes pièces et les packs déjà gagnés restent à toi.</p>

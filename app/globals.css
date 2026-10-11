@@ -737,3 +737,62 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Le Sillon : les paliers sur le sillon d'un vinyle ---------- */
+.sillon-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.sillon-head h1 { margin: 2px 0 4px; }
+.sillon-head p { margin: 0; }
+.sillon { display: grid; gap: 18px; margin: 8px 0 6px; }
+@media (min-width: 860px) { .sillon { grid-template-columns: minmax(0, 480px) 1fr; align-items: center; gap: 32px; } }
+.sillon-disc { position: relative; width: 100%; max-width: 480px; aspect-ratio: 1; margin: 0 auto; }
+/* Disque : sillons fins et reflet qui tourne doucement, sous le dessin des paliers */
+.sillon-disc::before, .sillon-disc::after { content: ""; position: absolute; inset: 4.2%; border-radius: 50%; pointer-events: none; }
+.sillon-disc::before { background: repeating-radial-gradient(circle, #15122a 0 2px, #1e1a3a 2px 4px); box-shadow: 0 18px 40px rgba(0,0,0,.5), inset 0 0 0 2px #0d0b1c; }
+.sillon-disc::after { background: conic-gradient(from var(--sheen), transparent 0 10%, rgba(255,255,255,.07) 16%, transparent 24% 60%, rgba(255,255,255,.05) 66%, transparent 74%); animation: sillon-sheen 14s linear infinite; }
+@property --sheen { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes sillon-sheen { to { --sheen: 360deg; } }
+.sillon-svg { position: relative; z-index: 1; display: block; width: 100%; height: 100%; overflow: visible; }
+.sillon-groove { fill: none; stroke: rgba(255,255,255,.06); stroke-width: 16; stroke-linecap: round; }
+.sillon-progress { fill: none; stroke: var(--gold); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 4px rgba(244,183,64,.55)); }
+.sillon-dot { cursor: pointer; outline: none; }
+.sillon-dot .hit { fill: transparent; }
+.sillon-dot .dot { fill: var(--night-3); stroke: #4a4380; stroke-width: 2; transform-box: fill-box; transform-origin: center; transition: transform .2s, fill .2s; }
+.sillon-dot.big.k-epic .dot { stroke: var(--r-epique); }
+.sillon-dot.big.k-legendary .dot { stroke: var(--r-legendaire); }
+.sillon-dot.reached .dot { fill: color-mix(in srgb, var(--gold) 45%, var(--night-3)); stroke: var(--gold-deep); }
+.sillon-dot.ready .dot { fill: var(--gold); stroke: #fff3cf; }
+.sillon-dot.on .dot, .sillon-dot:focus-visible .dot { stroke: #fff; stroke-width: 3; transform: scale(1.35); }
+.sillon-dot:hover .dot { transform: scale(1.2); }
+.sillon-dot text { font-family: var(--f-ui); font-weight: 700; font-size: 10px; fill: var(--ink); text-anchor: middle; pointer-events: none; }
+.sillon-dot.reached text, .sillon-dot.ready text { fill: #2b1d02; }
+.sillon-dot .pulse { fill: none; stroke: var(--gold); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: sillon-pulse 1.8s ease-out infinite; }
+@keyframes sillon-pulse { from { transform: scale(.75); opacity: .9; } to { transform: scale(1.5); opacity: 0; } }
+.sillon-arm { pointer-events: none; }
+.sillon-arm line { stroke: #cfd2e8; stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+.sillon-arm .pivot { fill: #2e2950; stroke: #cfd2e8; stroke-width: 3; }
+.sillon-arm .head { fill: var(--gold); stroke: #fff; stroke-width: 2; filter: drop-shadow(0 0 6px rgba(244,183,64,.8)); }
+.sillon-label { position: absolute; z-index: 2; left: 50%; top: 50%; translate: -50% -50%; width: 26%; aspect-ratio: 1; border-radius: 50%; display: grid; place-content: center; text-align: center; pointer-events: none; color: #fff; background: radial-gradient(circle at 35% 30%, #c98bff, var(--r-epique) 55%, #5f3196); box-shadow: 0 0 0 3px rgba(0,0,0,.35), inset 0 0 0 6px rgba(255,255,255,.08); }
+.sillon-label small { font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+.sillon-label b { font-family: var(--f-display); font-weight: 400; font-size: clamp(26px, 7vw, 38px); line-height: 1; }
+.sillon-card { display: grid; gap: 10px; padding: 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--night-2); }
+.sillon-card-head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; text-align: center; }
+.sillon-card-head h2 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 24px; }
+.sillon-card-head p { margin: 0; font-size: 13px; color: var(--muted); }
+.sillon-nav { width: 44px; height: 44px; border: 0; border-radius: 12px; background: var(--night-3); color: var(--ink); font-size: 26px; line-height: 1; cursor: pointer; }
+.sillon-nav:disabled { opacity: .35; cursor: default; }
+.sillon-reward { --kc: var(--gold); display: grid; grid-template-columns: 88px 1fr auto; align-items: center; gap: 10px; min-height: 48px; padding: 8px 12px; border-radius: 14px; border: 1px solid transparent; background: var(--night-3); }
+.sillon-reward.kind-solo { --kc: var(--r-peu_commun); }
+.sillon-reward.kind-epic { --kc: var(--r-epique); }
+.sillon-reward.kind-legendary { --kc: #ffd57a; }
+.sillon-reward.ready { border-color: var(--gold); }
+.sillon-reward.todo, .sillon-reward.locked { opacity: .7; }
+.sillon-reward.claimed { opacity: .6; }
+.sillon-track { display: flex; align-items: center; gap: 6px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; color: var(--muted); }
+.sillon-reward.premium .sillon-track { color: var(--gold); }
+.sillon-track svg { width: 15px; height: 15px; flex: none; }
+.sillon-pack { display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-size: 15px; }
+.sillon-pack i { flex: none; width: 20px; height: 20px; border-radius: 50%; background: repeating-radial-gradient(circle, #1a1730 0 2px, #2c2850 2px 3px); box-shadow: inset 0 0 0 3px var(--kc); }
+.sillon-state { display: inline-flex; align-items: center; gap: 4px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; color: var(--muted); }
+.sillon-state.ok { color: var(--r-peu_commun); }
+.sillon-state svg { width: 14px; height: 14px; }
+@media (prefers-reduced-motion: reduce) { .sillon-disc::after, .sillon-dot .pulse { animation: none; } .sillon-dot .pulse { opacity: .5; } }

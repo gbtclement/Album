@@ -31,7 +31,7 @@ export default function CgvPage() {
       <h2>2. Ce que comprend l&apos;abonnement</h2>
       <ul>
         <li>un stock de {MAX_STOCK_PREMIUM} packs au lieu de {MAX_STOCK} ;</li>
-        <li>la ligne premium du passe de combat ;</li>
+        <li>la ligne premium du Sillon (le passe du mois) ;</li>
         <li>une quête premium par jour, par semaine et par mois.</li>
       </ul>
       <p>

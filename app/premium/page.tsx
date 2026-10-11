@@ -29,7 +29,7 @@ export default async function PremiumPage() {
       detail: quest.title,
       value: rewardLabel(quest.reward),
     })),
-    { title: "Ligne premium du passe", detail: "30 paliers en plus chaque saison, à côté de la ligne gratuite", value: passRewardLabel(passTrackTotal("premium")) },
+    { title: "Ligne premium du Sillon", detail: "30 paliers en plus chaque saison, à côté de la ligne gratuite", value: passRewardLabel(passTrackTotal("premium")) },
     // Le mois offert n'apparaît que pour un compte qui n'a jamais été premium
     ...(trial ? [{ title: "Premier mois offert", detail: `${PREMIUM_TRIAL_DAYS} jours pour essayer, une fois par compte`, value: "0 €" }] : []),
     { title: "Rien de perdu", detail: "Devenu premium en cours de mois, tu récupères les paliers déjà atteints", value: "Rattrapage" },

@@ -43,7 +43,7 @@ export default function CguPage() {
       <p>
         Le statut premium est un abonnement facultatif, avec le premier mois offert, régi par les{" "}
         <Link href="/cgv">conditions générales de vente</Link>. Il donne des avantages de jeu (stock de packs plus grand, ligne premium du
-        passe de combat, une quête premium par jour, par semaine et par mois). L&apos;éditeur peut aussi l&apos;offrir, par exemple pour des
+        Sillon (le passe du mois), une quête premium par jour, par semaine et par mois). L&apos;éditeur peut aussi l&apos;offrir, par exemple pour des
         tests ou des concours.
       </p>
       <p>

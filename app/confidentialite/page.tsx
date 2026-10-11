@@ -36,7 +36,7 @@ export default function ConfidentialitePage() {
           proposer un pseudo). Nous ne recevons jamais ton mot de passe Google.
         </li>
         <li>
-          <strong>Ta partie</strong> : cartes, pièces, packs ouverts et gagnés, quêtes, passe de combat (XP et paliers récupérés), points et place au classement saisonnier, succès, pioches du jour, amis, échanges et annonces du marché, et tes réglages.
+          <strong>Ta partie</strong> : cartes, pièces, packs ouverts et gagnés, quêtes, Sillon (passe du mois : XP et paliers récupérés), points et place au classement saisonnier, succès, pioches du jour, amis, échanges et annonces du marché, et tes réglages.
         </li>
         <li>
           <strong>Statut premium</strong> : sa date de fin. Si tu t&apos;abonnes, le paiement est traité par Stripe : Album ne reçoit jamais

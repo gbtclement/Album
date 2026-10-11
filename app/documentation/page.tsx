@@ -31,7 +31,8 @@ const ROUTES = [
   { path: "/classement", description: "Podium et top 100 par score de rareté, onglet Amis (?vue=amis), onglet Saison (?vue=saison : points du mois, barème du top 20), position du joueur connecté (protégée)" },
   { path: "/quetes", description: "Quêtes journalières, hebdomadaires et mensuelles, avec récupération des récompenses (protégée)" },
   { path: "/premium", description: "Offre premium présentée comme l'édition deluxe d'un album : pochette avec autocollant de prix, avantages en liste de titres (Face A), ce qui ne change pas (Face B), date de fin si déjà premium ; paiement Stripe à venir (protégée)" },
-  { path: "/passe", description: "Passe de combat : niveau, XP de la saison, 30 paliers gratuits et premium à réclamer, « Tout réclamer » (protégée)" },
+  { path: "/passe", description: "Le Sillon (ancien « passe de combat ») : les 30 paliers posés sur le sillon d'un vinyle (spirale du bord vers l'étiquette), trait doré de l'XP, bras de platine sur la position actuelle ; toucher un palier affiche ses récompenses gratuite et premium avec « Prendre » ; « Tout prendre » (protégée, app/passe/sillon.tsx)" },
+  { path: "/passe/liste", description: "Ancienne vue du Sillon en colonnes défilantes, gardée en secours (protégée)" },
   { path: "/pioche", description: "Pioche du jour : un morceau de pochette à deviner, une seule réponse par jour, série de bonnes réponses (protégée)" },
   { path: "/pioche/image", description: "Morceau de la pochette du jour, découpé par le serveur (jamais l'image entière avant la réponse)" },
   { path: "/pioche/recherche", description: "Suggestions de titres pour la pioche : ?q=<texte> (2 caractères minimum)" },
@@ -149,6 +150,7 @@ const LOTS = [
   { lot: "P2", name: "Passe de combat : XP par carte selon la rareté (tous les packs et la pioche du jour), 30 paliers par mois, ligne gratuite et ligne premium (packs uniquement, jamais de pièces), versement automatique en fin de saison, page /passe et jauge dans la barre du haut", status: "Terminé", branch: "passe2-combat" },
   { lot: "S1", name: "Classement saisonnier : onglet Saison, points du mois gagnés seulement en ouvrant des packs (1 / 2 / 5 / 10 / 25 par carte, doublons compris), top 20 récompensé en pièces et packs à la première visite du mois suivant", status: "Terminé", branch: "saison1-classement" },
   { lot: "PAY1", name: "Préparation du paiement Stripe : variables STRIPE_* dans .env, page /premium façon édition deluxe d'un album (pochette, prix, liste des avantages) avec bouton de paiement désactivé, liens depuis le passe et le profil ; une quête premium par période (journalière, hebdomadaire, mensuelle) ; premier mois offert (30 jours, une fois par compte) et page /cgv ; adresse de l'API ListenBrainz réglable (LISTENBRAINZ_API_URL)", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "V1", name: "Le Sillon : le passe de combat est renommé et sa page devient un vinyle (paliers sur le sillon, bras de platine sur la position actuelle) ; l'ancienne vue reste sur /passe/liste", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
