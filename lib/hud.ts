@@ -24,6 +24,8 @@ export type HudData = {
   // Passe de combat : palier atteint, progression vers le suivant (0 à 100), récompenses à réclamer
   passLevel: number;
   passProgress: number;
+  // XP gagnée dans le palier en cours (sur XP_PER_TIER), pour la barre de la version ordinateur
+  passTierXp: number;
   passReady: number;
   // Récompenses d'une saison passée versées pendant ce chargement de page (notification)
   seasonRewards: number;
@@ -69,6 +71,7 @@ export async function getHudData(userId: string): Promise<HudData> {
     setsReady,
     passLevel: pass.level,
     passProgress: pass.level >= PASS_TIERS ? 100 : Math.floor(((pass.xp % XP_PER_TIER) / XP_PER_TIER) * 100),
+    passTierXp: pass.level >= PASS_TIERS ? XP_PER_TIER : pass.xp % XP_PER_TIER,
     passReady: pass.claimable,
     seasonRewards,
     unlocked: unlocked.map(({ key, title, reward }) => ({ key, title, reward })),

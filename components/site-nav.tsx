@@ -5,6 +5,7 @@ import { Dock, PackTimer, Toast } from "@/components/game-nav";
 import { Avatar, formatNumber } from "@/components/game-ui";
 import { SparkIcon } from "@/components/icons";
 import { getHudData } from "@/lib/hud";
+import { PASS_TIERS, XP_PER_TIER } from "@/lib/pass-rules";
 
 // Habillage commun des pages : barre d'infos en haut (profil, pièces, packs), barre de jeu en bas,
 // et message de retour éventuel (?message=...). Un visiteur voit seulement Connexion et Inscription.
@@ -38,6 +39,24 @@ export async function SiteNav({ message }: { message?: string } = {}) {
             <strong>{pseudo}</strong>
             <small>{formatNumber(hud.cards)} carte{hud.cards > 1 ? "s" : ""}</small>
           </span>
+        </Link>
+        {/* Passe de combat, version ordinateur : barre horizontale centrée (sur mobile, la pastille ronde plus bas) */}
+        <Link
+          href="/passe"
+          className="pass-strip"
+          style={{ "--p": `${hud.passProgress}%` } as CSSProperties}
+          aria-label={`Passe de combat, niveau ${hud.passLevel}${hud.passReady > 0 ? `, ${hud.passReady} à réclamer` : ""}`}
+        >
+          <span className="pass-strip-level"><small>Niv.</small>{hud.passLevel}</span>
+          <span className="pass-strip-main">
+            <span className="pass-strip-top">
+              <span>Passe de combat</span>
+              <span>{hud.passLevel >= PASS_TIERS ? "Terminé" : `${formatNumber(hud.passTierXp)} / ${formatNumber(XP_PER_TIER)} XP`}</span>
+            </span>
+            <span className="pass-strip-bar"><i /></span>
+          </span>
+          {hud.passLevel < PASS_TIERS && <span className="pass-strip-next">{hud.passLevel + 1}</span>}
+          {hud.passReady > 0 && <span className="pass-strip-ready">{hud.passReady} à prendre</span>}
         </Link>
         <div className="resources">
           {/* Raccourci vers la pioche du jour : il brille tant qu'elle n'est pas jouée */}
