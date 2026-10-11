@@ -153,7 +153,8 @@ export async function buyListing(buyerId: string, listingId: string, offeredSlug
     }
 
     await moveAlbum(client, listing.seller_id, buyerId, listing.album_id);
-    await client.query("update listings set status = 'sold', closed_at = now() where id = $1", [listingId]);
+    // L'acheteur est noté pour la détection des comptes « mules » (espace admin)
+    await client.query("update listings set status = 'sold', closed_at = now(), buyer_id = $2 where id = $1", [listingId, buyerId]);
     await recordEvent(client, buyerId, "trade", 1);
     await recordEvent(client, listing.seller_id, "trade", 1);
     return "sold" as const;

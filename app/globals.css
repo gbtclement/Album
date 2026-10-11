@@ -845,3 +845,47 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 :where(.btn)::after { content: ""; position: absolute; inset: -6px 0; }
 .auth-link { display: inline-block; padding-block: 8px; }
 input[name="terms"] { width: 22px; height: 22px; flex: none; accent-color: var(--gold); }
+
+/* Espace admin (app/admin) */
+.adm-user .r.adm-nums { display: grid; justify-items: end; gap: 2px; font-family: var(--f-ui); font-size: 12px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.adm-tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); font-family: var(--f-ui); font-size: 11px; font-weight: 700; color: var(--muted); vertical-align: 1px; }
+.adm-tag.gold { color: var(--gold); border-color: var(--gold); }
+.adm-tag.epic { color: var(--r-epique); border-color: var(--r-epique); }
+.adm-pager { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 16px; font-family: var(--f-ui); font-size: 13px; color: var(--muted); }
+.adm-back { display: inline-block; padding: 6px 0; margin-bottom: 8px; color: var(--muted); font-family: var(--f-ui); font-weight: 600; font-size: 13px; text-decoration: none; }
+.adm-back:hover { color: var(--ink); }
+.adm-head { display: flex; align-items: center; gap: 14px; }
+.adm-head .avatar { width: 56px; height: 56px; font-size: 26px; border-radius: 16px; }
+.adm-head .l { min-width: 0; }
+.adm-head h1 { margin: 0; overflow-wrap: anywhere; }
+.adm-head .sub { margin: 0; overflow-wrap: anywhere; }
+.adm-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 16px 0 8px; }
+.adm-facts div { background: var(--night-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; min-width: 0; }
+.adm-facts dt { font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.adm-facts dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
+.adm-form { display: grid; gap: 12px; max-width: 460px; }
+.adm-form .btn { justify-self: start; }
+.adm-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; cursor: pointer; }
+.adm-check input { width: 20px; height: 20px; accent-color: var(--gold); }
+.adm-row { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin-bottom: 10px; }
+.adm-row .field { flex: 1 1 180px; width: auto; }
+.adm-days { flex: 0 1 200px; }
+.adm-danger { margin-top: 24px; border: 1px solid var(--coral-deep); border-radius: 14px; padding: 4px 14px; background: color-mix(in srgb, var(--coral) 6%, var(--night-2)); }
+.adm-danger summary { cursor: pointer; padding: 10px 0; font-family: var(--f-ui); font-weight: 700; color: var(--coral); }
+.adm-danger p { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+.adm-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.adm-log li { background: var(--night-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; overflow-wrap: anywhere; }
+.adm-log a { color: var(--gold); }
+.adm-log small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.adm-when { display: block; font-family: var(--f-ui); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.adm-suspect { display: flex; align-items: flex-start; gap: 12px; background: var(--night-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px; text-decoration: none; color: var(--ink); min-width: 0; }
+.adm-suspect:hover, .adm-suspect:focus-visible { border-color: var(--gold); }
+.adm-suspect .l { flex: 1; min-width: 0; }
+.adm-suspect strong { display: block; font-size: 15px; }
+.adm-suspect small { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.adm-suspect ul { margin: 8px 0 0; padding-left: 18px; font-size: 13px; display: grid; gap: 4px; }
+.adm-score { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-display); font-size: 18px; color: #2b1d02; background: var(--gold); box-shadow: 0 3px 0 var(--gold-deep); }
+.adm-score.high { color: #fff; background: var(--coral); box-shadow: 0 3px 0 var(--coral-deep); }
+.adm-help { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+.adm-help strong { color: var(--ink); }
+.premium-tag.admin-tag { margin-left: 6px; background: var(--dock); color: var(--ink); box-shadow: 0 3px 0 var(--dock-edge); }

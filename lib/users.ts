@@ -7,9 +7,10 @@ export type UserRow = {
   password_hash: string | null;
   email_verified_at: Date | null;
   session_version: number;
+  role: "joueur" | "admin";
 };
 
-const USER_COLUMNS = "id, email, pseudo, password_hash, email_verified_at, session_version";
+const USER_COLUMNS = "id, email, pseudo, password_hash, email_verified_at, session_version, role";
 
 const PSEUDO_RE = /^[A-Za-z0-9_-]{3,20}$/;
 

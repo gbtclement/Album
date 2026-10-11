@@ -151,6 +151,8 @@ export async function exportUserData(userId: string) {
 // Supprime le joueur et, par ON DELETE CASCADE, tout ce qui lui appartient : collection, amis, échanges,
 // annonces, quêtes... Les ventes passées du marché restent, sans lien avec le joueur (table market_sales).
 export async function deleteAccount(userId: string) {
+  // Achats au marché : l'acheteur est noté sans clé étrangère (détection des mules), on l'efface à la main
+  await db.query("update listings set buyer_id = null where buyer_id = $1", [userId]);
   const result = await db.query("delete from users where id = $1", [userId]);
   await forgetCachedPseudos();
   return (result.rowCount ?? 0) > 0;
@@ -172,7 +174,7 @@ const LAST_ACTIVITY = "coalesce(last_seen_at, created_at)";
 // Comptes inactifs (à lancer chaque jour en production, npm run purge:inactive) :
 // 1. un e-mail prévient les joueurs absents depuis 3 ans moins 30 jours ;
 // 2. un compte toujours absent 30 jours après cet e-mail est supprimé ;
-// 3. les liens de vérification et de mot de passe expirés sont effacés.
+// 3. les liens de vérification et de mot de passe expirés sont effacés, ainsi que le journal de l'admin de plus d'un an.
 export async function purgeInactiveAccounts({ dryRun = false, log = console.log } = {}) {
   const notify = await db.query<{ id: string; email: string; pseudo: string }>(
     `select id, email, pseudo from users
@@ -204,10 +206,16 @@ export async function purgeInactiveAccounts({ dryRun = false, log = console.log 
   }
 
   // Mêmes conditions que plus haut, revérifiées au moment d'effacer (un joueur a pu revenir entre-temps)
+  await db.query(`update listings set buyer_id = null where buyer_id in (select id from users where ${doomedWhere})`, [
+    INACTIVE_YEARS,
+    INACTIVITY_NOTICE_DAYS,
+  ]);
   const deleted = (await db.query(`delete from users where ${doomedWhere}`, [INACTIVE_YEARS, INACTIVITY_NOTICE_DAYS])).rowCount ?? 0;
   if (deleted > 0) await forgetCachedPseudos();
 
   await db.query("delete from email_verifications where expires_at < now()");
   await db.query("delete from password_resets where expires_at < now()");
+  // Journal de l'admin : gardé un an
+  await db.query("delete from admin_actions where created_at < now() - interval '1 year'");
   return { notified, deleted };
 }

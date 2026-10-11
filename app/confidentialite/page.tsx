@@ -52,7 +52,11 @@ export default function ConfidentialitePage() {
       <h2>Pourquoi</h2>
       <ul>
         <li>Faire fonctionner le jeu que tu as choisi d&apos;utiliser (c&apos;est l&apos;exécution des conditions d&apos;utilisation).</li>
-        <li>Protéger les comptes et le jeu contre la triche et les attaques (c&apos;est notre intérêt légitime).</li>
+        <li>
+          Protéger les comptes et le jeu contre la triche et les attaques (c&apos;est notre intérêt légitime). Un outil repère les
+          comportements anormaux, par exemple des packs ouverts par un programme, pour qu&apos;un administrateur les examine : aucune
+          sanction n&apos;est automatique.
+        </li>
         <li>
           T&apos;envoyer les e-mails utiles à ton compte : confirmation de ton adresse, mot de passe oublié, avertissement avant la suppression
           d&apos;un compte inactif. Aucune lettre d&apos;information ni publicité.
@@ -64,6 +68,10 @@ export default function ConfidentialitePage() {
         <li>
           <strong>Les autres joueurs</strong> voient ton pseudo, ton score au classement, et ce que tu fais avec eux : demandes d&apos;amis,
           échanges, annonces du marché. Jamais ton adresse e-mail.
+        </li>
+        <li>
+          <strong>Les administrateurs du jeu</strong>, uniquement pour t&apos;aider, corriger ton compte ou lutter contre la triche.
+          Chacune de leurs actions sur un compte est inscrite dans un journal.
         </li>
         <li>
           <strong>Les prestataires techniques</strong> qui font tourner le site, uniquement pour ce service : l&apos;hébergeur (voir les mentions
@@ -87,6 +95,7 @@ export default function ConfidentialitePage() {
         </li>
         <li><strong>Les liens envoyés par e-mail</strong> : jusqu&apos;à leur expiration (24 heures au plus).</li>
         <li><strong>Ton adresse IP</strong> : une heure au plus.</li>
+        <li><strong>Le journal des actions des administrateurs</strong> : un an.</li>
         <li>
           Le prix des ventes passées au marché est gardé pour calculer la cote des albums, mais sans aucun lien avec le vendeur ni l&apos;acheteur.
         </li>

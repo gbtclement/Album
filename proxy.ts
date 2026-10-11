@@ -26,8 +26,12 @@ async function documentationGate(request: Request) {
   });
 }
 
+const isUnder = (pathname: string, base: string) => pathname === base || pathname.startsWith(`${base}/`);
+
 // Contrôle côté serveur, avant tout rendu (redirection 307) :
-// - documentation : identifiant et mot de passe (voir documentationGate) ;
+// - admin et documentation : réservés aux comptes admin ; pour les autres, la page 404 (on ne révèle pas qu'elles existent).
+//   La documentation demande en plus identifiant et mot de passe (voir documentationGate). Les pages admin revérifient
+//   aussi le rôle en base (app/admin/guard.ts) ;
 // - pages réservées aux joueurs : sans session, on part vers la connexion (elles restent aussi protégées dans leur code) ;
 // - connexion et inscription : déjà connecté, on part vers la page demandée (callbackUrl) ou le profil.
 // La session est lue par Auth.js lui-même : il choisit le bon nom de cookie selon le protocole
@@ -35,8 +39,11 @@ async function documentationGate(request: Request) {
 export const proxy = auth(async (request) => {
   const { pathname, search, origin } = request.nextUrl;
 
-  if (pathname === "/documentation" || pathname.startsWith("/documentation/")) {
-    return (await documentationGate(request)) ?? NextResponse.next();
+  if (isUnder(pathname, "/admin") || isUnder(pathname, "/documentation")) {
+    // Adresse qui n'existe pas : Next.js y affiche la page 404 (app/not-found.tsx), avec le statut 404
+    if (request.auth?.user?.role !== "admin") return NextResponse.rewrite(new URL("/introuvable", origin));
+    if (isUnder(pathname, "/documentation")) return (await documentationGate(request)) ?? NextResponse.next();
+    return NextResponse.next();
   }
 
   if (AUTH_PAGES.includes(pathname)) {
@@ -57,6 +64,7 @@ export const proxy = auth(async (request) => {
 export const config = {
   matcher: [
     "/documentation/:path*",
+    "/admin/:path*",
     "/connexion",
     "/inscription",
     "/packs/:path*",

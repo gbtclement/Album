@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { requireAdmin } from "@/app/admin/guard";
 import { SiteNav } from "@/components/site-nav";
 
 export const metadata: Metadata = {
@@ -41,7 +42,11 @@ const ROUTES = [
   { path: "/profil/donnees", description: "Téléchargement de toutes les données du joueur en JSON (RGPD, protégée)" },
   { path: "/profil/supprimer", description: "Suppression définitive du compte, confirmée par le pseudo et le mot de passe (RGPD, protégée)" },
   { path: "/mentions-legales, /confidentialite, /cgu, /cgv", description: "Pages légales : éditeur et hébergeur, politique de confidentialité, conditions d'utilisation, conditions de vente de l'abonnement premium (prix, mois offert, résiliation, rétractation, médiation)" },
-  { path: "/documentation", description: "Cette page, protégée par identifiant et mot de passe demandés par le navigateur (DOC_HTPASSWD, format .htpasswd ; 30 essais par adresse IP et par quart d'heure)" },
+  { path: "/documentation", description: "Cette page, réservée aux comptes admin (404 pour les autres) et protégée en plus par identifiant et mot de passe demandés par le navigateur (DOC_HTPASSWD, format .htpasswd ; 30 essais par adresse IP et par quart d'heure)" },
+  { path: "/admin", description: "Espace admin (rôle admin en base uniquement ; 404 pour tous les autres) : liste des joueurs, recherche par pseudo ou e-mail, 50 par page" },
+  { path: "/admin/joueurs/[id]", description: "Fiche d'un joueur : modifier pseudo, e-mail, vérification et pièces ; offrir ou retirer du premium (sans consommer le mois offert) ; déconnecter de tous les appareils ; supprimer le compte (pseudo à retaper, jamais le sien) ; journal du compte" },
+  { path: "/admin/triche", description: "Comptes suspects classés par score (réflexe surhumain à la recharge des packs, régularité de métronome, jamais endormi, pioche trop parfaite, comptes mules) ; aucune sanction automatique" },
+  { path: "/admin/journal", description: "Les 200 dernières actions des admins (qui, quoi, sur quel compte, quand), gardées un an" },
   { path: "(toute adresse inconnue)", description: "Page 404 (app/not-found.tsx) : pochette vide, vinyle « 404 » à moitié sorti, bras de platine levé, « Cette piste n'est pas sur l'album » ; bouton Retour à l'accueil et dos de pochette dont les pistes mènent à la collection, aux packs et à la pioche. Plantage (app/error.tsx, app/global-error.tsx) : même décor, disque rayé, « Le disque a sauté », bouton Réessayer et code de l'erreur pour retrouver le détail dans les logs" },
   { path: "/sitemap.xml", description: "Plan du site : pages publiques et fiches d'albums (SEO)" },
   { path: "/robots.txt", description: "Règles pour les robots d'indexation (bloqué tant que SEO_INDEXING n'est pas true)" },
@@ -52,7 +57,7 @@ const ROUTES = [
 ];
 
 const TABLES = [
-  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement), dates d'acceptation des CGU, de dernière visite et d'avertissement d'inactivité, fin du premium (premium_until, null si jamais premium), date du premier premium (premium_trial_used_at : rempli = plus de mois offert)" },
+  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement), dates d'acceptation des CGU, de dernière visite et d'avertissement d'inactivité, fin du premium (premium_until, null si jamais premium), date du premier premium (premium_trial_used_at : rempli = plus de mois offert), rôle (role : joueur ou admin, changé uniquement en base)" },
   { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
   { name: "password_resets", description: "Lien de réinitialisation du mot de passe en cours par joueur (empreinte SHA-256 du jeton, expiration 1 h)" },
   { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
@@ -69,7 +74,8 @@ const TABLES = [
   { name: "daily_draws", description: "Pioche du jour : album tiré par joueur et par jour (heure de Paris), position du morceau montré, réponse, réussite et série en cours" },
   { name: "artist_set_rewards", description: "Collections d'artiste terminées : récompense récupérée par joueur et par artiste (taille du set, pièces, pack), une seule fois" },
   { name: "user_achievements", description: "Succès débloqués par joueur (clé du succès, pièces versées, date, notification déjà affichée ou non). La liste des succès est dans lib/achievement-rules.ts" },
-  { name: "listings", description: "Annonces du marché : vente en pièces ou troc contre un album" },
+  { name: "listings", description: "Annonces du marché : vente en pièces ou troc contre un album ; acheteur (buyer_id, sans clé étrangère, effacé à la suppression de son compte) pour repérer les comptes mules" },
+  { name: "admin_actions", description: "Journal de l'admin : admin, compte visé (pseudos copiés), action, détails avant → après, date. Gardé un an (purge:inactive)" },
   { name: "market_sales", description: "Ventes en pièces sur le marché, base de la cote des albums" },
 ];
 
@@ -159,6 +165,7 @@ const LOTS = [
   { lot: "PHOTO1", name: "Photos d'artistes : photo Deezer à la place de l'initiale dans l'onglet Artistes de la collection (table artist_photos, migration 026, npm run import:photos, lancé aussi à la fin de import:catalog). Anti-homonyme : on ne garde un artiste Deezer du même nom que si l'un de ses albums porte le titre d'un album du catalogue ; sinon l'initiale reste", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "DOC1", name: "La page /documentation est protégée par identifiant et mot de passe (Basic Auth, ligne .htpasswd dans DOC_HTPASSWD, vérifiée dans proxy.ts, essais limités)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "ERR1", name: "Pages d'erreur au thème du jeu : 404 (« Cette piste n'est pas sur l'album ») et plantage (« Le disque a sauté », bouton Réessayer), composant components/record-error.tsx", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "ADM1", name: "Espace admin : rôle joueur ou admin (en base uniquement, migration 027), /admin et /documentation réservés aux admins (404 sinon, rôle revérifié en base), liste et fiche des joueurs (modification, premium offert, déconnexion, suppression), journal des actions, détection de triche (lib/cheat-rules.ts, lib/cheat-detection.ts)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
@@ -196,7 +203,9 @@ function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
   );
 }
 
-export default function DocumentationPage() {
+export default async function DocumentationPage() {
+  // Réservée aux admins (vérifié aussi par proxy.ts, avec le mot de passe en plus)
+  await requireAdmin();
   return (
     <>
       <SiteNav />

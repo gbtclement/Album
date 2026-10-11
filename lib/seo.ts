@@ -29,6 +29,8 @@ export const PRIVATE_PATHS = [
   "/mot-de-passe-oublie",
   "/nouveau-mot-de-passe",
   "/apercu-emails",
+  "/admin",
+  "/documentation",
   "/api/",
 ];
 

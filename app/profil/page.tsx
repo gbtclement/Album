@@ -67,6 +67,8 @@ export default async function ProfilPage({ searchParams }: Props) {
             ) : (
               <Link href="/premium" className="premium-tag">Passer premium</Link>
             )}
+            {/* Simple raccourci : l'admin revérifie le rôle en base à chaque page */}
+            {session.user.role === "admin" && <Link href="/admin" className="premium-tag admin-tag">Espace admin</Link>}
           </div>
         </div>
 

@@ -55,6 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.uid = dbUser.id;
           token.pseudo = dbUser.pseudo;
           token.sv = dbUser.session_version;
+          token.role = dbUser.role;
           token.checkedAt = Date.now();
           await touchLastSeen(dbUser.id);
         }
@@ -67,6 +68,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!dbUser || dbUser.session_version !== Number(token.sv ?? 0)) return null;
         await touchLastSeen(dbUser.id);
         token.pseudo = dbUser.pseudo;
+        token.role = dbUser.role;
         token.checkedAt = Date.now();
       }
       return token;
@@ -76,6 +78,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ...session.user,
         id: String(token.uid ?? ""),
         pseudo: String(token.pseudo ?? ""),
+        role: token.role === "admin" ? ("admin" as const) : ("joueur" as const),
       };
       return { ...session, user };
     },
