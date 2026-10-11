@@ -115,7 +115,7 @@ describe("packs gagnés", () => {
     expect(state).toMatchObject({ stock: 0, bonus: MAX_STOCK + 4 });
   });
 
-  it("seuls les packs du stock qui se recharge font avancer les quêtes « Ouvre N packs »", async () => {
+  it("les packs de 5 cartes (stock ou gagnés) font avancer les quêtes « Ouvre N packs », pas les Solo", async () => {
     const user = await createTestUser();
     await setStock(user.id, 1, 0);
     await withTransaction((client) => grantPacks(client, user.id, { classic: 2, solo: 2 }));
@@ -129,7 +129,7 @@ describe("packs gagnés", () => {
       [user.id],
     );
     expect(rows).toHaveLength(3);
-    for (const row of rows) expect(row.progress).toBe(1);
+    for (const row of rows) expect(row.progress).toBe(2);
   });
 });
 

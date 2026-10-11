@@ -121,9 +121,6 @@ async function pickAlbum(client: PoolClient, tier: RarityTier) {
 export async function openPack(userId: string, kind: PackKind = "classic"): Promise<{ cards: PackCard[]; state: PackState }> {
   return withTransaction(async (client) => {
     const before = await rechargeStock(client, userId);
-    // Seuls les packs du stock qui se recharge comptent pour les quêtes « Ouvre N packs » :
-    // les packs gagnés (quêtes, succès, collections, pioche) et les Solo n'en font pas partie
-    const fromStock = kind === "classic" && before.stock >= 1;
     if (kind === "solo") {
       if (before.solo < 1) throw new PackError("Tu n'as plus de pack Solo. Les quêtes en rapportent.");
       await client.query("update pack_stocks set solo_packs = solo_packs - 1 where user_id = $1", [userId]);
@@ -161,7 +158,8 @@ export async function openPack(userId: string, kind: PackKind = "classic"): Prom
     await client.query("insert into pack_openings (user_id, album_ids) values ($1, $2)", [userId, albumIds]);
 
     // Progression des quêtes, dans la même transaction que l'ouverture
-    if (fromStock) await recordEvent(client, userId, "pack_opened", 1);
+    // Quêtes « Ouvre N packs » : seuls les packs de 5 cartes comptent (stock ou gagnés), pas les Solo
+    if (kind === "classic") await recordEvent(client, userId, "pack_opened", 1);
     await recordEvent(client, userId, "rare_card", cards.filter((card) => card.tier !== "commun" && card.tier !== "peu_commun").length);
     await recordEvent(client, userId, "legendary_card", cards.filter((card) => card.tier === "legendaire").length);
     await recordEvent(client, userId, "new_album", cards.filter((card) => card.isNew).length);

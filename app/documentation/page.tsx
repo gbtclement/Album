@@ -135,7 +135,7 @@ const LOTS = [
   { lot: "G5", name: "Ouverture des packs une carte à la fois : flèches pour avancer et revenir, points de progression, clavier et glissement ; « Tout ouvrir » retiré", status: "Terminé", branch: "jeu5-ouverture-carte" },
   { lot: "C12", name: "Correctif : écoutes Last.fm sur la fiche album (chiffres plus parlants, source indiquée), npm run import:lastfm, récupérées aussi à la fin de l'import du catalogue ; la rareté reste sur ListenBrainz", status: "Terminé", branch: "correctif12-lastfm" },
   { lot: "R1", name: "Données personnelles (RGPD) : mentions légales, politique de confidentialité, CGU, case d'acceptation à l'inscription, téléchargement des données, suppression du compte, suppression des comptes inactifs depuis 3 ans", status: "Terminé", branch: "rgpd1-donnees" },
-  { lot: "C13", name: "Correctif : les packs gagnés (quêtes, succès, sets, pioche) et les packs Solo ne font plus avancer les quêtes « Ouvre N packs »", status: "Terminé", branch: "correctif13-quetes-packs" },
+  { lot: "C13", name: "Correctif : les packs Solo (1 album) ne font plus avancer les quêtes « Ouvre N packs » ; les packs de 5 cartes, du stock ou gagnés, comptent toujours", status: "Terminé", branch: "correctif13-quetes-packs" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -251,9 +251,8 @@ export default function DocumentationPage() {
             <li>
               <strong>Packs gagnés :</strong> les récompenses (quêtes, séries de la pioche, grands sets d&apos;artiste) vont dans une réserve à part,
               sans maximum : packs classiques (5 albums) et packs Solo (1 album). « Ouvrir un pack » prend d&apos;abord un pack du stock qui se
-              recharge, puis un pack gagné. La barre du haut affiche les packs gagnés en « +N ». Seuls les packs du stock qui se
-              recharge font avancer les quêtes « Ouvre N packs » (sinon une quête rapporterait de quoi en avancer une autre) ;
-              les cartes des packs gagnés comptent quand même pour les quêtes d&apos;albums nouveaux, rares et légendaires.
+              recharge, puis un pack gagné. La barre du haut affiche les packs gagnés en « +N ». Les quêtes « Ouvre N packs » comptent
+              tous les packs de 5 cartes (stock ou gagnés), pas les packs Solo d&apos;un album.
             </li>
             <li>
               <strong>Ouverture :</strong> un pack à la fois (plus de « Tout ouvrir »), et une carte à la fois, de la moins rare à la plus rare.
