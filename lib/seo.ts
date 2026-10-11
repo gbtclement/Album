@@ -21,6 +21,7 @@ export const PRIVATE_PATHS = [
   "/bourse",
   "/classement",
   "/quetes",
+  "/pioche",
   "/profil",
   "/verifier-email",
   "/mot-de-passe-oublie",

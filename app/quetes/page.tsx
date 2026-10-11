@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 import { auth } from "@/auth";
 import { DiscIcon, SparkIcon, StarIcon, SwapIcon, CrownIcon } from "@/components/icons";
+import { DrawBanner } from "@/components/draw-banner";
 import { SiteNav } from "@/components/site-nav";
+import { isDrawPending } from "@/lib/daily-draw";
 import { getQuestStatus, PERIOD_LABELS, type Period, type QuestEvent } from "@/lib/quests";
 import { claimQuestAction } from "./actions";
 
@@ -44,7 +46,7 @@ export default async function QuetesPage({ searchParams }: Props) {
   if (!session?.user?.id) redirect("/connexion");
 
   const { message } = await searchParams;
-  const quests = await getQuestStatus(session.user.id);
+  const [quests, drawPending] = await Promise.all([getQuestStatus(session.user.id), isDrawPending(session.user.id)]);
   const ready = quests.filter((quest) => !quest.claimed && quest.progress >= quest.target).length;
 
   return (
@@ -53,6 +55,7 @@ export default async function QuetesPage({ searchParams }: Props) {
       <main className="game-page">
         <h1>Quêtes</h1>
         <p className="sub">{ready === 0 ? "Aucune récompense à réclamer" : `${ready} récompense${ready > 1 ? "s" : ""} à réclamer`}</p>
+        <DrawBanner pending={drawPending} />
 
         {PERIODS.map((period) => (
           <section key={period}>

@@ -30,6 +30,9 @@ const ROUTES = [
   { path: "/api/market/history", description: "Historique des prix : ?album=<slug> et ?jours=<n> (30 par défaut, 365 max)" },
   { path: "/classement", description: "Podium et top 100 par score de rareté, onglet Amis (?vue=amis), position du joueur connecté (protégée)" },
   { path: "/quetes", description: "Quêtes journalières, hebdomadaires et mensuelles, avec récupération des récompenses (protégée)" },
+  { path: "/pioche", description: "Pioche du jour : un morceau de pochette à deviner, une seule réponse par jour, série de bonnes réponses (protégée)" },
+  { path: "/pioche/image", description: "Morceau de la pochette du jour, découpé par le serveur (jamais l'image entière avant la réponse)" },
+  { path: "/pioche/recherche", description: "Suggestions de titres pour la pioche : ?q=<texte> (2 caractères minimum)" },
   { path: "/album/[slug]", description: "Fiche d'un album : pochette, rareté, liens d'écoute" },
   { path: "/verifier-email", description: "Validation de l'adresse e-mail depuis le lien reçu (lien à usage unique, valable 24 h)" },
   { path: "/documentation", description: "Cette page" },
@@ -53,6 +56,7 @@ const TABLES = [
   { name: "friendships", description: "Amitiés et demandes d'amis, une ligne par paire de joueurs" },
   { name: "trades", description: "Propositions d'échange : album et/ou pièces de chaque côté, statut" },
   { name: "user_quests", description: "Progression des quêtes par joueur et par période, récompense récupérée ou non" },
+  { name: "daily_draws", description: "Pioche du jour : album tiré par joueur et par jour (heure de Paris), position du morceau montré, réponse, réussite et série en cours" },
   { name: "listings", description: "Annonces du marché : vente en pièces ou troc contre un album" },
   { name: "market_sales", description: "Ventes en pièces sur le marché, base de la cote des albums" },
 ];
@@ -114,6 +118,8 @@ const LOTS = [
   { lot: "D4", name: "Comptes : confirmation du mot de passe à l'inscription, mot de passe oublié (e-mail + page de changement), modèles d'e-mails HTML aux couleurs du jeu", status: "Terminé", branch: "design4-comptes-emails" },
   { lot: "D5", name: "SEO et performances : schema.org (WebSite, VideoGame, MusicAlbum, fil d'Ariane), titres h1/h2, accueil enrichi, robots et sitemap, image de partage, icônes et manifeste, pochettes optimisées (WebP, cache 30 jours), en-têtes de sécurité, préparation de la mise en production (Caddy)", status: "Terminé", branch: "design5-seo-performances" },
   { lot: "C10", name: "Correctif : marché et échanges réservés aux adresses e-mail vérifiées, un seul compte par boîte mail (adresses avec « + » et points Gmail rattachées au compte d'origine)", status: "Terminé", branch: "correctif10-email-verifie" },
+  { lot: "C11", name: "Correctif : catalogue élargi (discographies des artistes les plus écoutés de chaque période et de leurs artistes proches, 1 000 écoutes minimum)", status: "Terminé", branch: "correctif11-catalogue-elargi" },
+  { lot: "G1", name: "Pioche du jour : un album par joueur et par jour, un morceau de pochette, une seule réponse avec recherche guidée, série de 7 = 1 pack", status: "Terminé", branch: "jeu1-pioche-du-jour" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -243,6 +249,9 @@ export default function DocumentationPage() {
             </li>
             <li>
               <strong>Marché :</strong> une annonce active par exemplaire possédé (un album en un seul exemplaire ne peut être mis en vente qu&apos;une fois).
+            </li>
+            <li>
+              <strong>Pioche du jour :</strong> chaque jour à minuit (heure de Paris), chaque joueur tire son propre album, de préférence absent de sa collection et jamais pioché. Raretés plus généreuses que les packs : Commun 40 %, Peu commun 30 %, Rare 18 %, Épique 9 %, Légendaire 3 %. Seul un morceau de la pochette (30 % de la largeur) est montré, découpé par le serveur pour qu&apos;on ne puisse pas lire la réponse dans la page. Une seule réponse, choisie dans les suggestions (titres qui commencent par le texte tapé, puis ceux qui le contiennent) ; un album qui porte le même titre est accepté. Trouvé : la carte entre dans la collection. Raté : on ne gagne rien. Chaque série de 7 bonnes réponses d&apos;affilée offre un pack (300 pièces si le stock est plein).
             </li>
             <li>
               <strong>Quêtes d&apos;échange :</strong> un échange entre amis ne compte que si au moins un album change de mains (pas de pièces contre pièces). Chaque achat sur le marché compte.

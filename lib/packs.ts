@@ -22,11 +22,12 @@ export type PackState = {
   nextPackAt: Date | null;
 };
 
-export function drawTier(): RarityTier {
+// Tire un palier selon les taux donnés (ceux des packs par défaut ; la pioche du jour a les siens)
+export function drawTier(rates: Record<RarityTier, number> = PACK_RATES): RarityTier {
   const roll = randomInt(1_000_000) / 1_000_000;
   let cumulative = 0;
   for (const tier of RARITY_TIERS) {
-    cumulative += PACK_RATES[tier];
+    cumulative += rates[tier];
     if (roll < cumulative) return tier;
   }
   return "commun";
