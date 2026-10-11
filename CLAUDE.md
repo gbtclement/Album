@@ -8,7 +8,7 @@ Jeu de collection de cartes d'albums de musique, inspiré de Wikimaster. Interfa
 - PostgreSQL (`lib/db.ts`) et Redis (`lib/redis.ts`), tous deux dans Docker
 - Tailwind CSS 4
 - Auth.js (e-mail et mot de passe ; connexion Google retirée pour l'instant), Lightweight Charts (lot 6)
-- Catalogue : ListenBrainz (albums les plus écoutés, écoutes = rareté) et MusicBrainz, sans clé (`lib/listenbrainz.ts`, `lib/musicbrainz.ts`)
+- Catalogue : ListenBrainz (albums les plus écoutés) et MusicBrainz ; rareté = écoutes Last.fm (seuils fixes, lib/rarity.ts), sans clé (`lib/listenbrainz.ts`, `lib/musicbrainz.ts`)
 
 Next.js 16 a des changements par rapport aux versions habituelles : lire le guide correspondant dans `node_modules/next/dist/docs/` avant d'écrire du code.
 
@@ -25,7 +25,7 @@ Toutes les commandes se lancent dans WSL (Ubuntu-24.04), depuis `~/Album`.
 - Tests : `npm test` (Vitest). `tests/unit/` sans base ; `tests/integration/` sur la base `album_test` et Redis n°15, vidés à chaque test.
 - CI : `.github/workflows/ci.yml` (lint, typage, tests, build) à chaque push et PR.
 - Catalogue (sans clé) : `npm run import:catalog -- --listenbrainz` (albums les plus écoutés), `-- --listenbrainz --artists 1000 --similar 5 --min-listens 1000` (plus les discographies des artistes de chaque période et de leurs proches ; long la première fois, discographies en cache Redis une semaine), `-- --listens` (écoutes et rareté à jour). Un album déjà présent n'est pas réimporté.
-- Écoutes Last.fm (affichage seulement, la rareté reste sur ListenBrainz) : `npm run import:lastfm` (clé `LASTFM_API_KEY`, recherche par artiste + titre car Last.fm ne connaît pas les release groups MusicBrainz, 4 requêtes/s, chaque album revérifié au plus une fois par mois via `lastfm_checked_at`). Lancé aussi à la fin de `import:catalog` si la clé existe.
+- Écoutes Last.fm (fiches album ET rareté) : `npm run import:lastfm` (clé `LASTFM_API_KEY` ; une requête par artiste, artist.getTopAlbums, dont on additionne toutes les versions de chaque album, lib/lastfm-variants.ts ; album.getInfo pour les albums absents de cette liste ; 4 requêtes/s ; rareté recalculée à la fin ; chaque album revérifié au plus une fois par mois via `lastfm_checked_at`). Lancé aussi à la fin de `import:catalog` si la clé existe.
 - Pochettes en panne : `npm run check:covers` (remplace par Cover Art Archive ou Deezer) ; à l'écran, `components/cover-image.tsx` affiche un vinyle de secours. Toute nouvelle image de pochette passe par `CoverImage` (next/image, parent positionné, `sizes` à la taille affichée), jamais un `<img>` brut. Un nouveau domaine d'images doit être ajouté à `images.remotePatterns` dans `next.config.ts`.
 - Comptes inactifs : `npm run purge:inactive` (`--dry-run` pour compter) ; à lancer chaque jour en production.
 - Premium (sans paiement pour l'instant) : `npm run premium -- <email> <jours>` (`0` retire le premium).

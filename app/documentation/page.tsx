@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { requireAdmin } from "@/app/admin/guard";
+import { LISTENBRAINZ_TO_LASTFM, RARITY_THRESHOLDS } from "@/lib/rarity";
 import { SiteNav } from "@/components/site-nav";
+
+// « 133 millions »
+const formatMillions = (plays: number) => `${(plays / 1_000_000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} millions`;
 
 export const metadata: Metadata = {
   title: "Documentation technique",
@@ -166,6 +170,7 @@ const LOTS = [
   { lot: "DOC1", name: "La page /documentation est protégée par identifiant et mot de passe (Basic Auth, ligne .htpasswd dans DOC_HTPASSWD, vérifiée dans proxy.ts, essais limités)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "ERR1", name: "Pages d'erreur au thème du jeu : 404 (« Cette piste n'est pas sur l'album ») et plantage (« Le disque a sauté », bouton Réessayer), composant components/record-error.tsx", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "ADM1", name: "Espace admin : rôle joueur ou admin (en base uniquement, migration 027), /admin et /documentation réservés aux admins (404 sinon, rôle revérifié en base), liste et fiche des joueurs (modification, premium offert, déconnexion, suppression), journal des actions, détection de triche (lib/cheat-rules.ts, lib/cheat-detection.ts)", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "RAR1", name: "Rareté calculée sur les écoutes Last.fm (toutes versions d'un album additionnées : remasterisée, deluxe...), plafonnées à 100 par auditeur, avec des seuils fixes (un album garde sa rareté quand le catalogue grandit) ; récupération Last.fm par artiste (artist.getTopAlbums) et signes typographiques corrigés (’ ‐ …)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
@@ -342,9 +347,13 @@ export default async function DocumentationPage() {
             </li>
             <li>
               <strong>Raretés :</strong> Commun 65 %, Peu commun 25 %, Rare 8 %, Épique 1,5 %, Légendaire 0,5 % (par carte tirée).
-              Le palier d&apos;un album dépend de son rang dans le catalogue selon ses écoutes ListenBrainz, plafonnées à 100 par
-              auditeur (un auditeur écoute un album environ 23 fois ; au-delà, ce sont quelques fans qui le font tourner en boucle) : les 0,5 % les plus écoutés
-              sont légendaires, les 2 % suivants épiques, puis 10 % rares, 35 % peu communs, le reste commun.
+              Le palier d&apos;un album dépend de ses écoutes Last.fm, toutes versions de l&apos;album additionnées (originale, remasterisée,
+              deluxe...), plafonnées à 100 par auditeur (médiane : 16 ; au-delà, ce sont quelques fans qui le font tourner en boucle).
+              Seuils fixes (lib/rarity.ts), pour qu&apos;un album garde sa rareté quand le catalogue grandit : légendaire dès{" "}
+              {formatMillions(RARITY_THRESHOLDS.legendaire)}, épique dès {formatMillions(RARITY_THRESHOLDS.epique)}, rare dès{" "}
+              {formatMillions(RARITY_THRESHOLDS.rare)}, peu commun dès {formatMillions(RARITY_THRESHOLDS.peu_commun)} d&apos;écoutes, commun en dessous.
+              Ils donnaient au départ environ 0,5 % de légendaires, 2 % d&apos;épiques, 10 % de rares et 35 % de peu communs. Album inconnu de
+              Last.fm (ou chiffre 10 fois trop bas) : estimation à partir de ListenBrainz (× {LISTENBRAINZ_TO_LASTFM}, rapport médian entre les deux).
             </li>
             <li>
               <strong>Doublons :</strong> conservés. La carte affiche un badge xN quand le joueur en possède plusieurs.

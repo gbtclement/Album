@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { tierForRank, type RarityTier } from "@/lib/rarity";
+import { type RarityTier, rarityScore, tierForPlays } from "@/lib/rarity";
 
 export type AlbumLink = { url: string; exact: boolean };
 export type AlbumLinks = Partial<Record<"spotify" | "deezer" | "youtube", AlbumLink>>;
@@ -97,33 +97,39 @@ export async function saveListens(listens: Map<string, { listens: number; listen
   return result.rowCount ?? 0;
 }
 
-// Écoutes comptées au plus par auditeur : un auditeur écoute un album environ 23 fois (médiane),
-// 99 % des albums restent sous 100. Au-delà, ce sont quelques fans qui le font tourner en boucle
-// (un album à 48 millions d'écoutes pour moins de 5 000 auditeurs, soit 10 000 écoutes chacun).
-export const MAX_LISTENS_PER_LISTENER = 100;
-
-// Recalcule les paliers de rareté de tout le catalogue, à partir des écoutes ListenBrainz plafonnées
-// (voir MAX_LISTENS_PER_LISTENER) : les albums les plus écoutés sont les plus rares. Sans statistique : "commun".
+// Recalcule la rareté de tout le catalogue à partir des écoutes Last.fm (seuils fixes, voir lib/rarity.ts) :
+// un album garde sa rareté quand d'autres arrivent. Sans aucune statistique : "commun".
+// Renvoie le nombre d'albums dont au moins une statistique est connue.
 export async function recomputeRarity() {
-  const ranked = await db.query<{ id: string }>(
-    `select id from albums where listener_count is not null
-     order by least(listen_count, listener_count * $1) desc nulls last, listener_count desc, id`,
-    [MAX_LISTENS_PER_LISTENER],
+  const { rows } = await db.query<{
+    id: string;
+    lastfm_playcount: string | null;
+    lastfm_listeners: string | null;
+    listen_count: string | null;
+    listener_count: string | null;
+  }>("select id, lastfm_playcount, lastfm_listeners, listen_count, listener_count from albums");
+  const number = (value: string | null) => (value === null ? null : Number(value));
+  const ids = rows.map((row) => row.id);
+  const tiers = rows.map((row) =>
+    tierForPlays(
+      rarityScore({
+        lastfmPlaycount: number(row.lastfm_playcount),
+        lastfmListeners: number(row.lastfm_listeners),
+        listens: number(row.listen_count),
+        listeners: number(row.listener_count),
+      }),
+    ),
   );
-  const total = ranked.rows.length;
-  const ids = ranked.rows.map((row) => row.id);
-  const tiers = ids.map((_, rank) => tierForRank(rank, total));
 
-  if (total > 0) {
+  if (ids.length > 0) {
     await db.query(
       `update albums set rarity_tier = data.tier, updated_at = now()
        from (select unnest($1::uuid[]) as id, unnest($2::text[]) as tier) as data
-       where albums.id = data.id`,
+       where albums.id = data.id and albums.rarity_tier <> data.tier`,
       [ids, tiers],
     );
   }
-  await db.query("update albums set rarity_tier = 'commun' where listener_count is null");
-  return total;
+  return rows.filter((row) => row.lastfm_playcount !== null || row.listen_count !== null).length;
 }
 
 export async function findAlbumBySlug(slug: string) {

@@ -115,7 +115,7 @@ export default async function AlbumPage({ params }: Props) {
         </div>
         <p className="sub" style={{ marginTop: 6 }}>
           {lastfm !== null
-            ? `Écoutes comptées sur Last.fm${album.lastfm_listeners ? ` par ${formatCompact(Number(album.lastfm_listeners))} auditeurs` : ""} (et non sur Spotify, qui ne publie pas ses chiffres). `
+            ? `Écoutes comptées sur Last.fm, toutes versions de l'album confondues (remasterisée, deluxe...)${album.lastfm_listeners ? ` par ${formatCompact(Number(album.lastfm_listeners))} auditeurs` : ""} (et non sur Spotify, qui ne publie pas ses chiffres). `
             : "Écoutes comptées sur ListenBrainz, un service d'écoutes ouvert (et non sur Spotify, qui ne publie pas ses chiffres). "}
           Plus un album est écouté, plus sa carte est rare.
         </p>

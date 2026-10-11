@@ -206,9 +206,10 @@ async function main() {
 
   console.log(`Terminé : ${imported} albums importés.`);
   await refreshListensAndRarity();
-  // Écoutes Last.fm des nouveaux albums (affichées sur les fiches), si la clé est configurée
+  // Écoutes Last.fm des nouveaux albums (fiches album et rareté), si la clé est configurée, puis rareté recalculée
   if (lastfmKey()) await syncLastfm();
   else console.log("Écoutes Last.fm non récupérées : ajoute LASTFM_API_KEY dans .env puis lance npm run import:lastfm.");
+  await recomputeRarity();
   // Photos des nouveaux artistes (onglet Artistes de la collection)
   await syncArtistPhotos();
 }

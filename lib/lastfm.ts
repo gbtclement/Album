@@ -1,18 +1,26 @@
-// Last.fm : nombre d'écoutes et d'auditeurs d'un album (méthode album.getInfo), avec une clé API gratuite
+// Last.fm : nombre d'écoutes et d'auditeurs des albums, avec une clé API gratuite
 // (LASTFM_API_KEY dans .env, à créer sur https://www.last.fm/api/account/create).
-// Last.fm ne connaît pas nos identifiants d'album (MusicBrainz « release group ») : on cherche par artiste
-// et titre, avec la correction automatique des noms de Last.fm.
-// Ces chiffres sont seulement affichés : la rareté reste calculée avec ListenBrainz.
+// Ces chiffres sont affichés sur les fiches album et servent à calculer la rareté (lib/catalog.ts).
+//
+// Last.fm range chaque version d'un album à part (« Abbey Road », « Abbey Road (Remastered) »...) : on demande la
+// liste des albums de chaque artiste (artist.getTopAlbums, une requête par artiste) et on additionne les écoutes de
+// toutes les versions d'un même album (lib/lastfm-variants.ts). Un album absent de cette liste est cherché seul
+// (album.getInfo), avec la correction automatique des noms de Last.fm.
 
 import { db } from "@/lib/db";
+import { lastfmText, matchVariants } from "@/lib/lastfm-variants";
 
 const LASTFM_BASE = "https://ws.audioscrobbler.com/2.0/";
 const USER_AGENT = `Musicodex/0.1 (${process.env.MUSICBRAINZ_CONTACT ?? "https://github.com/gbtclement/Album"})`;
 const MAX_ATTEMPTS = 5;
 // Last.fm demande de rester raisonnable (environ 5 requêtes par seconde) : on en fait 4
 export const LASTFM_DELAY_MS = 250;
+// Albums d'un artiste lus sur Last.fm : les 500 premiers suffisent (au-delà, des versions à quelques écoutes)
+const TOP_ALBUMS_LIMIT = 500;
+// En dessous d'un million d'écoutes, le plafond par auditeur ne change rien à la rareté : pas besoin des auditeurs
+const LISTENERS_MIN_PLAYCOUNT = 1_000_000;
 
-export type LastfmStats = { playcount: number; listeners: number };
+export type LastfmStats = { playcount: number; listeners: number | null };
 
 export function lastfmKey() {
   return process.env.LASTFM_API_KEY?.trim() || null;
@@ -20,15 +28,13 @@ export function lastfmKey() {
 
 export class LastfmError extends Error {}
 
-// Codes d'erreur Last.fm : 6 = album introuvable ; 11, 16 = service momentanément indisponible ; 29 = trop de requêtes
+// Codes d'erreur Last.fm : 6 = album ou artiste introuvable ; 11, 16 = service momentanément indisponible ; 29 = trop de requêtes
 const NOT_FOUND = 6;
 const RETRYABLE = new Set([11, 16, 29]);
 
-type AlbumInfoResponse = {
-  error?: number;
-  message?: string;
-  album?: { playcount?: string | number; listeners?: string | number };
-};
+type LastfmResponse = { error?: number; message?: string };
+type AlbumInfoResponse = LastfmResponse & { album?: { playcount?: string | number; listeners?: string | number } };
+type TopAlbumsResponse = LastfmResponse & { topalbums?: { album?: Array<{ name?: string; playcount?: string | number }> } };
 
 // Extrait les chiffres de la réponse d'album.getInfo (null si l'album est inconnu ou sans écoute)
 export function parseAlbumInfo(json: AlbumInfoResponse): LastfmStats | null {
@@ -38,16 +44,17 @@ export function parseAlbumInfo(json: AlbumInfoResponse): LastfmStats | null {
   return { playcount, listeners: Number.isFinite(listeners) ? listeners : 0 };
 }
 
-export async function fetchLastfmAlbum(artist: string, title: string): Promise<LastfmStats | null> {
+// Une requête à l'API, réessayée si Last.fm est surchargé ; null si l'album ou l'artiste est introuvable
+async function lastfmGet<T extends LastfmResponse>(params: Record<string, string>): Promise<T | null> {
   const key = lastfmKey();
   if (!key) throw new LastfmError("LASTFM_API_KEY manquant dans .env");
-  const params = new URLSearchParams({ method: "album.getinfo", api_key: key, artist, album: title, autocorrect: "1", format: "json" });
+  const query = new URLSearchParams({ ...params, api_key: key, autocorrect: "1", format: "json" });
 
   for (let attempt = 1; ; attempt++) {
-    const res = await fetch(`${LASTFM_BASE}?${params}`, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" } });
-    const json = (await res.json().catch(() => ({}))) as AlbumInfoResponse;
+    const res = await fetch(`${LASTFM_BASE}?${query}`, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" } });
+    const json = (await res.json().catch(() => ({}))) as T;
     if (json.error === NOT_FOUND) return null;
-    if (res.ok && !json.error) return parseAlbumInfo(json);
+    if (res.ok && !json.error) return json;
     // Clé refusée (10, 26) ou autre erreur définitive : inutile de continuer l'import
     const retryable = res.status >= 500 || res.status === 429 || (json.error !== undefined && RETRYABLE.has(json.error));
     if (!retryable || attempt === MAX_ATTEMPTS) {
@@ -55,6 +62,18 @@ export async function fetchLastfmAlbum(artist: string, title: string): Promise<L
     }
     await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
   }
+}
+
+// Un album seul (titre et artiste débarrassés des signes typographiques que Last.fm ne reconnaît pas)
+export async function fetchLastfmAlbum(artist: string, title: string): Promise<LastfmStats | null> {
+  const json = await lastfmGet<AlbumInfoResponse>({ method: "album.getinfo", artist: lastfmText(artist), album: lastfmText(title) });
+  return json ? parseAlbumInfo(json) : null;
+}
+
+// Tous les albums d'un artiste sur Last.fm, versions comprises, avec leurs écoutes
+export async function fetchArtistTopAlbums(artist: string) {
+  const json = await lastfmGet<TopAlbumsResponse>({ method: "artist.gettopalbums", artist: lastfmText(artist), limit: String(TOP_ALBUMS_LIMIT) });
+  return (json?.topalbums?.album ?? []).map((album) => ({ name: album.name ?? "", playcount: Number(album.playcount) || 0 }));
 }
 
 // Enregistre le résultat d'une recherche, même vide (l'album ne sera pas recherché de nouveau tout de suite)
@@ -66,13 +85,21 @@ export async function saveLastfm(albumId: string, stats: LastfmStats | null) {
   );
 }
 
-// Albums à (re)chercher : jamais cherchés, ou cherchés il y a plus de `days` jours ; les plus écoutés d'abord
-export async function albumsToCheck(days: number, limit: number) {
-  const { rows } = await db.query<{ id: string; artist: string; title: string }>(
-    `select id, artist, title from albums
-     where lastfm_checked_at is null or lastfm_checked_at < now() - make_interval(days => $1)
-     order by lastfm_checked_at nulls first, listen_count desc nulls last
-     limit $2`,
+// Artistes dont au moins un album est à (re)chercher : jamais cherché, ou cherché il y a plus de `days` jours.
+// Pour chacun, TOUS ses albums du catalogue (pour bien répartir les versions), et ceux à mettre à jour.
+async function artistsToCheck(days: number, limit: number) {
+  const { rows } = await db.query<{ artist: string; albums: Array<{ id: string; title: string; due: boolean }> }>(
+    `with due as (
+       select id from albums
+       where lastfm_checked_at is null or lastfm_checked_at < now() - make_interval(days => $1)
+       order by lastfm_checked_at nulls first, listen_count desc nulls last
+       limit $2
+     )
+     select a.artist, json_agg(json_build_object('id', a.id, 'title', a.title, 'due', a.id in (select id from due))) as albums
+     from albums a
+     where a.artist in (select artist from albums where id in (select id from due))
+     group by a.artist
+     order by max(a.listen_count) desc nulls last`,
     [days, limit],
   );
   return rows;
@@ -82,17 +109,38 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Met à jour les écoutes Last.fm du catalogue. Une erreur définitive (clé refusée...) arrête tout ;
 // relancer reprend là où on s'est arrêté, grâce à lastfm_checked_at.
-export async function syncLastfm({ days = 30, max = Infinity, log = console.log } = {}) {
-  const albums = await albumsToCheck(days, Number.isFinite(max) ? max : 1_000_000);
-  log(`Last.fm : ${albums.length} albums à vérifier.`);
+export async function syncLastfm({ days = 30, max = Infinity, log = console.log, delayMs = LASTFM_DELAY_MS } = {}) {
+  const artists = await artistsToCheck(days, Number.isFinite(max) ? max : 1_000_000);
+  const total = artists.reduce((sum, item) => sum + item.albums.filter((album) => album.due).length, 0);
+  log(`Last.fm : ${total} albums à vérifier (${artists.length} artistes).`);
+  let checked = 0;
   let found = 0;
-  for (const [index, album] of albums.entries()) {
-    const stats = await fetchLastfmAlbum(album.artist, album.title);
-    await saveLastfm(album.id, stats);
-    if (stats) found++;
-    if ((index + 1) % 100 === 0) log(`Last.fm : ${index + 1}/${albums.length}, ${found} trouvés.`);
-    await sleep(LASTFM_DELAY_MS);
+
+  for (const { artist, albums } of artists) {
+    const variants = matchVariants(albums.map((album) => album.title), await fetchArtistTopAlbums(artist));
+    await sleep(delayMs);
+
+    for (const album of albums.filter((item) => item.due)) {
+      const match = variants.get(album.title);
+      let stats: LastfmStats | null;
+      if (match) {
+        stats = { playcount: match.playcount, listeners: null };
+        if (match.playcount >= LISTENERS_MIN_PLAYCOUNT) {
+          // Auditeurs de la version la plus écoutée, étendus au total dans la même proportion que les écoutes
+          const top = await fetchLastfmAlbum(artist, match.top);
+          await sleep(delayMs);
+          if (top?.listeners && top.playcount > 0) stats.listeners = Math.round((top.listeners * match.playcount) / top.playcount);
+        }
+      } else {
+        stats = await fetchLastfmAlbum(artist, album.title);
+        await sleep(delayMs);
+      }
+      await saveLastfm(album.id, stats);
+      checked++;
+      if (stats) found++;
+      if (checked % 200 === 0) log(`Last.fm : ${checked}/${total}, ${found} trouvés.`);
+    }
   }
-  log(`Last.fm terminé : ${found} albums sur ${albums.length} trouvés.`);
-  return { checked: albums.length, found };
+  log(`Last.fm terminé : ${found} albums sur ${checked} trouvés.`);
+  return { checked, found };
 }
