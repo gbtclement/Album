@@ -25,7 +25,7 @@ export default async function PacksPage() {
       <SiteNav />
       <main className="game-page">
         {/* La pioche du jour en premier : sous les packs, il fallait faire défiler pour la voir */}
-        <div style={{ maxWidth: 420, margin: "0 auto 4px" }}>
+        <div style={{ maxWidth: 420, margin: "0 auto 18px" }}>
           <DrawBanner pending={drawPending} />
         </div>
         <PackRoom

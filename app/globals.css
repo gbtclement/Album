@@ -50,10 +50,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .game-page { max-width: 1040px; margin: 0 auto; padding: calc(var(--hud-h) + 8px) 16px calc(var(--dock-space) + env(safe-area-inset-bottom, 0px)); }
 .game-page.narrow { max-width: 720px; }
 .game-page h1, .h1 { font-family: var(--f-display); font-weight: 400; font-size: 30px; line-height: 1.1; margin: 6px 0 2px; }
-.sub { color: var(--muted); font-size: 13px; margin: 0 0 12px; font-family: var(--f-ui); letter-spacing: .02em; }
-.label { font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 22px 0 8px; display: flex; justify-content: space-between; gap: 8px; }
+.sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; font-family: var(--f-ui); letter-spacing: .02em; }
+.label { font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 28px 0 10px; display: flex; justify-content: space-between; gap: 8px; }
 .label span { letter-spacing: .02em; text-transform: none; font-weight: 600; color: var(--gold); }
-.stack { display: grid; gap: 8px; }
+.stack { display: grid; gap: 10px; }
 @media (min-width: 760px) { .stack.two { grid-template-columns: 1fr 1fr; } }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 18px 8px; grid-column: 1 / -1; }
@@ -118,10 +118,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* ---------- Barres de progression, puces, onglets internes ---------- */
 .bar { height: 8px; border-radius: 99px; background: var(--dock-edge); overflow: hidden; margin-top: 6px; }
 .bar > div { height: 100%; background: var(--c, var(--r-peu_commun)); border-radius: 99px; transition: width .4s; }
-.chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; margin: 0 -2px; scrollbar-width: none; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; margin: 0 -2px 6px; scrollbar-width: none; }
 .chip { flex: none; display: inline-flex; align-items: center; gap: 6px; border: 0; cursor: pointer; background: var(--night-3); color: var(--muted); border-radius: 999px; padding: 6px 12px; font-family: var(--f-ui); font-weight: 600; font-size: 12px; box-shadow: 0 2px 0 var(--dock-edge); text-decoration: none; }
 /* Tri : liens ou boutons discrets, celui choisi en or ; pagination et « afficher plus » sous les listes */
-.sortbar { display: flex; align-items: center; gap: 4px 12px; overflow-x: auto; scrollbar-width: none; margin: 2px 0 10px; font-family: var(--f-ui); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.sortbar { display: flex; align-items: center; gap: 4px 12px; overflow-x: auto; scrollbar-width: none; margin: 2px 0 16px; font-family: var(--f-ui); font-size: 12px; font-weight: 600; white-space: nowrap; }
 .sortbar span { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: 10px; }
 .sortbar a, .sortbar button { flex: none; background: none; border: 0; padding: 4px 0; color: var(--muted); cursor: pointer; text-decoration: none; border-bottom: 2px solid transparent; }
 .sortbar a:hover, .sortbar button:hover { color: var(--ink); }
@@ -132,7 +132,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .more { display: flex; justify-content: center; margin-top: 14px; }
 .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--muted)); }
 .chip[aria-pressed="true"], .chip[aria-current="page"] { background: var(--dock); color: var(--ink); outline: 2px solid var(--c, var(--gold)); outline-offset: -2px; }
-.seg { display: flex; gap: 4px; padding: 4px; background: var(--dock-edge); border-radius: 14px; margin: 4px 0 12px; }
+.seg { display: flex; gap: 4px; padding: 4px; background: var(--dock-edge); border-radius: 14px; margin: 4px 0 16px; }
 .seg > * { flex: 1; border: 0; background: transparent; color: var(--muted); padding: 8px 6px; border-radius: 10px; cursor: pointer; font-family: var(--f-ui); font-weight: 700; font-size: 13px; text-align: center; text-decoration: none; }
 .seg > [aria-current="page"], .seg > [aria-pressed="true"] { background: var(--dock); color: var(--ink); box-shadow: 0 3px 0 #0f0c22; }
 .seg b { font-family: var(--f-display); font-weight: 400; color: var(--coral); margin-left: 4px; }
@@ -269,15 +269,19 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .spark { width: 70px; height: 26px; flex: none; }
 
 /* ---------- Packs ---------- */
-.big-pack { display: grid; justify-items: center; gap: 12px; padding-top: 10px; text-align: center; }
-.big-pack .disc { position: relative; width: 160px; height: 160px; border-radius: 50%; border: 6px solid var(--gold); box-shadow: 0 8px 0 var(--gold-deep), 0 0 60px rgba(244,183,64,.25); overflow: hidden; }
+.big-pack { display: grid; justify-items: center; gap: 18px; padding-top: 10px; text-align: center; }
+.big-pack > .sub { margin: -10px 0 0; }
+.big-pack > .pack-help { margin: 0; max-width: 360px; line-height: 1.5; }
+/* Le vinyle a une tranche de 8 px dessous : marge en plus pour qu'il ne touche pas les boutons */
+.big-pack .disc { position: relative; width: 160px; height: 160px; margin: 8px 0 14px; border-radius: 50%; border: 6px solid var(--gold); box-shadow: 0 8px 0 var(--gold-deep), 0 0 60px rgba(244,183,64,.25); overflow: hidden; }
 .disc-rot { position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, #1a1730 0 3px, #29244c 3px 5px); display: grid; place-items: center; animation: spin 6s linear infinite; }
 .big-pack .hub { width: 54px; height: 54px; }
 .hub { position: relative; display: block; border-radius: 50%; background: radial-gradient(circle, var(--night) 0 12%, var(--coral) 13%); }
 .hub::after { content: ""; position: absolute; top: 14%; left: 50%; width: 12%; height: 12%; transform: translateX(-50%); border-radius: 50%; background: rgba(255,255,255,.85); }
 .sheen { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; background: conic-gradient(from 20deg, transparent 0 30deg, rgba(255,255,255,.13) 55deg, transparent 80deg 200deg, rgba(255,255,255,.08) 225deg, transparent 250deg); }
-.pack-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
-.rates { width: 100%; max-width: 360px; display: grid; gap: 6px; text-align: left; }
+.pack-actions { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-bottom: 4px; }
+.rates { width: 100%; max-width: 360px; display: grid; gap: 8px; text-align: left; }
+.big-pack .rates { margin-top: 8px; }
 .rate { display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 13px; align-items: center; }
 .rate span { display: flex; align-items: center; gap: 8px; }
 .rate i { width: 10px; height: 10px; border-radius: 3px; background: var(--rar); }
@@ -361,7 +365,7 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .pass-xp-chip b { font-family: var(--f-display); font-weight: 400; color: var(--rar); }
 .pass-xp-chip b::after { content: " XP"; font-family: var(--f-ui); font-size: 11px; color: var(--muted); }
 @keyframes spin { to { rotate: 360deg; } }
-.pack-stock { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: -6px; }
+.pack-stock { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .pack-stock span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--night-3); }
 .btn.lg.solo { background: var(--coral); color: #fff; box-shadow: 0 5px 0 var(--coral-deep); }
 .btn.lg.epic { background: var(--r-epique); color: #fff; box-shadow: 0 5px 0 #7a3fb0; }

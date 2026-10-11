@@ -105,7 +105,7 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
           </button>
         ))}
       </div>
-      <p className="sub" style={{ margin: 0 }}>
+      <p className="sub pack-help">
         Un pack contient {PACK_SIZE} albums, un pack Solo un seul. Les packs Épique et Légendaire garantissent une carte de leur rareté.
       </p>
       <label className="auto-row">
