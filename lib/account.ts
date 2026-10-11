@@ -36,7 +36,7 @@ export async function exportUserData(userId: string) {
     `select pseudo, email, email_verified_at as email_verifie_le, created_at as inscrit_le,
             terms_accepted_at as cgu_acceptees_le, last_seen_at as derniere_visite,
             case when password_hash is null then 'Google' else 'e-mail et mot de passe' end as connexion,
-            coins as pieces, auto_reveal as reglage_revelation_auto
+            coins as pieces, auto_reveal as reglage_revelation_auto, premium_until as premium_jusqu_au
      from users where id = $1`,
     userId,
   );
@@ -45,7 +45,8 @@ export async function exportUserData(userId: string) {
   const [packs, collection, openings, friends, trades, listings, quests, draws, sets, achievements, links] = await Promise.all([
     rows(
       `select stock as packs_en_reserve, last_recharged_at as dernier_rechargement,
-              bonus_packs as packs_gagnes, solo_packs as packs_solo
+              bonus_packs as packs_gagnes, solo_packs as packs_solo,
+              epic_packs as packs_epiques, legendary_packs as packs_legendaires
        from pack_stocks where user_id = $1`,
       userId,
     ),

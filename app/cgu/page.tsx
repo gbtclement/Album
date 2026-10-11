@@ -33,6 +33,14 @@ export default function CguPage() {
         ne se remboursent pas et ne s&apos;échangent pas contre de l&apos;argent réel, ni dans le jeu ni en dehors. Elles ne servent qu&apos;à jouer.
       </p>
       <p>
+        Le marché garde 5 % du prix de chaque vente contre des pièces : cette part disparaît du jeu, pour que les pièces gardent leur valeur.
+        Les échanges directs entre joueurs ne sont pas taxés.
+      </p>
+      <p>
+        Le statut premium est pour l&apos;instant attribué gratuitement par l&apos;éditeur, sans paiement. Il donne des avantages de jeu
+        (stock de packs plus grand) et peut être retiré ou modifié.
+      </p>
+      <p>
         Pour garder le jeu équilibré, les règles peuvent évoluer : rythme des packs, récompenses, prix, rareté des cartes (qui suit les écoutes
         réelles des albums). Ces changements ne donnent droit à aucune compensation.
       </p>

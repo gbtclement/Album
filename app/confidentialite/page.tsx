@@ -36,7 +36,10 @@ export default function ConfidentialitePage() {
           proposer un pseudo). Nous ne recevons jamais ton mot de passe Google.
         </li>
         <li>
-          <strong>Ta partie</strong> : cartes, pièces, packs ouverts, quêtes, succès, pioches du jour, amis, échanges et annonces du marché, et tes réglages.
+          <strong>Ta partie</strong> : cartes, pièces, packs ouverts et gagnés, quêtes, succès, pioches du jour, amis, échanges et annonces du marché, et tes réglages.
+        </li>
+        <li>
+          <strong>Statut premium</strong> : sa date de fin, s&apos;il t&apos;a été attribué. Aucune donnée de paiement n&apos;est collectée.
         </li>
         <li>
           <strong>Sécurité</strong> : ton adresse IP, gardée au plus une heure, pour bloquer les robots qui essaient beaucoup de mots de

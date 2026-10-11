@@ -31,8 +31,12 @@ describe("données personnelles (RGPD)", () => {
     await db.query("insert into pack_openings (user_id, album_ids) values ($1, $2)", [user.id, [album.id]]);
     await db.query("insert into friendships (requester_id, addressee_id, status) values ($1, $2, 'accepted')", [user.id, friend.id]);
     await db.query("insert into password_resets (user_id, token_hash, expires_at) values ($1, 'empreinte-secrete', now() + interval '1 hour')", [user.id]);
+    await db.query("insert into pack_stocks (user_id, epic_packs, legendary_packs) values ($1, 2, 1)", [user.id]);
+    await db.query("update users set premium_until = now() + interval '30 days' where id = $1", [user.id]);
 
     const data = await exportUserData(user.id);
+    expect(data?.packs).toMatchObject({ packs_epiques: 2, packs_legendaires: 1 });
+    expect(data?.compte.premium_jusqu_au).toBeInstanceOf(Date);
     expect(data?.compte).toMatchObject({ pseudo: user.pseudo, email: user.email, connexion: "e-mail et mot de passe" });
     expect(data?.collection).toEqual([expect.objectContaining({ exemplaires: 2, artiste: "Artiste de test" })]);
     expect(data?.ouvertures_de_packs[0].albums).toEqual([expect.stringContaining("Artiste de test")]);

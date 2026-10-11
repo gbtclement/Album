@@ -48,12 +48,12 @@ const ROUTES = [
 ];
 
 const TABLES = [
-  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement), dates d'acceptation des CGU, de dernière visite et d'avertissement d'inactivité" },
+  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement), dates d'acceptation des CGU, de dernière visite et d'avertissement d'inactivité, fin du premium (premium_until, null si jamais premium)" },
   { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
   { name: "password_resets", description: "Lien de réinitialisation du mot de passe en cours par joueur (empreinte SHA-256 du jeton, expiration 1 h)" },
   { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
   { name: "albums", description: "Catalogue : identifiant MusicBrainz, titre, artiste, pochette, écoutes et auditeurs ListenBrainz, palier de rareté, liens d'écoute" },
-  { name: "pack_stocks", description: "Stock de packs par joueur et date de la dernière recharge, plus les packs gagnés : bonus_packs (classiques) et solo_packs (1 album), sans maximum" },
+  { name: "pack_stocks", description: "Stock de packs par joueur et date de la dernière recharge, plus les packs gagnés : bonus_packs (classiques), solo_packs (1 album), epic_packs et legendary_packs, sans maximum. Le stock est limité à 15 en base ; le maximum de chaque joueur (10, 15 en premium) est appliqué par lib/packs.ts" },
   { name: "user_albums", description: "Collection : une ligne par album possédé, avec le nombre d'exemplaires" },
   { name: "pack_openings", description: "Historique des ouvertures de packs" },
   { name: "friendships", description: "Amitiés et demandes d'amis, une ligne par paire de joueurs" },
@@ -97,6 +97,7 @@ const COMMANDS = [
   { command: "npm run import:lastfm", description: "Récupérer les écoutes Last.fm des albums jamais vérifiés ou vérifiés il y a plus de 30 jours (clé LASTFM_API_KEY dans .env, environ 4 albums par seconde). Options --days 0 pour tout le catalogue, --max 200 pour un essai" },
   { command: "npm run check:covers", description: "Vérifier que chaque pochette s'affiche encore et remplacer celles en panne (Cover Art Archive, sinon Deezer). Option --max 200 pour un essai" },
   { command: "npm run purge:inactive", description: "Comptes inactifs : e-mail d'avertissement à 3 ans moins 30 jours sans visite, suppression 30 jours après, liens e-mail expirés effacés. À lancer chaque jour en production. Option --dry-run pour compter sans rien faire" },
+  { command: "npm run premium -- <email> <jours>", description: "Compte premium attribué à la main (pas encore de paiement) : ajoute N jours à partir de la fin du premium en cours ; 0 retire le premium" },
   { command: "npm run seed:demo", description: "Créer des données de démonstration (compte demo@demo.invalid / demo-album, 8 autres joueurs, marché, bourse, échanges). Refusé en production" },
 ];
 
@@ -136,6 +137,7 @@ const LOTS = [
   { lot: "C12", name: "Correctif : écoutes Last.fm sur la fiche album (chiffres plus parlants, source indiquée), npm run import:lastfm, récupérées aussi à la fin de l'import du catalogue ; la rareté reste sur ListenBrainz", status: "Terminé", branch: "correctif12-lastfm" },
   { lot: "R1", name: "Données personnelles (RGPD) : mentions légales, politique de confidentialité, CGU, case d'acceptation à l'inscription, téléchargement des données, suppression du compte, suppression des comptes inactifs depuis 3 ans", status: "Terminé", branch: "rgpd1-donnees" },
   { lot: "C13", name: "Correctif : les packs Solo (1 album) ne font plus avancer les quêtes « Ouvre N packs » ; les packs de 5 cartes, du stock ou gagnés, comptent toujours", status: "Terminé", branch: "correctif13-quetes-packs" },
+  { lot: "P1", name: "Packs Épique et Légendaire (5 cartes, une de leur rareté garantie), compte premium attribué à la main (npm run premium) avec un stock de 15 packs, taxe de 5 % détruite sur les ventes du marché", status: "Terminé", branch: "passe1-packs-premium" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -252,7 +254,22 @@ export default function DocumentationPage() {
               <strong>Packs gagnés :</strong> les récompenses (quêtes, séries de la pioche, grands sets d&apos;artiste) vont dans une réserve à part,
               sans maximum : packs classiques (5 albums) et packs Solo (1 album). « Ouvrir un pack » prend d&apos;abord un pack du stock qui se
               recharge, puis un pack gagné. La barre du haut affiche les packs gagnés en « +N ». Les quêtes « Ouvre N packs » comptent
-              tous les packs de 5 cartes (stock ou gagnés), pas les packs Solo d&apos;un album.
+              tous les packs de 5 cartes (stock ou gagnés, Épique et Légendaire compris), pas les packs Solo d&apos;un album.
+            </li>
+            <li>
+              <strong>Packs Épique et Légendaire :</strong> 5 cartes, dont la première est tirée dans le palier garanti (épique ou légendaire,
+              repli sur le palier voisin si le catalogue n&apos;en a pas) ; les 4 autres suivent les chances habituelles. Gagnés seulement en
+              récompense (passe de combat), ils vont dans la réserve des packs gagnés.
+            </li>
+            <li>
+              <strong>Premium :</strong> attribué à la main (<code>npm run premium</code>), sans paiement pour l&apos;instant
+              (<code>lib/premium.ts</code>). Avantage : stock de 15 packs au lieu de 10. Un premium expiré garde ses packs au-dessus de 10,
+              la recharge reprend quand il redescend sous 10.
+            </li>
+            <li>
+              <strong>Taxe du marché :</strong> le vendeur reçoit le prix moins 5 % (arrondi à l&apos;unité inférieure,
+              <code>lib/market-rules.ts</code>) ; la taxe disparaît du jeu pour freiner l&apos;inflation des pièces. La Bourse garde le prix
+              payé par l&apos;acheteur. Les échanges directs ne sont pas taxés.
             </li>
             <li>
               <strong>Ouverture :</strong> un pack à la fois (plus de « Tout ouvrir »), et une carte à la fois, de la moins rare à la plus rare.
@@ -384,7 +401,7 @@ export default function DocumentationPage() {
               <strong>Cookies :</strong> seulement ceux d&apos;Auth.js (session, sécurité de la connexion), strictement nécessaires : pas de bandeau. Polices et pochettes servies par le site (<code>next/font</code>, <code>next/image</code>) : le navigateur ne contacte aucun tiers. Ajouter une mesure d&apos;audience ou de la publicité imposerait un bandeau de consentement.
             </li>
             <li>
-              <strong>Avant la mise en ligne :</strong> remplir les trois variables <code>LEGAL_*</code> ; choisir un hébergeur et un service d&apos;e-mails situés dans l&apos;Union européenne ; garder les sauvegardes de la base 30 jours au plus (promis dans la politique) ; programmer <code>purge:inactive</code> ; tenir le registre des traitements (une page suffit : finalités, données, durées, prestataires, reprendre la politique de confidentialité).
+              <strong>Avant la mise en ligne :</strong> remplir les trois variables <code>LEGAL_*</code> ; choisir un hébergeur et un service d&apos;e-mails situés dans l&apos;Union européenne ; garder les sauvegardes de la base 30 jours au plus (promis dans la politique) ; programmer <code>purge:inactive</code> ; tenir le registre des traitements (une page suffit : finalités, données, durées, prestataires, reprendre la politique de confidentialité). Avant de faire payer le premium : paiement (Stripe), CGV, droit de rétractation, factures, TVA et résiliation en ligne.
             </li>
           </ul>
         </Section>
