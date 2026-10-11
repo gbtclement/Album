@@ -124,6 +124,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .game-page input::placeholder { color: var(--muted); }
 .form-grid { display: grid; gap: 14px; }
 .form-card { background: var(--night-2); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 10px; }
+.premium-tag { display: inline-block; margin: 6px 0 0; padding: 3px 10px; border-radius: 999px; background: var(--gold); color: #2b1d02; font-family: var(--f-ui); font-weight: 700; font-size: 12px; box-shadow: 0 2px 0 var(--gold-deep); }
 .field-hint { color: var(--muted); font-size: 13px; margin-top: -4px; }
 .form-card legend, .form-card h2 { font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 4px; }
 .field-label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); font-family: var(--f-ui); font-weight: 600; }
@@ -198,6 +199,8 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 /* Petit vinyle des récompenses : bord doré pour un pack classique, corail pour un pack Solo */
 .vinyl-i { flex: none; display: inline-block; width: 15px; height: 15px; border-radius: 50%; background: radial-gradient(circle, var(--coral) 0 2px, #1a1730 2px 3px, #2c2850 3px); border: 2px solid var(--gold); }
 .vinyl-i.solo { border-color: var(--coral); }
+.vinyl-i.epic { border-color: var(--r-epique); }
+.vinyl-i.legendary { border-color: #ffe08a; box-shadow: 0 0 6px rgba(244,183,64,.7); }
 
 /* ---------- Classement ---------- */
 .podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 8px; margin: 8px auto 14px; max-width: 480px; }
@@ -260,6 +263,8 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .pack-stock { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: -6px; }
 .pack-stock span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--night-3); }
 .btn.lg.solo { background: var(--coral); color: #fff; box-shadow: 0 5px 0 var(--coral-deep); }
+.btn.lg.epic { background: var(--r-epique); color: #fff; box-shadow: 0 5px 0 #7a3fb0; }
+.btn.lg.legendary { background: linear-gradient(135deg, #ffe08a, var(--gold)); color: #2b1d02; box-shadow: 0 5px 0 var(--gold-deep), 0 0 18px rgba(244,183,64,.45); }
 
 /* Chargement d'une page : vinyle au centre de l'écran */
 .page-loader { position: fixed; inset: 0; z-index: 20; display: grid; place-content: center; justify-items: center; gap: 12px; }

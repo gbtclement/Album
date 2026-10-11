@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { CardsIcon, CartIcon, PodiumIcon, SwapIcon, TrendIcon, TrophyIcon, UserPlusIcon, UsersIcon } from "@/components/icons";
-import { MAX_STOCK, PACK_INTERVAL_MS } from "@/lib/pack-rules";
+import { PACK_INTERVAL_MS } from "@/lib/pack-rules";
 
 // Temps restant avant le prochain pack, mis à jour chaque seconde.
 // À zéro, la page est rechargée côté serveur pour que le stock soit recalculé.
@@ -115,8 +115,9 @@ export function Dock({ stock, extra, nextPackAt, questsReady, social, collection
     trayRef.current?.querySelector("a")?.focus({ preventScroll: true });
   }, [open]);
 
-  // Anneau du vinyle : part du délai déjà écoulée avant le prochain pack
-  const progress = stock >= MAX_STOCK || !nextPackAt ? 100 : Math.round((1 - remaining / PACK_INTERVAL_MS) * 100);
+  // Anneau du vinyle : part du délai déjà écoulée avant le prochain pack (plein quand le stock est au maximum :
+  // nextPackAt est alors null, que le maximum soit 10 ou 15 en premium)
+  const progress = !nextPackAt ? 100 : Math.round((1 - remaining / PACK_INTERVAL_MS) * 100);
   const groupActive = (group: Group) => group.items.some((item) => isActive(pathname, item.href));
 
   const groupButton = (key: "marche" | "social", badge = 0) => {

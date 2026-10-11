@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { CoverImage } from "@/components/cover-image";
 import { smallCover } from "@/components/game-ui";
 import { useCallback, useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
-import { MAX_STOCK, PACK_RATES, PACK_SIZE, type PackKind } from "@/lib/pack-rules";
+import { PACK_LABELS, PACK_RATES, PACK_SIZE, type PackKind } from "@/lib/pack-rules";
 import type { PackCard } from "@/lib/packs";
 import { RARITY_LABELS, RARITY_TIERS, type RarityTier } from "@/lib/rarity";
-import { openPackAction, setAutoRevealAction } from "./actions";
+import { openPackAction, setAutoRevealAction, type Stocks } from "./actions";
 
 const tierRank = (tier: RarityTier) => RARITY_TIERS.indexOf(tier);
 const NOTE_GLYPHS = ["♪", "♫", "♪", "♬", "♪", "♫", "♪"];
@@ -16,7 +16,16 @@ type Note = { glyph: string; x: number; dx: number; r: number; d: number };
 type DrawnCard = PackCard & { notes: Note[] };
 // id : numéro de l'ouverture, pour repartir de zéro à chaque nouveau pack sans recréer tout l'écran
 type Opening = { id: number; kind: PackKind; cards: DrawnCard[] | null; error?: string };
-type Stocks = { stock: number; bonus: number; solo: number };
+
+// Packs gagnés autres que classiques : bouton d'ouverture, classe de couleur et libellé de la réserve
+const SPECIAL_PACKS: Array<{ kind: "legendary" | "epic" | "solo"; button: string; one: string; many: string }> = [
+  { kind: "legendary", button: "Ouvrir un Légendaire", one: "pack Légendaire", many: "packs Légendaires" },
+  { kind: "epic", button: "Ouvrir un Épique", one: "pack Épique", many: "packs Épiques" },
+  { kind: "solo", button: "Ouvrir un Solo", one: "pack Solo", many: "packs Solo" },
+];
+
+// Classe du bouton « Encore un » selon le type de pack
+const AGAIN_CLASS: Record<PackKind, string> = { classic: "gold", solo: "solo", epic: "epic", legendary: "legendary" };
 
 // Trajets des notes de musique d'une carte légendaire, tirés au moment de l'ouverture
 function legendNotes(): Note[] {
@@ -72,12 +81,14 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
     <div className="big-pack">
       <h1>Packs</h1>
       <p className="sub">
-        {current.stock > 0 ? `${current.stock} pack${current.stock > 1 ? "s" : ""} prêt${current.stock > 1 ? "s" : ""}` : "Aucun pack prêt"} · +1 toutes les 5 min · {MAX_STOCK} max
+        {current.stock > 0 ? `${current.stock} pack${current.stock > 1 ? "s" : ""} prêt${current.stock > 1 ? "s" : ""}` : "Aucun pack prêt"} · +1 toutes les 5 min · {current.max} max
       </p>
-      {(current.bonus > 0 || current.solo > 0) && (
+      {(current.bonus > 0 || SPECIAL_PACKS.some((pack) => current[pack.kind] > 0)) && (
         <div className="pack-stock">
           {current.bonus > 0 && <span><i className="vinyl-i" aria-hidden="true" />{current.bonus} pack{current.bonus > 1 ? "s" : ""} gagné{current.bonus > 1 ? "s" : ""}</span>}
-          {current.solo > 0 && <span><i className="vinyl-i solo" aria-hidden="true" />{current.solo} pack{current.solo > 1 ? "s" : ""} Solo</span>}
+          {SPECIAL_PACKS.filter((pack) => current[pack.kind] > 0).map((pack) => (
+            <span key={pack.kind}><i className={`vinyl-i ${pack.kind}`} aria-hidden="true" />{current[pack.kind]} {current[pack.kind] > 1 ? pack.many : pack.one}</span>
+          ))}
         </div>
       )}
       <div className="disc">
@@ -88,11 +99,15 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
         <button type="button" className="btn lg gold" disabled={classic < 1 || opening !== null} onClick={() => open("classic")}>
           Ouvrir un pack{classic > 0 ? ` (${classic})` : ""}
         </button>
-        {current.solo > 0 && (
-          <button type="button" className="btn lg solo" disabled={opening !== null} onClick={() => open("solo")}>Ouvrir un Solo ({current.solo})</button>
-        )}
+        {SPECIAL_PACKS.filter((pack) => current[pack.kind] > 0).map((pack) => (
+          <button key={pack.kind} type="button" className={`btn lg ${pack.kind}`} disabled={opening !== null} onClick={() => open(pack.kind)}>
+            {pack.button} ({current[pack.kind]})
+          </button>
+        ))}
       </div>
-      <p className="sub" style={{ margin: 0 }}>Un pack contient {PACK_SIZE} albums, un pack Solo un seul. Les quêtes en rapportent.</p>
+      <p className="sub" style={{ margin: 0 }}>
+        Un pack contient {PACK_SIZE} albums, un pack Solo un seul. Les packs Épique et Légendaire garantissent une carte de leur rareté.
+      </p>
       <label className="auto-row">
         <button type="button" className="toggle" role="switch" aria-checked={autoReveal} aria-label="Révéler les cartes automatiquement" onClick={toggleAuto} />
         Révéler les cartes automatiquement
@@ -116,7 +131,7 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
             opening={opening}
             autoReveal={autoReveal}
             reduced={reduced}
-            left={opening.kind === "solo" ? current.solo : classic}
+            left={opening.kind === "classic" ? classic : current[opening.kind]}
             onClose={close}
             onAgain={() => open(opening.kind)}
           />
@@ -238,7 +253,7 @@ function PackOpening({
       ) : (
         cards && card && dealt && (
           <>
-            <h2 className="op-title">{opening.kind === "solo" ? "Pack Solo" : "Pack"}</h2>
+            <h2 className="op-title">{PACK_LABELS[opening.kind]}</h2>
             {total > 1 && (
               <div className="op-dots" aria-label={`Carte ${index + 1} sur ${total}`}>
                 {cards.map((item, i) => (
@@ -322,7 +337,7 @@ function PackOpening({
               {allFlipped && (
                 <>
                   <button type="button" className="btn lg alt" onClick={onClose}>Continuer</button>
-                  {left > 0 && <button type="button" className={`btn lg ${opening.kind === "solo" ? "solo" : "gold"}`} onClick={onAgain}>Encore un ({left})</button>}
+                  {left > 0 && <button type="button" className={`btn lg ${AGAIN_CLASS[opening.kind]}`} onClick={onAgain}>Encore un ({left})</button>}
                 </>
               )}
             </div>

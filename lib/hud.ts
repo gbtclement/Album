@@ -10,8 +10,10 @@ export type HudData = {
   coins: number;
   cards: number;
   stock: number;
+  // Stock maximum : 10, ou 15 pour un compte premium
+  max: number;
   nextPackAt: string | null;
-  // Packs gagnés (classiques + Solo), en plus du stock qui se recharge
+  // Packs gagnés (classiques, Solo, Épique, Légendaire), en plus du stock qui se recharge
   extraPacks: number;
   drawPending: boolean;
   questsReady: number;
@@ -47,8 +49,9 @@ export async function getHudData(userId: string): Promise<HudData> {
     coins: user.rows[0]?.coins ?? 0,
     cards: user.rows[0]?.cards ?? 0,
     stock: pack.stock,
+    max: pack.max,
     nextPackAt: pack.nextPackAt ? pack.nextPackAt.toISOString() : null,
-    extraPacks: pack.bonus + pack.solo,
+    extraPacks: pack.bonus + pack.solo + pack.epic + pack.legendary,
     drawPending,
     // Pastille Quêtes : récompenses à réclamer, plus la pioche du jour tant qu'elle n'est pas jouée
     questsReady: quests.filter((quest) => !quest.claimed && quest.progress >= quest.target).length + (drawPending ? 1 : 0),

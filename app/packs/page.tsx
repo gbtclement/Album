@@ -28,7 +28,10 @@ export default async function PacksPage() {
         <div style={{ maxWidth: 420, margin: "0 auto 4px" }}>
           <DrawBanner pending={drawPending} />
         </div>
-        <PackRoom stocks={{ stock: state.stock, bonus: state.bonus, solo: state.solo }} autoReveal={settings.rows[0]?.auto_reveal ?? false} />
+        <PackRoom
+          stocks={{ stock: state.stock, max: state.max, bonus: state.bonus, solo: state.solo, epic: state.epic, legendary: state.legendary }}
+          autoReveal={settings.rows[0]?.auto_reveal ?? false}
+        />
       </main>
     </>
   );

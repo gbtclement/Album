@@ -3,7 +3,6 @@ import { auth } from "@/auth";
 import { Dock, PackTimer, Toast } from "@/components/game-nav";
 import { Avatar, formatNumber } from "@/components/game-ui";
 import { SparkIcon } from "@/components/icons";
-import { MAX_STOCK } from "@/lib/pack-rules";
 import { getHudData } from "@/lib/hud";
 
 // Habillage commun des pages : barre d'infos en haut (profil, pièces, packs), barre de jeu en bas,
@@ -55,7 +54,7 @@ export async function SiteNav({ message }: { message?: string } = {}) {
           </span>
           <Link href="/packs" className="res" title="Packs disponibles">
             <i className="mini-vinyl" aria-hidden="true" />
-            {hud.stock}/{MAX_STOCK}
+            {hud.stock}/{hud.max}
             {hud.extraPacks > 0 && <span className="res-extra" title="Packs gagnés">+{hud.extraPacks}</span>}
             <PackTimer nextPackAt={hud.nextPackAt} />
           </Link>
