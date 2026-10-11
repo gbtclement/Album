@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { auth } from "@/auth";
 import { formatNumber } from "@/components/game-ui";
+import { CheckIcon, CrownIcon, DiscIcon, LockIcon } from "@/components/icons";
 import { SiteNav } from "@/components/site-nav";
 import { claimKey, getPassState } from "@/lib/pass";
 import { PASS_REWARDS, PASS_TIERS, PASS_XP, passRewardLabel, XP_PER_TIER, type PassReward, type PassTrack } from "@/lib/pass-rules";
@@ -17,24 +18,15 @@ type Props = {
   searchParams: Promise<{ message?: string }>;
 };
 
-// Petit vinyle de la récompense (couleur selon le type de pack) et nombre
-function RewardIcon({ reward }: { reward: PassReward }) {
-  const [kind, count] = reward.legendary
-    ? ["legendary", reward.legendary]
-    : reward.epic
-      ? ["epic", reward.epic]
-      : reward.classic
-        ? ["", reward.classic]
-        : ["solo", reward.solo ?? 0];
-  return (
-    <span className="pass-reward">
-      <i className={`vinyl-i ${kind}`} aria-hidden="true" />
-      {count > 1 && <b>×{count}</b>}
-    </span>
-  );
+// Type de pack d'une récompense (pour sa couleur), son nom court et le nombre
+function rewardKind(reward: PassReward) {
+  if (reward.legendary) return { kind: "legendary", name: "Légendaire", count: reward.legendary };
+  if (reward.epic) return { kind: "epic", name: "Épique", count: reward.epic };
+  if (reward.classic) return { kind: "classic", name: "Pack", count: reward.classic };
+  return { kind: "solo", name: "Solo", count: reward.solo ?? 0 };
 }
 
-function daysLeft(endsAt: Date) {
+function timeLeft(endsAt: Date) {
   const hours = Math.max(0, Math.floor((endsAt.getTime() - Date.now()) / 3_600_000));
   if (hours >= 48) return `${Math.floor(hours / 24)} jours`;
   if (hours >= 1) return `${hours} h`;
@@ -49,25 +41,32 @@ export default async function PassePage({ searchParams }: Props) {
   const pass = await getPassState(session.user.id);
   const maxed = pass.level >= PASS_TIERS;
   const inTier = maxed ? XP_PER_TIER : pass.xp % XP_PER_TIER;
+  const current = Math.min(PASS_TIERS, pass.level + 1);
+  const month = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" }).format(pass.endsAt.getTime() - 86_400_000);
 
   function cell(tier: number, track: PassTrack, reward: PassReward) {
     const reached = tier <= pass.level;
     const claimed = pass.claimed.has(claimKey(tier, track));
     const locked = track === "premium" && !pass.premium;
-    const label = passRewardLabel(reward);
     const state = claimed ? "claimed" : locked ? "locked" : reached ? "ready" : "todo";
+    const { kind, name, count } = rewardKind(reward);
+    const label = passRewardLabel(reward);
     return (
-      <div className={`pass-cell ${track} ${state}`} title={label}>
-        <RewardIcon reward={reward} />
-        {state === "ready" ? (
+      <div className={`pass-cell ${track} ${state} kind-${kind}`}>
+        <span className="pass-pack" aria-hidden="true">
+          <i className="pass-pack-disc" />
+          {count > 1 && <b>×{count}</b>}
+        </span>
+        <span className="pass-pack-name">{name}</span>
+        {state === "ready" && (
           <form action={claimPassTierAction}>
             <input type="hidden" name="tier" value={tier} />
             <input type="hidden" name="track" value={track} />
-            <button type="submit" className="btn gold" aria-label={`Réclamer ${label} (palier ${tier})`}>Prendre</button>
+            <button type="submit" className="pass-take" aria-label={`Prendre ${label} (palier ${tier})`}>Prendre</button>
           </form>
-        ) : (
-          <span className="pass-state">{claimed ? "✓" : locked ? "🔒" : label.replace(/^1 /, "")}</span>
         )}
+        {state === "claimed" && <span className="pass-badge ok" title="Récupéré"><CheckIcon /><span className="sr-only">Récupéré</span></span>}
+        {state === "locked" && <span className="pass-badge lock" title="Premium"><LockIcon /><span className="sr-only">Réservé au premium</span></span>}
       </div>
     );
   }
@@ -76,67 +75,80 @@ export default async function PassePage({ searchParams }: Props) {
     <>
       <SiteNav message={message} />
       <main className="game-page">
-        <h1>Passe de combat</h1>
-        <p className="sub">Chaque carte obtenue rapporte de l&apos;XP. Fin de la saison dans {daysLeft(pass.endsAt)}.</p>
-
-        <div className="pass-head">
-          <span className="pass-level"><small>Niv.</small>{pass.level}</span>
-          <div className="pass-xp">
-            <div className="bar">
-              <div style={{ width: `${(inTier / XP_PER_TIER) * 100}%`, "--c": "var(--r-epique)" } as CSSProperties} />
-            </div>
-            <span>
-              {maxed ? `Passe terminé · ${formatNumber(pass.xp)} XP` : `${formatNumber(inTier)} / ${formatNumber(XP_PER_TIER)} XP vers le palier ${pass.level + 1}`}
+        <section className="pass-hero">
+          {/* Vinyle du niveau : l'anneau autour se remplit vers le palier suivant */}
+          <div className="pass-disc" style={{ "--p": `${(inTier / XP_PER_TIER) * 100}%` } as CSSProperties}>
+            <span className="pass-disc-vinyl">
+              <span className="pass-disc-label"><small>Niv.</small>{pass.level}</span>
             </span>
           </div>
+          <div className="pass-hero-text">
+            <p className="pass-season">Saison {/^[aeiou]/.test(month) ? "d'" : "de "}{month}</p>
+            <h1>Passe de combat</h1>
+            <p className="pass-hero-xp">
+              {maxed ? <>Passe terminé · <b>{formatNumber(pass.xp)} XP</b></> : <><b>{formatNumber(inTier)}</b> / {formatNumber(XP_PER_TIER)} XP vers le palier {current}</>}
+            </p>
+            <p className="pass-hero-end">Fin dans {timeLeft(pass.endsAt)}</p>
+          </div>
           {pass.claimable > 0 && (
-            <form action={claimAllPassAction}>
-              <button type="submit" className="btn gold">Tout réclamer ({pass.claimable})</button>
+            <form action={claimAllPassAction} className="pass-hero-claim">
+              <button type="submit" className="btn gold lg">Tout réclamer ({pass.claimable})</button>
             </form>
           )}
-        </div>
+        </section>
 
-        <div className="pass-track" id="pass-track">
-          <div className="pass-col pass-legend">
-            <span className="pass-tier" />
-            <span className="pass-row-label">Gratuit</span>
-            <span className="pass-row-label premium">Premium</span>
+        <div className="pass-board">
+          <div className="pass-rows" aria-hidden="true">
+            <span className="pass-row-head" />
+            <span className="pass-row free"><DiscIcon />Gratuit</span>
+            <span className="pass-row premium"><CrownIcon />Premium</span>
           </div>
-          {PASS_REWARDS.map((row) => (
-            <div
-              key={row.tier}
-              className={`pass-col${row.tier <= pass.level ? " reached" : ""}`}
-              data-current={row.tier === Math.min(PASS_TIERS, pass.level + 1) ? "" : undefined}
-              // Ligne de progression : pleine pour les paliers atteints, en partie pour celui en cours
-              style={{ "--f": `${row.tier <= pass.level ? 100 : row.tier === pass.level + 1 ? (inTier / XP_PER_TIER) * 100 : 0}%` } as CSSProperties}
-            >
-              <span className="pass-tier">{row.tier}</span>
-              {cell(row.tier, "free", row.free)}
-              {cell(row.tier, "premium", row.premium)}
-            </div>
-          ))}
+          <div className="pass-track" id="pass-track" tabIndex={0} aria-label="Paliers du passe, à faire défiler">
+            {PASS_REWARDS.map((row) => {
+              const fill = row.tier <= pass.level ? 100 : row.tier === current && !maxed ? (inTier / XP_PER_TIER) * 100 : 0;
+              return (
+                <div
+                  key={row.tier}
+                  className={`pass-col${row.tier <= pass.level ? " reached" : ""}${row.tier % 5 === 0 ? " milestone" : ""}`}
+                  data-current={row.tier === current ? "" : undefined}
+                  style={{ "--f": `${fill}%` } as CSSProperties}
+                >
+                  <span className="pass-tier">
+                    <span className="pass-num">{row.tier}</span>
+                    {row.tier === current && !maxed && <span className="pass-you">{formatNumber(pass.xp)} XP</span>}
+                  </span>
+                  {cell(row.tier, "free", row.free)}
+                  {cell(row.tier, "premium", row.premium)}
+                </div>
+              );
+            })}
+          </div>
         </div>
         <ScrollToCurrent trackId="pass-track" />
 
         {!pass.premium && (
-          <p className="pass-premium-note">
-            🔒 La ligne premium (packs en plus à chaque palier, packs Épiques et un pack Légendaire au palier 30) est réservée aux comptes
-            premium, qui ont aussi un stock de 15 packs. Devenu premium en cours de mois, tu récupères les paliers déjà atteints.
-          </p>
+          <div className="pass-upsell">
+            <CrownIcon />
+            <p>
+              <strong>Ligne premium</strong> : des packs en plus à chaque palier, 2 packs Épiques et un pack Légendaire au palier 30,
+              et un stock de 15 packs. Devenu premium en cours de mois, tu récupères les paliers déjà atteints.
+            </p>
+          </div>
         )}
 
         <h2 className="label">XP par carte</h2>
-        <div className="rates">
+        <div className="pass-xp-table">
           {[...RARITY_TIERS].reverse().map((tier) => (
-            <div key={tier} className={`rate tier-${tier}`}>
-              <span><i />{RARITY_LABELS[tier]}</span>
-              <b>{PASS_XP[tier]} XP</b>
+            <div key={tier} className={`pass-xp-chip tier-${tier}`}>
+              <i />
+              <span>{RARITY_LABELS[tier]}</span>
+              <b>{PASS_XP[tier]}</b>
             </div>
           ))}
         </div>
         <p className="sub" style={{ marginTop: 10 }}>
-          Packs du stock, packs gagnés, Solo, Épique, Légendaire et pioche du jour trouvée : toutes les cartes comptent.
-          Les paliers atteints et pas réclamés sont ajoutés à tes packs à la fin du mois. <Link href="/packs">Ouvrir des packs</Link>
+          Toutes les cartes comptent : packs du stock, packs gagnés, Solo, Épique, Légendaire et pioche du jour trouvée. Les paliers
+          atteints et pas réclamés sont ajoutés à tes packs à la fin du mois. <Link href="/packs">Ouvrir des packs</Link>
         </p>
       </main>
     </>

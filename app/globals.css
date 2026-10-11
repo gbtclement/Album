@@ -267,39 +267,83 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .rate i { width: 10px; height: 10px; border-radius: 3px; background: var(--rar); }
 .rate b { font-family: var(--f-ui); font-variant-numeric: tabular-nums; }
 
-/* Passe de combat (page /passe) : niveau, barre d'XP, frise des 30 paliers qui défile horizontalement */
-.pass-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--night-2); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
-.pass-level { flex: none; width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center; align-content: center; background: var(--r-epique); color: #fff; font-family: var(--f-display); font-size: 26px; line-height: 1; box-shadow: 0 4px 0 #7a3fb0; }
-.pass-level small { font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
-.pass-xp { flex: 1; min-width: 160px; }
-.pass-xp span { display: block; margin-top: 6px; font-family: var(--f-ui); font-size: 12px; color: var(--muted); }
-.pass-track { display: flex; gap: 6px; overflow-x: auto; margin: 14px -16px 0; padding: 8px 16px 12px; scroll-snap-type: x proximity; }
-.pass-col { flex: none; width: 74px; display: grid; grid-template-rows: 32px 86px 86px; gap: 6px; scroll-snap-align: center; }
-.pass-legend { position: sticky; left: -16px; z-index: 1; width: 78px; margin-left: -16px; padding-left: 16px; background: linear-gradient(90deg, var(--night) 85%, transparent); }
-.pass-row-label { align-self: center; font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.pass-row-label.premium { color: var(--gold); }
-.pass-col { --f: 0%; }
-.pass-tier { position: relative; display: grid; place-items: center; align-content: start; font-family: var(--f-display); font-size: 14px; color: var(--muted); }
-/* Ligne de progression continue sous les numéros (elle déborde dans l'espace entre deux colonnes) */
-.pass-tier::after { content: ""; position: absolute; left: 0; right: -6px; bottom: 0; height: 5px; background: linear-gradient(90deg, var(--r-epique) var(--f), var(--line) 0); }
+/* Passe de combat (page /passe) */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* En-tête : vinyle du niveau (anneau = progression vers le palier suivant), saison, XP, « Tout réclamer » */
+.pass-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; padding: 16px; border-radius: 22px; border: 1px solid color-mix(in srgb, var(--r-epique) 40%, var(--line)); background: radial-gradient(120% 140% at 0% 0%, rgba(181,108,242,.32), transparent 60%), linear-gradient(160deg, var(--night-2), var(--night)); }
+.pass-hero h1 { margin: 0; font-size: 26px; }
+.pass-season { margin: 0; font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--r-epique); }
+.pass-hero-xp { margin: 6px 0 0; font-family: var(--f-ui); font-size: 13px; color: var(--muted); }
+.pass-hero-xp b { font-family: var(--f-display); font-weight: 400; color: var(--ink); }
+.pass-hero-end { margin: 2px 0 0; font-family: var(--f-ui); font-weight: 700; font-size: 12px; color: var(--gold); }
+.pass-hero-claim { grid-column: 1 / -1; }
+.pass-hero-claim .btn { width: 100%; }
+.pass-disc { width: 92px; height: 92px; padding: 5px; border-radius: 50%; background: conic-gradient(var(--r-epique) var(--p), rgba(181,108,242,.18) 0); box-shadow: 0 0 26px rgba(181,108,242,.35); }
+.pass-disc-vinyl { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; background: repeating-radial-gradient(circle, #15122a 0 2px, #241f44 2px 3px); }
+.pass-disc-label { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; align-content: center; color: #fff; font-family: var(--f-display); font-size: 22px; line-height: 1; background: radial-gradient(circle at 35% 30%, #d9a6ff, var(--r-epique) 60%, #7a3fb0); }
+.pass-disc-label small { font-family: var(--f-ui); font-weight: 700; font-size: 10px; }
+
+/* Frise : étiquettes fixes à gauche (rien ne passe dessus), paliers qui défilent à droite */
+.pass-board { display: grid; grid-template-columns: 62px minmax(0, 1fr); margin-top: 18px; }
+.pass-rows, .pass-col { display: grid; grid-template-rows: 66px 122px 122px; gap: 8px; }
+.pass-row { display: grid; place-items: center; align-content: center; gap: 6px; border-radius: 16px 0 0 16px; border: 1px solid var(--line); border-right: 0; background: var(--night-2); font-family: var(--f-ui); font-weight: 700; font-size: 11px; text-transform: uppercase; color: var(--muted); }
+.pass-row svg { width: 22px; height: 22px; }
+.pass-row.premium { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 35%, var(--line)); background: color-mix(in srgb, var(--gold) 12%, var(--night-2)); }
+.pass-row.premium svg { height: 16px; }
+.pass-track { display: flex; gap: 8px; overflow-x: auto; padding: 0 14px 12px 8px; scroll-snap-type: x proximity; overscroll-behavior-x: contain; mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 20px), transparent); scrollbar-width: thin; scrollbar-color: var(--r-epique) var(--dock-edge); }
+.pass-track::-webkit-scrollbar { height: 8px; }
+.pass-track::-webkit-scrollbar-track { background: var(--dock-edge); border-radius: 99px; margin: 0 14px; }
+.pass-track::-webkit-scrollbar-thumb { background: linear-gradient(90deg, #8f4fd6, var(--r-epique)); border-radius: 99px; }
+.pass-track:focus-visible { outline: 2px solid var(--r-epique); outline-offset: 4px; border-radius: 10px; }
+.pass-col { flex: none; width: 84px; scroll-snap-align: center; --f: 0%; }
+
+/* Ligne de progression : numéros en haut, bulle d'XP, ligne continue avec un repère à la position exacte */
+.pass-tier { position: relative; }
+.pass-num { position: absolute; top: 2px; left: 50%; translate: -50% 0; min-width: 28px; height: 28px; padding: 0 6px; border-radius: 14px; display: grid; place-items: center; font-family: var(--f-display); font-size: 14px; color: var(--muted); }
+.pass-col.reached .pass-num { color: var(--ink); }
+.pass-col.milestone .pass-num { color: var(--gold); background: var(--dock); box-shadow: 0 2px 0 var(--dock-edge); }
+.pass-col[data-current] .pass-num { color: #fff; background: var(--r-epique); box-shadow: 0 3px 0 #7a3fb0, 0 0 14px rgba(181,108,242,.6); }
+.pass-tier::after { content: ""; position: absolute; left: 0; right: -8px; bottom: 8px; height: 6px; background: linear-gradient(90deg, var(--r-epique) var(--f), var(--dock-edge) 0); }
 .pass-col:first-child .pass-tier::after { border-radius: 3px 0 0 3px; }
 .pass-col:last-child .pass-tier::after { right: 0; border-radius: 0 3px 3px 0; }
-.pass-legend .pass-tier::after { display: none; }
-.pass-col.reached .pass-tier { color: var(--ink); }
-/* Palier en cours : numéro en pastille et repère lumineux à la position exacte de l'XP */
-.pass-col[data-current] .pass-tier { color: #fff; }
-.pass-tier { padding-top: 3px; }
-.pass-col[data-current] .pass-tier { background: radial-gradient(circle at 50% 12px, var(--r-epique) 0 11px, transparent 12px); }
-.pass-col[data-current] .pass-tier::before { content: ""; position: absolute; z-index: 1; left: var(--f); bottom: -4px; width: 13px; height: 13px; margin-left: -6px; border-radius: 50%; background: #fff; border: 3px solid var(--r-epique); box-shadow: 0 0 10px rgba(181,108,242,.9); }
-.pass-cell { display: grid; justify-items: center; align-content: center; gap: 6px; padding: 6px 4px; border-radius: 12px; background: var(--night-2); border: 1px solid var(--line); text-align: center; }
-.pass-cell.premium { background: color-mix(in srgb, var(--gold) 8%, var(--night-2)); }
-.pass-cell.ready { border-color: var(--gold); box-shadow: 0 0 12px rgba(244,183,64,.25); }
-.pass-cell.claimed, .pass-cell.locked { opacity: .5; }
-.pass-cell .btn { padding: 5px 8px; font-size: 12px; }
-.pass-reward { display: inline-flex; align-items: center; gap: 3px; font-family: var(--f-display); font-size: 13px; }
-.pass-reward .vinyl-i { width: 22px; height: 22px; }
-.pass-state { font-family: var(--f-ui); font-weight: 700; font-size: 10px; line-height: 1.2; color: var(--muted); }
-.pass-premium-note { margin: 4px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--night-2); border: 1px dashed var(--gold); color: var(--muted); font-size: 13px; }
+.pass-col[data-current] .pass-tier::before { content: ""; position: absolute; z-index: 2; left: var(--f); bottom: 3px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: #fff; border: 4px solid var(--r-epique); box-shadow: 0 0 12px rgba(181,108,242,.9); }
+.pass-you { position: absolute; z-index: 3; left: clamp(28px, var(--f), 56px); bottom: 22px; translate: -50% 0; padding: 2px 7px; border-radius: 99px; background: #fff; color: #5b2a91; font-family: var(--f-ui); font-weight: 700; font-size: 10px; white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.3); }
+
+/* Cases de récompense : vinyle à la couleur du pack, nom, et selon l'état bouton, coche ou cadenas */
+.pass-cell { position: relative; display: grid; justify-items: center; align-content: center; gap: 5px; padding: 8px 4px; border-radius: 16px; border: 1px solid var(--line); background: var(--night-2); text-align: center; --k: var(--gold); }
+.pass-cell.premium { border-color: color-mix(in srgb, var(--gold) 25%, var(--line)); background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 12%, var(--night-2)), var(--night-2)); }
+.pass-cell.kind-solo { --k: var(--coral); }
+.pass-cell.kind-epic { --k: var(--r-epique); }
+.pass-cell.kind-legendary { --k: #ffe08a; }
+.pass-pack { position: relative; display: block; }
+.pass-pack-disc { display: block; width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--k); background: radial-gradient(circle, var(--k) 0 5px, #15122a 5px 7px, transparent 7px), repeating-radial-gradient(circle, #1a1730 0 2px, #2c2850 2px 3px); box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.pass-cell.kind-legendary .pass-pack-disc { box-shadow: 0 3px 0 rgba(0,0,0,.35), 0 0 16px rgba(244,183,64,.6); }
+.pass-pack b { position: absolute; top: -6px; right: -16px; padding: 0 5px; border-radius: 8px; background: var(--dock); font-family: var(--f-display); font-weight: 400; font-size: 12px; }
+.pass-pack-name { font-family: var(--f-ui); font-weight: 700; font-size: 11px; color: var(--muted); }
+.pass-cell.todo .pass-pack, .pass-cell.todo .pass-pack-name { opacity: .6; }
+.pass-cell.locked .pass-pack, .pass-cell.locked .pass-pack-name, .pass-cell.claimed .pass-pack, .pass-cell.claimed .pass-pack-name { opacity: .35; filter: grayscale(.5); }
+.pass-cell.ready { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold), 0 0 16px rgba(244,183,64,.3); animation: pass-ready 2.4s ease-in-out infinite; }
+@keyframes pass-ready { 50% { box-shadow: inset 0 0 0 1px var(--gold), 0 0 24px rgba(244,183,64,.5); } }
+.pass-take { height: 34px; padding: 0 12px; border: 0; border-radius: 10px; cursor: pointer; background: var(--gold); color: #2b1d02; font-family: var(--f-display); font-size: 13px; box-shadow: 0 3px 0 var(--gold-deep); }
+.pass-take:active { translate: 0 2px; box-shadow: 0 1px 0 var(--gold-deep); }
+.pass-badge { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; }
+.pass-badge svg { width: 13px; height: 13px; }
+.pass-badge.ok { background: var(--r-peu_commun); color: #0f2a1c; }
+.pass-badge.lock { background: var(--dock); color: var(--gold); }
+@media (prefers-reduced-motion: reduce) { .pass-cell.ready { animation: none; } }
+
+/* Encart premium et barème d'XP */
+.pass-upsell { display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; padding: 12px 14px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--line)); background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 16%, var(--night-2)), var(--night-2)); }
+.pass-upsell svg { flex: none; width: 26px; height: 18px; margin-top: 2px; color: var(--gold); }
+.pass-upsell p { margin: 0; font-size: 13px; color: var(--muted); }
+.pass-upsell strong { color: var(--gold); }
+.pass-xp-table { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.pass-xp-chip { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--night-2); font-family: var(--f-ui); font-size: 13px; }
+.pass-xp-chip i { width: 10px; height: 10px; border-radius: 3px; background: var(--rar); }
+.pass-xp-chip span { flex: 1; }
+.pass-xp-chip b { font-family: var(--f-display); font-weight: 400; color: var(--rar); }
+.pass-xp-chip b::after { content: " XP"; font-family: var(--f-ui); font-size: 11px; color: var(--muted); }
 @keyframes spin { to { rotate: 360deg; } }
 .pack-stock { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: -6px; }
 .pack-stock span { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--night-3); }

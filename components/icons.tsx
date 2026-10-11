@@ -41,6 +41,12 @@ export function SparkIcon(props: IconProps) {
 export function SearchIcon(props: IconProps) {
   return <svg viewBox="0 0 24 24" aria-hidden="true" {...stroke} strokeWidth={2.2} {...props}><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>;
 }
+export function LockIcon(props: IconProps) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" {...stroke} {...props}><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></svg>;
+}
+export function CheckIcon(props: IconProps) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" {...stroke} strokeWidth={3} {...props}><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
+}
 export function CrownIcon(props: IconProps) {
   return <svg viewBox="0 0 26 18" aria-hidden="true" fill="currentColor" {...props}><path d="M1 5l6 5 6-9 6 9 6-5-3 13H4z" /></svg>;
 }
