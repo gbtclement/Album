@@ -50,3 +50,7 @@ export function CheckIcon(props: IconProps) {
 export function CrownIcon(props: IconProps) {
   return <svg viewBox="0 0 26 18" aria-hidden="true" fill="currentColor" {...props}><path d="M1 5l6 5 6-9 6 9 6-5-3 13H4z" /></svg>;
 }
+
+export function PlayIcon(props: IconProps) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" {...stroke} {...props}><path d="M8 5.5v13l10-6.5z" fill="currentColor" /></svg>;
+}

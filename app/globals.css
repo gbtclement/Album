@@ -800,3 +800,42 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .sillon-spin { transform-box: view-box; transform-origin: 200px 200px; transition: transform 2s cubic-bezier(.22,.75,.2,1); }
 .sillon-dot text { transform-box: fill-box; transform-origin: center; transition: transform 2s cubic-bezier(.22,.75,.2,1); }
 @media (prefers-reduced-motion: reduce) { .sillon-spin, .sillon-dot text { transition: none; } }
+
+/* Pages d'erreur (404 et plantage) : pochette vide, vinyle à moitié sorti, bras levé, dos de pochette (components/record-error.tsx) */
+.rec-page { min-height: 100dvh; max-width: 440px; margin: 0 auto; padding: 32px 16px 48px; display: grid; justify-items: center; align-content: center; text-align: center; }
+.rec-art { width: min(100%, 340px); height: auto; overflow: visible; margin-bottom: 14px; }
+.rec-sleeve rect { fill: var(--night-3); stroke: var(--line); stroke-width: 2; stroke-dasharray: 9 7; }
+.rec-brand { font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: .22em; fill: var(--muted); }
+.rec-q { font-family: var(--f-display); font-size: 96px; fill: var(--line); text-anchor: middle; }
+.rec-vinyl { fill: #141127; stroke: var(--gold); stroke-width: 3; }
+.rec-groove { fill: none; stroke: #29244c; stroke-width: 1.5; }
+.rec-label { fill: var(--coral); }
+.rec-code { font-family: var(--f-display); font-size: 21px; fill: var(--night); text-anchor: middle; }
+.rec-hole { fill: var(--night); }
+.rec-scratch { fill: none; stroke: rgba(255,255,255,.6); stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 26 5 40 4 60; }
+.rec-pivot { fill: var(--dock); stroke: var(--line); stroke-width: 2; }
+.rec-rod { fill: none; stroke: var(--muted); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.rec-head { fill: var(--muted); }
+/* Le vinyle sort de la pochette, puis le bras se lève : la musique s'arrête */
+.rec-disc { transform-box: view-box; animation: rec-slide .9s cubic-bezier(.22,.75,.2,1) both; }
+.rec-arm { transform-box: view-box; transform-origin: 344px 28px; animation: rec-lift .7s .75s cubic-bezier(.3,.7,.3,1) both; }
+.rec-art.scratched .rec-disc { animation: rec-slide .9s cubic-bezier(.22,.75,.2,1) both, rec-skip .32s 1s steps(2) 2; }
+@keyframes rec-slide { from { transform: translateX(-84px); } }
+@keyframes rec-lift { from { transform: rotate(-16deg); } }
+@keyframes rec-skip { 50% { transform: translate(1.5px, -1.5px); } }
+.rec-side { margin: 0; font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--coral); }
+.rec-title { margin: 6px 0 8px; font-family: var(--f-display); font-weight: 400; font-size: 30px; line-height: 1.1; text-wrap: balance; }
+.rec-text { margin: 0; max-width: 34ch; color: var(--muted); font-size: 15px; }
+.rec-ref { display: block; margin-top: 8px; font: 600 12px var(--f-ui); letter-spacing: .04em; color: var(--muted); opacity: .8; }
+.rec-action { margin: 20px 0 26px; }
+.rec-tracks { list-style: none; margin: 0; padding: 0; width: 100%; max-width: 380px; text-align: left; border-top: 1px solid var(--line); }
+.rec-track { display: grid; grid-template-columns: 22px 16px 1fr auto; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 0 10px; border: 0; border-bottom: 1px solid var(--line); background: none; color: var(--ink); font: 600 15px var(--f-ui); text-align: left; text-decoration: none; cursor: pointer; }
+.rec-track:hover, .rec-track:focus-visible { background: rgba(255,255,255,.04); }
+.rec-track:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+.rec-n, .rec-d { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.rec-d { font-size: 13px; }
+.rec-play { width: 16px; height: 16px; color: var(--muted); }
+.rec-track:hover .rec-play, .rec-track:focus-visible .rec-play { color: var(--gold); }
+.rec-track.missing { cursor: default; color: var(--muted); }
+.rec-track.missing .rec-t { text-decoration: line-through; text-decoration-color: var(--coral); }
+@media (prefers-reduced-motion: reduce) { .rec-disc, .rec-arm, .rec-art.scratched .rec-disc { animation: none; } }

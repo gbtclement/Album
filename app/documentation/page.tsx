@@ -42,6 +42,7 @@ const ROUTES = [
   { path: "/profil/supprimer", description: "Suppression définitive du compte, confirmée par le pseudo et le mot de passe (RGPD, protégée)" },
   { path: "/mentions-legales, /confidentialite, /cgu, /cgv", description: "Pages légales : éditeur et hébergeur, politique de confidentialité, conditions d'utilisation, conditions de vente de l'abonnement premium (prix, mois offert, résiliation, rétractation, médiation)" },
   { path: "/documentation", description: "Cette page, protégée par identifiant et mot de passe demandés par le navigateur (DOC_HTPASSWD, format .htpasswd ; 30 essais par adresse IP et par quart d'heure)" },
+  { path: "(toute adresse inconnue)", description: "Page 404 (app/not-found.tsx) : pochette vide, vinyle « 404 » à moitié sorti, bras de platine levé, « Cette piste n'est pas sur l'album » ; bouton Retour à l'accueil et dos de pochette dont les pistes mènent à la collection, aux packs et à la pioche. Plantage (app/error.tsx, app/global-error.tsx) : même décor, disque rayé, « Le disque a sauté », bouton Réessayer et code de l'erreur pour retrouver le détail dans les logs" },
   { path: "/sitemap.xml", description: "Plan du site : pages publiques et fiches d'albums (SEO)" },
   { path: "/robots.txt", description: "Règles pour les robots d'indexation (bloqué tant que SEO_INDEXING n'est pas true)" },
   { path: "/manifest.webmanifest", description: "Manifeste (nom, couleurs, icônes) pour l'ajout à l'écran d'accueil" },
@@ -157,6 +158,7 @@ const LOTS = [
   { lot: "MAIL1", name: "E-mails : logo vinyle (PNG) à la place de la note ; e-mails de l'abonnement premium (début avec ou sans mois offert, reçu mensuel, rappel de fin du mois offert, résiliation envoyée dès maintenant, paiement refusé)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PHOTO1", name: "Photos d'artistes : photo Deezer à la place de l'initiale dans l'onglet Artistes de la collection (table artist_photos, migration 026, npm run import:photos, lancé aussi à la fin de import:catalog). Anti-homonyme : on ne garde un artiste Deezer du même nom que si l'un de ses albums porte le titre d'un album du catalogue ; sinon l'initiale reste", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "DOC1", name: "La page /documentation est protégée par identifiant et mot de passe (Basic Auth, ligne .htpasswd dans DOC_HTPASSWD, vérifiée dans proxy.ts, essais limités)", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "ERR1", name: "Pages d'erreur au thème du jeu : 404 (« Cette piste n'est pas sur l'album ») et plantage (« Le disque a sauté », bouton Réessayer), composant components/record-error.tsx", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
