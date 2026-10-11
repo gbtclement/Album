@@ -4,24 +4,23 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import type { PackKind } from "@/lib/pack-rules";
-import { openPacks, PackError, type PackCard } from "@/lib/packs";
+import { openPack, PackError, type PackCard } from "@/lib/packs";
 
 export type PackActionResult = {
   error?: string;
   cards?: PackCard[];
-  opened?: number;
   stocks?: { stock: number; bonus: number; solo: number };
 };
 
-// Ouvre 1 pack, ou tous ceux disponibles ; kind : pack classique ou pack Solo
-export async function openPacksAction(count: number, kind: PackKind = "classic"): Promise<PackActionResult> {
+// Ouvre un seul pack (les packs s'ouvrent un par un) ; kind : pack classique ou pack Solo
+export async function openPackAction(kind: PackKind = "classic"): Promise<PackActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { error: "Connecte-toi pour ouvrir un pack." };
   if (kind !== "classic" && kind !== "solo") return { error: "Type de pack inconnu." };
 
   try {
-    const { cards, state, opened } = await openPacks(session.user.id, count, kind);
-    return { cards, opened, stocks: { stock: state.stock, bonus: state.bonus, solo: state.solo } };
+    const { cards, state } = await openPack(session.user.id, kind);
+    return { cards, stocks: { stock: state.stock, bonus: state.bonus, solo: state.solo } };
   } catch (error) {
     if (error instanceof PackError) return { error: error.message };
     throw error;

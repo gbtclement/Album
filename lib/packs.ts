@@ -2,7 +2,7 @@ import { randomInt } from "node:crypto";
 import type { PoolClient } from "pg";
 import { withTransaction } from "@/lib/db";
 import { RARITY_TIERS, type RarityTier } from "@/lib/rarity";
-import { MAX_OPEN_AT_ONCE, MAX_STOCK, PACK_INTERVAL_MS, PACK_RATES, PACK_SIZE, SOLO_PACK_SIZE, type PackKind } from "@/lib/pack-rules";
+import { MAX_STOCK, PACK_INTERVAL_MS, PACK_RATES, PACK_SIZE, SOLO_PACK_SIZE, type PackKind } from "@/lib/pack-rules";
 import { recordEvent } from "@/lib/quests";
 
 export class PackError extends Error {}
@@ -114,31 +114,6 @@ async function pickAlbum(client: PoolClient, tier: RarityTier) {
     if (rows[0]) return rows[0];
   }
   throw new PackError("Le catalogue est vide : aucun album ne peut être tiré.");
-}
-
-// Ouvre plusieurs packs à la suite (bouton « Tout ouvrir ») : chacun dans sa propre transaction,
-// on s'arrête dès qu'il n'en reste plus. Au moins un pack doit pouvoir être ouvert.
-export async function openPacks(
-  userId: string,
-  count: number,
-  kind: PackKind = "classic",
-): Promise<{ cards: PackCard[]; state: PackState; opened: number }> {
-  const wanted = Math.max(1, Math.min(MAX_OPEN_AT_ONCE, Math.floor(count)));
-  const cards: PackCard[] = [];
-  let state: PackState | null = null;
-  let opened = 0;
-  for (let i = 0; i < wanted; i++) {
-    try {
-      const result = await openPack(userId, kind);
-      cards.push(...result.cards);
-      state = result.state;
-      opened++;
-    } catch (error) {
-      if (opened > 0 && error instanceof PackError) break;
-      throw error;
-    }
-  }
-  return { cards, state: state!, opened };
 }
 
 // Ouvre un pack : consomme un pack, tire les cartes et les ajoute à la collection.

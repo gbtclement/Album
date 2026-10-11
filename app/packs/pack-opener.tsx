@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { CoverImage } from "@/components/cover-image";
 import { smallCover } from "@/components/game-ui";
 import { useCallback, useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
-import { MAX_OPEN_AT_ONCE, MAX_STOCK, PACK_RATES, PACK_SIZE, type PackKind } from "@/lib/pack-rules";
+import { MAX_STOCK, PACK_RATES, PACK_SIZE, type PackKind } from "@/lib/pack-rules";
 import type { PackCard } from "@/lib/packs";
 import { RARITY_LABELS, RARITY_TIERS, type RarityTier } from "@/lib/rarity";
-import { openPacksAction, setAutoRevealAction } from "./actions";
+import { openPackAction, setAutoRevealAction } from "./actions";
 
 const tierRank = (tier: RarityTier) => RARITY_TIERS.indexOf(tier);
 const NOTE_GLYPHS = ["♪", "♫", "♪", "♬", "♪", "♫", "♪"];
@@ -15,7 +15,7 @@ const NOTE_GLYPHS = ["♪", "♫", "♪", "♬", "♪", "♫", "♪"];
 type Note = { glyph: string; x: number; dx: number; r: number; d: number };
 type DrawnCard = PackCard & { notes: Note[] };
 // id : numéro de l'ouverture, pour repartir de zéro à chaque nouveau pack sans recréer tout l'écran
-type Opening = { id: number; kind: PackKind; multi: boolean; packs: number; cards: DrawnCard[] | null; error?: string };
+type Opening = { id: number; kind: PackKind; cards: DrawnCard[] | null; error?: string };
 type Stocks = { stock: number; bonus: number; solo: number };
 
 // Trajets des notes de musique d'une carte légendaire, tirés au moment de l'ouverture
@@ -41,27 +41,19 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
   const current = liveStocks ?? stocks;
   // Packs classiques : le stock qui se recharge, puis les packs gagnés
   const classic = current.stock + current.bonus;
-  const allAtOnce = Math.min(classic, MAX_OPEN_AT_ONCE);
 
-  async function open(count: number, kind: PackKind) {
+  async function open(kind: PackKind) {
     const id = ++openings.current;
-    const multi = count > 1;
-    setOpening({ id, kind, multi, packs: count, cards: null });
-    const result = await openPacksAction(count, kind);
+    setOpening({ id, kind, cards: null });
+    const result = await openPackAction(kind);
     if (result.error || !result.cards || !result.stocks) {
-      setOpening({ id, kind, multi, packs: count, cards: [], error: result.error ?? "Ouverture impossible." });
+      setOpening({ id, kind, cards: [], error: result.error ?? "Ouverture impossible." });
       return;
     }
     setLiveStocks(result.stocks);
-    // Un pack seul se révèle de la moins rare à la plus rare ; plusieurs packs : les plus rares d'abord
-    const sorted = [...result.cards].sort((a, b) => (multi ? tierRank(b.tier) - tierRank(a.tier) : tierRank(a.tier) - tierRank(b.tier)));
-    setOpening({
-      id,
-      kind,
-      multi,
-      packs: result.opened ?? count,
-      cards: sorted.map((card) => ({ ...card, notes: card.tier === "legendaire" ? legendNotes() : [] })),
-    });
+    // De la moins rare à la plus rare : la meilleure carte arrive en dernier
+    const sorted = [...result.cards].sort((a, b) => tierRank(a.tier) - tierRank(b.tier));
+    setOpening({ id, kind, cards: sorted.map((card) => ({ ...card, notes: card.tier === "legendaire" ? legendNotes() : [] })) });
   }
 
   function close() {
@@ -93,10 +85,11 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
         <span className="sheen" />
       </div>
       <div className="pack-actions">
-        <button type="button" className="btn lg gold" disabled={classic < 1 || opening !== null} onClick={() => open(1, "classic")}>Ouvrir 1</button>
-        <button type="button" className="btn lg alt" disabled={classic < 2 || opening !== null} onClick={() => open(allAtOnce, "classic")}>Tout ouvrir ({allAtOnce})</button>
+        <button type="button" className="btn lg gold" disabled={classic < 1 || opening !== null} onClick={() => open("classic")}>
+          Ouvrir un pack{classic > 0 ? ` (${classic})` : ""}
+        </button>
         {current.solo > 0 && (
-          <button type="button" className="btn lg solo" disabled={opening !== null} onClick={() => open(1, "solo")}>Ouvrir un Solo ({current.solo})</button>
+          <button type="button" className="btn lg solo" disabled={opening !== null} onClick={() => open("solo")}>Ouvrir un Solo ({current.solo})</button>
         )}
       </div>
       <p className="sub" style={{ margin: 0 }}>Un pack contient {PACK_SIZE} albums, un pack Solo un seul. Les quêtes en rapportent.</p>
@@ -117,7 +110,7 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
       {/* Le fond reste affiché pendant toute l'ouverture (attente du serveur comprise) : pas de clignotement.
           Seul le contenu repart de zéro à chaque nouveau pack (clé = numéro de l'ouverture). */}
       {opening && (
-        <div className={`opening${opening.multi ? " multi" : ""}${reduced ? " static" : ""}`} role="dialog" aria-modal="true" aria-label="Ouverture de pack">
+        <div className={`opening${reduced ? " static" : ""}`} role="dialog" aria-modal="true" aria-label="Ouverture de pack">
           <PackOpening
             key={opening.id}
             opening={opening}
@@ -125,7 +118,7 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
             reduced={reduced}
             left={opening.kind === "solo" ? current.solo : classic}
             onClose={close}
-            onAgain={() => open(1, opening.kind)}
+            onAgain={() => open(opening.kind)}
           />
         </div>
       )}
@@ -133,6 +126,8 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
   );
 }
 
+// Les cartes d'un pack, une à la fois : on la retourne en la touchant, les flèches passent à la suivante
+// ou reviennent sur les précédentes (aussi au clavier et en glissant le doigt)
 function PackOpening({
   opening,
   autoReveal,
@@ -148,49 +143,91 @@ function PackOpening({
   onClose: () => void;
   onAgain: () => void;
 }) {
-  const { cards, multi } = opening;
+  const { cards } = opening;
   const [dealt, setDealt] = useState(false);
+  const [index, setIndex] = useState(0);
+  // Sens du dernier déplacement, pour faire glisser la carte du bon côté
+  const [direction, setDirection] = useState<"next" | "prev" | "first">("first");
   const [flipped, setFlipped] = useState<Set<number>>(() => new Set());
   const [legendHit, setLegendHit] = useState(0);
-  const timers = useRef<number[]>([]);
+  const touchX = useRef<number | null>(null);
+
+  const total = cards?.length ?? 0;
+  const card = cards?.[index] ?? null;
+  const isFlipped = flipped.has(index);
+  const allFlipped = total > 0 && flipped.size === total;
 
   const flip = useCallback(
-    (index: number) => {
+    (at: number) => {
       setFlipped((current) => {
-        if (current.has(index)) return current;
+        if (current.has(at)) return current;
         const next = new Set(current);
-        next.add(index);
+        next.add(at);
         return next;
       });
-      if (cards?.[index]?.tier === "legendaire") setLegendHit((count) => count + 1);
+      if (cards?.[at]?.tier === "legendaire") setLegendHit((count) => count + 1);
     },
     [cards],
   );
 
-  // Vinyle qui accélère, cartes distribuées, puis révélation automatique si le réglage est activé
+  const goTo = useCallback(
+    (at: number) => {
+      if (at < 0 || at >= total || at === index) return;
+      setDirection(at > index ? "next" : "prev");
+      setIndex(at);
+    },
+    [index, total],
+  );
+
+  // Flèche suivante : retourne d'abord la carte si elle est encore cachée
+  const next = useCallback(() => {
+    if (!isFlipped) flip(index);
+    else goTo(index + 1);
+  }, [flip, goTo, index, isFlipped]);
+
+  // Vinyle qui accélère puis première carte
   useEffect(() => {
     if (!cards || cards.length === 0) return;
-    const later = (fn: () => void, ms: number) => timers.current.push(window.setTimeout(fn, ms));
-    const dealDelay = reduced ? 0 : 950;
-    later(() => setDealt(true), dealDelay);
-    if (autoReveal) {
-      const step = multi ? 22 : 90;
-      const start = reduced ? 0 : dealDelay + cards.length * step + 450;
-      cards.forEach((_, i) => later(() => flip(i), multi ? start + i * 45 : start + i * 520 + (i === cards.length - 1 ? 350 : 0)));
-    }
-    const pending = timers.current;
-    return () => pending.forEach((timer) => window.clearTimeout(timer));
-  }, [cards, autoReveal, multi, reduced, flip]);
+    const timer = window.setTimeout(() => setDealt(true), reduced ? 0 : 950);
+    return () => window.clearTimeout(timer);
+  }, [cards, reduced]);
 
-  const allFlipped = cards !== null && cards.length > 0 && flipped.size === cards.length;
-  const fresh = cards?.filter((card) => card.isNew).length ?? 0;
-  const counts = RARITY_TIERS.map((tier) => [tier, cards?.filter((card) => card.tier === tier).length ?? 0] as const).filter(([, n]) => n > 0).reverse();
+  // Réglage « Révéler automatiquement » : la carte affichée se retourne seule
+  useEffect(() => {
+    if (!dealt || !autoReveal || isFlipped) return;
+    const timer = window.setTimeout(() => flip(index), reduced ? 0 : 450);
+    return () => window.clearTimeout(timer);
+  }, [dealt, autoReveal, isFlipped, flip, index, reduced]);
+
+  // Clavier : flèches gauche et droite, Entrée ou Espace pour retourner
+  useEffect(() => {
+    if (!dealt) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "ArrowRight") next();
+      else if (event.key === "ArrowLeft") goTo(index - 1);
+      else return;
+      event.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [dealt, next, goTo, index]);
+
+  const fresh = cards?.filter((item) => item.isNew).length ?? 0;
+  const last = index === total - 1;
 
   return (
     <>
       {/* Léger flash doré à chaque légendaire retournée (la clé relance l'animation) */}
       {legendHit > 0 && <span key={legendHit} className="legend-flash" aria-hidden="true" />}
       {!reduced && !dealt && <div className={`op-disc-wrap${cards ? " go" : ""}`}><div className="op-disc" /></div>}
+      {/* Pochettes du pack chargées pendant que le vinyle tourne : elles apparaissent dès qu'on retourne une carte */}
+      {cards && (
+        <div className="op-preload" aria-hidden="true">
+          {cards.map((item, i) => (
+            <span key={i}><CoverImage src={smallCover(item.coverUrl)} fallback={item.coverUrl} title="" sizes="240px" priority /></span>
+          ))}
+        </div>
+      )}
 
       {opening.error ? (
         <>
@@ -199,34 +236,45 @@ function PackOpening({
           <div className="op-actions"><button type="button" className="btn lg alt" onClick={onClose}>Fermer</button></div>
         </>
       ) : (
-        cards && dealt && (
+        cards && card && dealt && (
           <>
-            <h2 className="op-title">{multi ? `${opening.packs} packs ouverts` : opening.kind === "solo" ? "Pack Solo ouvert" : "Pack ouvert"}</h2>
-            {multi && (
-              <div className="op-sum">
-                {counts.map(([tier, n]) => <span key={tier} className={`tier-${tier}`}>{n} {RARITY_LABELS[tier]}</span>)}
+            <h2 className="op-title">{opening.kind === "solo" ? "Pack Solo" : "Pack"}</h2>
+            {total > 1 && (
+              <div className="op-dots" aria-label={`Carte ${index + 1} sur ${total}`}>
+                {cards.map((item, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`${flipped.has(i) ? `seen tier-${item.tier}` : ""}${i === index ? " cur" : ""}`}
+                    aria-label={`Carte ${i + 1}`}
+                    aria-current={i === index ? "true" : undefined}
+                    disabled={!flipped.has(i) && i !== index}
+                    onClick={() => goTo(i)}
+                  />
+                ))}
               </div>
             )}
-            <p className="op-hint">
-              {allFlipped ? (
-                `Ajouté à ta collection · ${fresh === 0 ? "aucun nouvel album" : fresh === 1 ? "1 nouvel album" : `${fresh} nouveaux albums`}`
-              ) : (
-                <>
-                  {autoReveal ? "Révélation automatique" : `Touche ${multi ? "les cartes" : "chaque carte"} pour ${multi ? "les" : "la"} retourner`}
-                  {" · "}
-                  <button type="button" className="btn-link" onClick={() => cards.forEach((_, i) => flip(i))}>tout révéler</button>
-                </>
-              )}
-            </p>
-            <div className={`op-cards ${reduced ? "" : "dealt"}`} style={{ "--step": multi ? "22ms" : "90ms" } as CSSProperties}>
-              {cards.map((card, i) => (
+
+            <div
+              className="op-stage"
+              onTouchStart={(event) => {
+                touchX.current = event.touches[0].clientX;
+              }}
+              onTouchEnd={(event) => {
+                if (touchX.current === null) return;
+                const dx = event.changedTouches[0].clientX - touchX.current;
+                touchX.current = null;
+                if (dx < -40) next();
+                else if (dx > 40) goTo(index - 1);
+              }}
+            >
+              <button type="button" className="op-arrow" aria-label="Carte précédente" disabled={index === 0} onClick={() => goTo(index - 1)}>‹</button>
+              <div key={index} className={`op-slot ${direction}`}>
                 <button
-                  key={`${card.slug}-${i}`}
                   type="button"
-                  className={`pcard tier-${card.tier}${flipped.has(i) ? " flipped" : ""}`}
-                  style={{ "--i": i } as CSSProperties}
-                  aria-label={flipped.has(i) ? `${card.title}, ${RARITY_LABELS[card.tier]}` : "Carte face cachée, la retourner"}
-                  onClick={() => flip(i)}
+                  className={`pcard tier-${card.tier}${isFlipped ? " flipped" : ""}`}
+                  aria-label={isFlipped ? `${card.title}, ${card.artist}, ${RARITY_LABELS[card.tier]}` : "Carte face cachée, la retourner"}
+                  onClick={() => flip(index)}
                 >
                   {tierRank(card.tier) >= 2 && <span className="aura" />}
                   {card.tier === "legendaire" && (
@@ -242,14 +290,34 @@ function PackOpening({
                   <span className="inner">
                     <span className="face back" />
                     <span className="face front">
-                      <span className="art"><CoverImage src={smallCover(card.coverUrl)} fallback={card.coverUrl} title={card.title} sizes="124px" /></span>
+                      <span className="art"><CoverImage src={smallCover(card.coverUrl)} fallback={card.coverUrl} title={card.title} sizes="240px" priority /></span>
                       {card.isNew && <span className="new">Nouveau</span>}
-                      <span className="meta"><span className="t">{card.title}</span><span className="tier">{RARITY_LABELS[card.tier]}</span></span>
+                      <span className="meta">
+                        <span className="t">{card.title}</span>
+                        <span className="a">{card.artist}</span>
+                        <span className="tier">{RARITY_LABELS[card.tier]}</span>
+                      </span>
                     </span>
                   </span>
                 </button>
-              ))}
+              </div>
+              <button
+                type="button"
+                className="op-arrow"
+                aria-label={isFlipped ? "Carte suivante" : "Retourner la carte"}
+                disabled={isFlipped && last}
+                onClick={next}
+              >›</button>
             </div>
+
+            <p className="op-hint">
+              {allFlipped
+                ? `Ajouté à ta collection · ${fresh === 0 ? "aucun nouvel album" : fresh === 1 ? "1 nouvel album" : `${fresh} nouveaux albums`}`
+                : !isFlipped
+                  ? autoReveal ? "Révélation..." : "Touche la carte pour la retourner"
+                  : `Carte ${index + 1} sur ${total} · flèche pour la suivante`}
+            </p>
+
             <div className="op-actions">
               {allFlipped && (
                 <>

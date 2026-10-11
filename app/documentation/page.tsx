@@ -125,6 +125,7 @@ const LOTS = [
   { lot: "G2", name: "Collections d'artiste : un set par artiste d'au moins 3 albums, progression dans la collection, récompense unique en pièces (et un pack pour les grands sets)", status: "Terminé", branch: "jeu2-collections-artiste" },
   { lot: "G3", name: "Succès et badges : 22 objectifs permanents (collection, raretés, packs, artistes, social, pioche), pièces versées au déblocage, notification dorée, grille sur le profil, nombre de succès des amis", status: "Terminé", branch: "jeu3-succes" },
   { lot: "G4", name: "Économie : les quêtes rapportent des packs (Solo d'un album, ou classiques), réserve de packs gagnés sans maximum, plus de pièces de remplacement ; raccourci de la pioche dans la barre du haut ; vinyle de chargement centré et ouverture de pack sans clignotement", status: "Terminé", branch: "jeu4-economie" },
+  { lot: "G5", name: "Ouverture des packs une carte à la fois : flèches pour avancer et revenir, points de progression, clavier et glissement ; « Tout ouvrir » retiré", status: "Terminé", branch: "jeu5-ouverture-carte" },
 ];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -239,8 +240,13 @@ export default function DocumentationPage() {
             </li>
             <li>
               <strong>Packs gagnés :</strong> les récompenses (quêtes, séries de la pioche, grands sets d&apos;artiste) vont dans une réserve à part,
-              sans maximum : packs classiques (5 albums) et packs Solo (1 album). « Ouvrir 1 » prend d&apos;abord un pack du stock qui se
-              recharge, puis un pack gagné ; « Tout ouvrir » en ouvre 20 au plus d&apos;un coup. La barre du haut affiche les packs gagnés en « +N ».
+              sans maximum : packs classiques (5 albums) et packs Solo (1 album). « Ouvrir un pack » prend d&apos;abord un pack du stock qui se
+              recharge, puis un pack gagné. La barre du haut affiche les packs gagnés en « +N ».
+            </li>
+            <li>
+              <strong>Ouverture :</strong> un pack à la fois (plus de « Tout ouvrir »), et une carte à la fois, de la moins rare à la plus rare.
+              On touche la carte pour la retourner (ou elle se retourne seule avec le réglage « Révéler automatiquement ») ; les flèches,
+              le clavier ou un glissement du doigt passent à la suivante ou reviennent sur les précédentes.
             </li>
             <li>
               <strong>Quêtes :</strong> journalières = 1 pack Solo ; hebdomadaires = 1 pack Solo + 100 pièces ; mensuelles = 1 pack + 500 pièces.

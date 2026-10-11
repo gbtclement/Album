@@ -9,8 +9,6 @@ export const PACK_INTERVAL_MS = 5 * 60 * 1000;
 // Un pack classique contient PACK_SIZE albums, un pack Solo un seul.
 export type PackKind = "classic" | "solo";
 export const SOLO_PACK_SIZE = 1;
-// « Tout ouvrir » ouvre au plus ce nombre de packs d'un coup
-export const MAX_OPEN_AT_ONCE = 20;
 
 export type Reward = { coins: number; packs: number; solo: number };
 
