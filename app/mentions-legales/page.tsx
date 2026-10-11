@@ -16,7 +16,8 @@ export default function MentionsLegalesPage() {
     <LegalPage title="Mentions légales">
       <h2>Éditeur du site</h2>
       <p>
-        Album est un jeu gratuit édité par <strong>{publisher}</strong>, qui en est aussi le directeur de la publication.
+        Album est un jeu gratuit, avec un abonnement premium facultatif (voir les <Link href="/cgv">conditions de vente</Link>), édité
+        par <strong>{publisher}</strong>, qui en est aussi le directeur de la publication.
         <br />
         Contact : <strong>{contactEmail}</strong>
       </p>

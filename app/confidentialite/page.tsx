@@ -39,14 +39,19 @@ export default function ConfidentialitePage() {
           <strong>Ta partie</strong> : cartes, pièces, packs ouverts et gagnés, quêtes, passe de combat (XP et paliers récupérés), points et place au classement saisonnier, succès, pioches du jour, amis, échanges et annonces du marché, et tes réglages.
         </li>
         <li>
-          <strong>Statut premium</strong> : sa date de fin, s&apos;il t&apos;a été attribué. Aucune donnée de paiement n&apos;est collectée.
+          <strong>Statut premium</strong> : sa date de fin. Si tu t&apos;abonnes, le paiement est traité par Stripe : Album ne reçoit jamais
+          ton numéro de carte, seulement un identifiant client Stripe et l&apos;état de ton abonnement (essai, actif, résilié). Les preuves de
+          paiement sont gardées 10 ans, comme l&apos;exige la loi pour les pièces comptables.
         </li>
         <li>
           <strong>Sécurité</strong> : ton adresse IP, gardée au plus une heure, pour bloquer les robots qui essaient beaucoup de mots de
           passe ou créent des comptes en masse.
         </li>
       </ul>
-      <p>Le jeu ne te demande jamais ton nom, ton adresse, ton téléphone ou des coordonnées bancaires : tout y est gratuit.</p>
+      <p>
+        Le jeu ne te demande jamais ton nom, ton adresse ou ton téléphone. Il est gratuit ; seul l&apos;abonnement premium, facultatif, est
+        payant, et ta carte est alors saisie chez Stripe, jamais sur Album.
+      </p>
 
       <h2>Pourquoi</h2>
       <ul>
@@ -66,7 +71,8 @@ export default function ConfidentialitePage() {
         </li>
         <li>
           <strong>Les prestataires techniques</strong> qui font tourner le site, uniquement pour ce service : l&apos;hébergeur (voir les mentions
-          légales), le service d&apos;envoi d&apos;e-mails et, si tu l&apos;utilises, Google pour la connexion.
+          légales), le service d&apos;envoi d&apos;e-mails, Stripe pour le paiement si tu t&apos;abonnes et, si tu l&apos;utilises, Google
+          pour la connexion.
         </li>
       </ul>
       <p>

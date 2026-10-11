@@ -2,6 +2,8 @@
 // Le prix réellement payé est celui du prix Stripe STRIPE_PRICE_PREMIUM : garder les deux identiques.
 
 export const PREMIUM_PRICE_CENTS = 299;
+// Premier mois offert, une seule fois par compte : période d'essai de l'abonnement Stripe (trial_period_days)
+export const PREMIUM_TRIAL_DAYS = 30;
 
 // « 2,99 € »
 export function formatEuros(cents: number) {

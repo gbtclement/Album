@@ -39,7 +39,7 @@ const ROUTES = [
   { path: "/verifier-email", description: "Validation de l'adresse e-mail depuis le lien reçu (lien à usage unique, valable 24 h)" },
   { path: "/profil/donnees", description: "Téléchargement de toutes les données du joueur en JSON (RGPD, protégée)" },
   { path: "/profil/supprimer", description: "Suppression définitive du compte, confirmée par le pseudo et le mot de passe (RGPD, protégée)" },
-  { path: "/mentions-legales, /confidentialite, /cgu", description: "Pages légales : éditeur et hébergeur, politique de confidentialité, conditions d'utilisation" },
+  { path: "/mentions-legales, /confidentialite, /cgu, /cgv", description: "Pages légales : éditeur et hébergeur, politique de confidentialité, conditions d'utilisation, conditions de vente de l'abonnement premium (prix, mois offert, résiliation, rétractation, médiation)" },
   { path: "/documentation", description: "Cette page" },
   { path: "/sitemap.xml", description: "Plan du site : pages publiques et fiches d'albums (SEO)" },
   { path: "/robots.txt", description: "Règles pour les robots d'indexation (bloqué tant que SEO_INDEXING n'est pas true)" },
@@ -84,9 +84,11 @@ const ENV_VARS = [
   { name: "SEO_INDEXING", description: "\"true\" pour autoriser l'indexation par les moteurs de recherche. Désactivé tant que le domaine n'est pas en ligne" },
   { name: "GOOGLE_SITE_VERIFICATION", description: "Code de vérification Google Search Console (facultatif, une fois le domaine en ligne)" },
   { name: "MUSICBRAINZ_CONTACT", description: "Contact envoyé à MusicBrainz dans le User-Agent (optionnel)" },
+  { name: "LISTENBRAINZ_API_URL", description: "Adresse de l'API ListenBrainz (vide = https://api.listenbrainz.org/1). Secours quand l'adresse principale est en panne : https://beta-api.listenbrainz.org/1" },
   { name: "LASTFM_API_KEY", description: "Clé Last.fm pour les écoutes affichées sur les fiches album (optionnelle)" },
   { name: "STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_PREMIUM", description: "Paiement Stripe de l'abonnement premium : clé secrète (sk_test_ ou sk_live_), secret de signature du webhook (whsec_) et identifiant du prix mensuel (price_). Vides = paiement désactivé. Secrets : jamais dans le code ni dans Git" },
   { name: "LEGAL_PUBLISHER, LEGAL_CONTACT_EMAIL, LEGAL_HOST", description: "Éditeur du site, adresse de contact (questions et droits RGPD) et hébergeur (nom, adresse, téléphone), affichés dans les pages légales. Obligatoires avant la mise en ligne" },
+  { name: "LEGAL_SELLER, LEGAL_MEDIATOR", description: "Pour les CGV : adresse et numéro SIRET du vendeur, médiateur de la consommation (nom et site). Obligatoires avant d'ouvrir le paiement" },
 ];
 
 const COMMANDS = [
@@ -146,7 +148,7 @@ const LOTS = [
   { lot: "P1", name: "Packs Épique et Légendaire (5 cartes, une de leur rareté garantie), compte premium attribué à la main (npm run premium) avec un stock de 15 packs, taxe de 5 % détruite sur les ventes du marché", status: "Terminé", branch: "passe1-packs-premium" },
   { lot: "P2", name: "Passe de combat : XP par carte selon la rareté (tous les packs et la pioche du jour), 30 paliers par mois, ligne gratuite et ligne premium (packs uniquement, jamais de pièces), versement automatique en fin de saison, page /passe et jauge dans la barre du haut", status: "Terminé", branch: "passe2-combat" },
   { lot: "S1", name: "Classement saisonnier : onglet Saison, points du mois gagnés seulement en ouvrant des packs (1 / 2 / 5 / 10 / 25 par carte, doublons compris), top 20 récompensé en pièces et packs à la première visite du mois suivant", status: "Terminé", branch: "saison1-classement" },
-  { lot: "PAY1", name: "Préparation du paiement Stripe : variables STRIPE_* dans .env, page /premium façon édition deluxe d'un album (pochette, prix, liste des avantages) avec bouton de paiement désactivé, liens depuis le passe et le profil ; une quête premium par période (journalière, hebdomadaire, mensuelle)", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "PAY1", name: "Préparation du paiement Stripe : variables STRIPE_* dans .env, page /premium façon édition deluxe d'un album (pochette, prix, liste des avantages) avec bouton de paiement désactivé, liens depuis le passe et le profil ; une quête premium par période (journalière, hebdomadaire, mensuelle) ; premier mois offert (30 jours, une fois par compte) et page /cgv ; adresse de l'API ListenBrainz réglable (LISTENBRAINZ_API_URL)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
@@ -434,7 +436,7 @@ export default function DocumentationPage() {
               <strong>Cookies :</strong> seulement ceux d&apos;Auth.js (session, sécurité de la connexion), strictement nécessaires : pas de bandeau. Polices et pochettes servies par le site (<code>next/font</code>, <code>next/image</code>) : le navigateur ne contacte aucun tiers. Ajouter une mesure d&apos;audience ou de la publicité imposerait un bandeau de consentement.
             </li>
             <li>
-              <strong>Avant la mise en ligne :</strong> remplir les trois variables <code>LEGAL_*</code> ; choisir un hébergeur et un service d&apos;e-mails situés dans l&apos;Union européenne ; garder les sauvegardes de la base 30 jours au plus (promis dans la politique) ; programmer <code>purge:inactive</code> ; tenir le registre des traitements (une page suffit : finalités, données, durées, prestataires, reprendre la politique de confidentialité). Avant de faire payer le premium : paiement (Stripe), CGV, droit de rétractation, factures, TVA et résiliation en ligne.
+              <strong>Avant la mise en ligne :</strong> remplir les trois variables <code>LEGAL_*</code> ; choisir un hébergeur et un service d&apos;e-mails situés dans l&apos;Union européenne ; garder les sauvegardes de la base 30 jours au plus (promis dans la politique) ; programmer <code>purge:inactive</code> ; tenir le registre des traitements (une page suffit : finalités, données, durées, prestataires, reprendre la politique de confidentialité). Avant de faire payer le premium (les CGV sont écrites) : brancher Stripe (lot PAY2) avec l&apos;essai de 30 jours une seule fois par compte, l&apos;e-mail de rappel avant la fin de l&apos;essai et le bouton « Gérer mon abonnement » du profil promis par les CGV ; remplir <code>LEGAL_SELLER</code> (SIRET) et <code>LEGAL_MEDIATOR</code> (adhérer à un médiateur de la consommation) ; vérifier la TVA ; revoir la phrase « sans usage commercial » des pochettes dans les mentions légales, qui ne tient plus avec un abonnement payant.
             </li>
           </ul>
         </Section>

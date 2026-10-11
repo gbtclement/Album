@@ -4,7 +4,8 @@
 //  - nombre d'écoutes de n'importe quel album, à partir de son identifiant MusicBrainz
 // Les identifiants sont ceux de MusicBrainz : aucune recherche par nom n'est nécessaire.
 
-const LB_BASE = "https://api.listenbrainz.org/1";
+// Adresse de l'API, remplaçable dans .env (ex. le serveur beta-api.listenbrainz.org quand l'adresse principale est en panne)
+const LB_BASE = process.env.LISTENBRAINZ_API_URL || "https://api.listenbrainz.org/1";
 const USER_AGENT = `Album/0.1 (${process.env.MUSICBRAINZ_CONTACT ?? "https://github.com/gbtclement/Album"})`;
 // L'API accepte au plus 1000 éléments par requête de statistiques
 const STATS_PAGE = 1000;

@@ -41,8 +41,10 @@ export default function CguPage() {
         ouvrant des packs pendant le mois. Un compte qui triche peut perdre sa place et ses récompenses.
       </p>
       <p>
-        Le statut premium est pour l&apos;instant attribué gratuitement par l&apos;éditeur, sans paiement. Il donne des avantages de jeu
-        (stock de packs plus grand, ligne premium du passe de combat, une quête premium par jour, par semaine et par mois) et peut être retiré ou modifié.
+        Le statut premium est un abonnement facultatif, avec le premier mois offert, régi par les{" "}
+        <Link href="/cgv">conditions générales de vente</Link>. Il donne des avantages de jeu (stock de packs plus grand, ligne premium du
+        passe de combat, une quête premium par jour, par semaine et par mois). L&apos;éditeur peut aussi l&apos;offrir, par exemple pour des
+        tests ou des concours.
       </p>
       <p>
         Pour garder le jeu équilibré, les règles peuvent évoluer : rythme des packs, récompenses, prix, rareté des cartes (qui suit les écoutes

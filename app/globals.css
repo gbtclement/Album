@@ -399,6 +399,10 @@ button.item { width: 100%; text-align: left; cursor: pointer; font: inherit; }
 .dlx-cta { display: grid; gap: 10px; justify-items: start; }
 .dlx-cta .btn svg { width: 16px; height: 16px; }
 .dlx-fine, .dlx-status { margin: 0; font-size: 13px; color: var(--muted); }
+.dlx-fine { max-width: 46ch; }
+.dlx-fine a { color: var(--ink); }
+.dlx-price { margin: 0; font-family: var(--f-ui); font-weight: 600; color: var(--muted); }
+.dlx-price b { font-family: var(--f-display); font-weight: 400; font-size: 22px; color: var(--gold); margin-right: 4px; }
 .dlx-status strong { color: var(--ink); }
 .dlx-side { margin-top: 48px; }
 .dlx-side-title { display: flex; align-items: center; gap: 12px; margin: 0; padding-bottom: 12px; border-bottom: 2px solid color-mix(in srgb, var(--gold) 45%, var(--line)); font-family: var(--f-display); font-weight: 400; font-size: 22px; }

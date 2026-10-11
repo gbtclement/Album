@@ -3,6 +3,8 @@
 //   LEGAL_PUBLISHER     : nom de l'éditeur du site (personne ou société)
 //   LEGAL_CONTACT_EMAIL : adresse où écrire pour toute question sur le site et les données
 //   LEGAL_HOST          : nom, adresse et téléphone de l'hébergeur
+//   LEGAL_SELLER        : adresse et numéro SIRET du vendeur de l'abonnement premium (CGV)
+//   LEGAL_MEDIATOR      : nom et site du médiateur de la consommation (CGV)
 
 // Date de la version en vigueur des CGU et de la politique de confidentialité
 export const LEGAL_UPDATED_AT = "11 octobre 2026";
@@ -21,5 +23,7 @@ export function legalInfo() {
     publisher: process.env.LEGAL_PUBLISHER || MISSING,
     contactEmail: process.env.LEGAL_CONTACT_EMAIL || MISSING,
     host: process.env.LEGAL_HOST || MISSING,
+    seller: process.env.LEGAL_SELLER || MISSING,
+    mediator: process.env.LEGAL_MEDIATOR || MISSING,
   };
 }

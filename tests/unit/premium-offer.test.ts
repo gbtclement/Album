@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { passTrackTotal } from "@/lib/pass-rules";
-import { formatEuros, PREMIUM_PRICE_CENTS } from "@/lib/premium-offer";
+import { formatEuros, PREMIUM_PRICE_CENTS, PREMIUM_TRIAL_DAYS } from "@/lib/premium-offer";
 
 describe("offre premium", () => {
   it("affiche le prix en euros à la française", () => {
     expect(formatEuros(PREMIUM_PRICE_CENTS)).toBe("2,99 €");
     expect(formatEuros(1000)).toBe("10,00 €");
+  });
+
+  it("offre le premier mois (30 jours)", () => {
+    expect(PREMIUM_TRIAL_DAYS).toBe(30);
   });
 
   it("totalise les récompenses de chaque ligne du passe", () => {

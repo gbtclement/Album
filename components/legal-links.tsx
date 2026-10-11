@@ -7,6 +7,7 @@ export function LegalLinks() {
       <Link href="/mentions-legales">Mentions légales</Link>
       <Link href="/confidentialite">Confidentialité</Link>
       <Link href="/cgu">CGU</Link>
+      <Link href="/cgv">CGV</Link>
     </nav>
   );
 }

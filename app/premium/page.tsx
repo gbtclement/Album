@@ -6,7 +6,7 @@ import { LockIcon } from "@/components/icons";
 import { SiteNav } from "@/components/site-nav";
 import { MAX_STOCK, MAX_STOCK_PREMIUM, rewardLabel } from "@/lib/pack-rules";
 import { passRewardLabel, passTrackTotal } from "@/lib/pass-rules";
-import { formatEuros, PREMIUM_PRICE_CENTS } from "@/lib/premium-offer";
+import { formatEuros, PREMIUM_PRICE_CENTS, PREMIUM_TRIAL_DAYS } from "@/lib/premium-offer";
 import { getPremiumUntil } from "@/lib/premium";
 import { QUESTS, type Period } from "@/lib/quests";
 
@@ -30,6 +30,7 @@ export default async function PremiumPage() {
       value: rewardLabel(quest.reward),
     })),
     { title: "Ligne premium du passe", detail: "30 paliers en plus chaque saison, à côté de la ligne gratuite", value: passRewardLabel(passTrackTotal("premium")) },
+    { title: "Premier mois offert", detail: `${PREMIUM_TRIAL_DAYS} jours pour essayer, une fois par compte`, value: "0 €" },
     { title: "Rien de perdu", detail: "Devenu premium en cours de mois, tu récupères les paliers déjà atteints", value: "Rattrapage" },
   ];
 
@@ -46,7 +47,7 @@ export default async function PremiumPage() {
               <span className="dlx-ref">PRM · {tracks.length} titres</span>
             </div>
             <span className="dlx-sticker">
-              {premiumUntil ? <b>Actif</b> : <><b>{price}</b><small>par mois</small></>}
+              {premiumUntil ? <b>Actif</b> : <><small>1er mois</small><b>offert</b></>}
             </span>
           </div>
 
@@ -61,10 +62,14 @@ export default async function PremiumPage() {
               </div>
             ) : (
               <div className="dlx-cta">
+                <p className="dlx-price"><b>1er mois offert</b> puis {price} par mois</p>
                 <button type="button" className="btn gold lg" disabled>
                   <LockIcon /> Bientôt disponible
                 </button>
-                <p className="dlx-fine">{price} par mois, sans engagement. Paiement par Stripe : Album ne voit jamais ta carte.</p>
+                <p className="dlx-fine">
+                  Sans engagement : résilie pendant le mois offert et tu ne paies rien. Paiement par Stripe, Album ne voit jamais ta carte.{" "}
+                  <Link href="/cgv">Conditions de vente</Link>
+                </p>
               </div>
             )}
           </div>
