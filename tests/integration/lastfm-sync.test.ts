@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/lib/db";
-import { syncLastfm } from "@/lib/lastfm";
+import { fetchLastfmArtists, syncLastfm } from "@/lib/lastfm";
 import { createAlbum, resetDatabase } from "./helpers";
 
 beforeEach(async () => {
@@ -54,6 +54,28 @@ function fakeLastfm() {
   vi.stubGlobal("fetch", fetchMock);
   return calls;
 }
+
+describe("classements d'artistes Last.fm", () => {
+  it("lit les pages jusqu'au nombre demandé et s'arrête à la dernière", async () => {
+    const pages: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        const url = new URL(input);
+        const page = Number(url.searchParams.get("page"));
+        pages.push(`${url.searchParams.get("method")}:${url.searchParams.get("country")}:${page}`);
+        const artist = Array.from({ length: 500 }, (_, i) => ({ name: `Artiste ${page}-${i}`, mbid: i === 0 ? "" : `mbid-${page}-${i}` }));
+        return new Response(JSON.stringify({ topartists: { artist, "@attr": { totalPages: "2" } } }));
+      }),
+    );
+
+    const artists = await fetchLastfmArtists({ country: "France" }, 5000, 0);
+    expect(artists).toHaveLength(1000);
+    expect(pages).toEqual(["geo.gettopartists:France:1", "geo.gettopartists:France:2"]);
+    expect(artists[0]).toEqual({ name: "Artiste 1-0", mbid: null });
+    expect(await fetchLastfmArtists({ country: "France" }, 600, 0)).toHaveLength(600);
+  });
+});
 
 describe("récupération Last.fm par artiste", () => {
   it("additionne les versions, corrige l'apostrophe, estime les auditeurs, et cherche à part les albums absents de la liste", async () => {

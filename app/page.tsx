@@ -38,7 +38,7 @@ export default async function Home({ searchParams }: Props) {
   // Quelques légendaires du catalogue : de vraies pages à découvrir (et des liens internes pour les moteurs)
   const { rows: legends } = await db.query<{ slug: string; title: string; artist: string; cover_url: string | null; rarity_tier: RarityTier }>(
     `select slug, title, artist, cover_url, rarity_tier from albums
-     where rarity_tier = 'legendaire' order by listen_count desc nulls last limit 6`,
+     where rarity_tier = 'legendaire' order by lastfm_playcount desc nulls last limit 6`,
   );
 
   // Données structurées : le site (WebSite) et le jeu lui-même (VideoGame, gratuit, dans le navigateur)
@@ -124,7 +124,7 @@ export default async function Home({ searchParams }: Props) {
 
       <footer className="landing-foot">
         <Link href="/inscription" className="btn gold">Commencer à jouer</Link>
-        <p>Pièces 100 % virtuelles, sans achat. Données musicales : ListenBrainz, MusicBrainz, Last.fm, Cover Art Archive.</p>
+        <p>Pièces 100 % virtuelles, sans achat. Données musicales : Last.fm, MusicBrainz, Cover Art Archive, Deezer.</p>
         <LegalLinks />
       </footer>
     </main>

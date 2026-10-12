@@ -1,30 +1,22 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { recomputeRarity, saveListens } from "@/lib/catalog";
+import { catalogTitlesByArtist, recomputeRarity } from "@/lib/catalog";
 import { db } from "@/lib/db";
-import { LISTENBRAINZ_TO_LASTFM, RARITY_THRESHOLDS } from "@/lib/rarity";
+import { RARITY_THRESHOLDS } from "@/lib/rarity";
 import { createAlbum, resetDatabase } from "./helpers";
 
 beforeEach(async () => {
   await resetDatabase();
 });
 
-async function mbidOf(id: string) {
-  const { rows } = await db.query<{ mbid: string }>("select mbid from albums where id = $1", [id]);
-  return rows[0].mbid;
-}
-
 async function tierOf(id: string) {
   const { rows } = await db.query<{ rarity_tier: string }>("select rarity_tier from albums where id = $1", [id]);
   return rows[0].rarity_tier;
 }
 
-// Album avec ses écoutes Last.fm (et, s'il le faut, ListenBrainz)
-async function albumWith(lastfm: number | null, lastfmListeners: number | null = null, listens: number | null = null, listeners: number | null = null) {
+// Album avec ses écoutes et auditeurs Last.fm
+async function albumWith(lastfm: number | null, lastfmListeners: number | null = null) {
   const album = await createAlbum();
-  await db.query(
-    "update albums set lastfm_playcount = $2, lastfm_listeners = $3, listen_count = $4, listener_count = $5 where id = $1",
-    [album.id, lastfm, lastfmListeners, listens, listeners],
-  );
+  await db.query("update albums set lastfm_playcount = $2, lastfm_listeners = $3 where id = $1", [album.id, lastfm, lastfmListeners]);
   return album.id;
 }
 
@@ -54,28 +46,24 @@ describe("rareté selon les écoutes Last.fm (seuils fixes)", () => {
   });
 
   it("plafonne les écoutes en boucle d'une poignée de fans (100 par auditeur)", async () => {
-    const looped = await albumWith(1_300_000_000, 660_000);
+    // Dix fois les écoutes d'un légendaire, mais trop peu d'auditeurs : compté comme un épique
+    const looped = await albumWith(RARITY_THRESHOLDS.legendaire * 10, RARITY_THRESHOLDS.epique / 100);
     await recomputeRarity();
     expect(await tierOf(looped)).toBe("epique");
   });
 
-  it("estime à partir de ListenBrainz un album que Last.fm ne connaît pas, et laisse commun un album sans aucune donnée", async () => {
-    const estimated = await albumWith(null, null, Math.ceil(RARITY_THRESHOLDS.rare / LISTENBRAINZ_TO_LASTFM), 100_000);
+  it("laisse commun un album que Last.fm ne connaît pas", async () => {
     const unknown = (await createAlbum("epique")).id;
-    await recomputeRarity();
-    expect(await tierOf(estimated)).toBe("rare");
+    expect(await recomputeRarity()).toBe(0);
     expect(await tierOf(unknown)).toBe("commun");
   });
 });
 
-describe("écoutes ListenBrainz", () => {
-  it("enregistre écoutes et auditeurs de chaque album", async () => {
+describe("titres du catalogue par artiste", () => {
+  it("regroupe les titres sous le nom simplifié de l'artiste", async () => {
     const album = await createAlbum();
-    expect(await saveListens(new Map([[await mbidOf(album.id), { listens: 10_000, listeners: 100 }]]))).toBe(1);
-    const { rows } = await db.query<{ listen_count: string; listener_count: string }>(
-      "select listen_count, listener_count from albums where id = $1",
-      [album.id],
-    );
-    expect(rows[0]).toEqual({ listen_count: "10000", listener_count: "100" });
+    await db.query("update albums set artist = 'Beyoncé', title = 'Lemonade' where id = $1", [album.id]);
+    const titles = await catalogTitlesByArtist((artist) => artist.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase());
+    expect(titles.get("beyonce")).toEqual(["Lemonade"]);
   });
 });

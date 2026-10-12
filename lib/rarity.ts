@@ -41,21 +41,11 @@ export function tierForPlays(plays: number): RarityTier {
 // Écoutes comptées au plus par auditeur : au-delà, ce sont quelques fans qui font tourner l'album en boucle
 // (ARIRANG de BTS : 1,3 milliard d'écoutes Last.fm pour 660 000 auditeurs, près de 2 000 chacun ; la médiane est de 16).
 export const MAX_PLAYS_PER_LISTENER = 100;
-// Un album a environ 54 fois plus d'écoutes sur Last.fm que sur ListenBrainz (médiane du catalogue) :
-// sert d'estimation quand Last.fm n'a pas l'album, ou un chiffre manifestement faux (10 fois trop bas)
-export const LISTENBRAINZ_TO_LASTFM = 54;
 
-export type ListenStats = {
-  lastfmPlaycount: number | null;
-  lastfmListeners: number | null;
-  listens: number | null;
-  listeners: number | null;
-};
+export type ListenStats = { lastfmPlaycount: number | null; lastfmListeners: number | null };
 
-// Écoutes retenues pour la rareté (équivalent Last.fm)
-export function rarityScore(stats: ListenStats): number {
-  const capped = (plays: number, listeners: number | null) => (listeners === null ? plays : Math.min(plays, listeners * MAX_PLAYS_PER_LISTENER));
-  const estimate = stats.listens === null ? 0 : capped(stats.listens, stats.listeners) * LISTENBRAINZ_TO_LASTFM;
-  if (stats.lastfmPlaycount === null || stats.lastfmPlaycount * 10 < estimate) return estimate;
-  return capped(stats.lastfmPlaycount, stats.lastfmListeners);
+// Écoutes retenues pour la rareté. Album inconnu de Last.fm : 0 (commun).
+export function rarityScore({ lastfmPlaycount, lastfmListeners }: ListenStats): number {
+  if (lastfmPlaycount === null) return 0;
+  return lastfmListeners === null ? lastfmPlaycount : Math.min(lastfmPlaycount, lastfmListeners * MAX_PLAYS_PER_LISTENER);
 }

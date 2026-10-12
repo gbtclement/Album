@@ -22,7 +22,7 @@ function readOption(name: string): string | null {
 
 async function main() {
   const max = Number(readOption("--max") ?? Infinity);
-  const { rows } = await db.query<Row>("select id, mbid, artist, title, cover_url from albums order by listener_count desc nulls last, id");
+  const { rows } = await db.query<Row>("select id, mbid, artist, title, cover_url from albums order by lastfm_playcount desc nulls last, id");
   const albums = rows.slice(0, max);
 
   const broken: Row[] = [];

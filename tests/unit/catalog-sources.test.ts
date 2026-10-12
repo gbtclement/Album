@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { coverFromCaa } from "@/lib/listenbrainz";
 import { isStudioAlbum } from "@/lib/musicbrainz";
 
 describe("isStudioAlbum", () => {
@@ -15,18 +14,5 @@ describe("isStudioAlbum", () => {
     expect(isStudioAlbum("Single", [])).toBe(false);
     expect(isStudioAlbum("EP", [])).toBe(false);
     expect(isStudioAlbum(null, [])).toBe(false);
-  });
-});
-
-describe("coverFromCaa", () => {
-  it("construit l'adresse de la pochette choisie par ListenBrainz", () => {
-    expect(coverFromCaa("30702389-5c67-4438-9ea0-2351c8de0f1d", 43287476628)).toBe(
-      "https://coverartarchive.org/release/30702389-5c67-4438-9ea0-2351c8de0f1d/43287476628-500.jpg",
-    );
-  });
-
-  it("ne renvoie rien sans image", () => {
-    expect(coverFromCaa(null, 123)).toBeNull();
-    expect(coverFromCaa("30702389-5c67-4438-9ea0-2351c8de0f1d", null)).toBeNull();
   });
 });

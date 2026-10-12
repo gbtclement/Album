@@ -13,7 +13,7 @@ export async function coverWorks(url: string): Promise<boolean> {
 }
 
 // Cherche une autre pochette qui fonctionne : d'abord l'image principale de l'album sur Cover Art Archive
-// (qui peut différer de celle choisie par ListenBrainz), sinon la pochette Deezer.
+// (qui peut différer de celle de l'import), sinon la pochette Deezer.
 export async function findReplacementCover(album: { mbid: string; artist: string; title: string; cover_url: string | null }) {
   const caa = await fetchCoverUrl(album.mbid).catch(() => null);
   if (caa && caa !== album.cover_url && (await coverWorks(caa))) return caa;

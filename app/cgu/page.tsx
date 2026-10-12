@@ -67,7 +67,7 @@ export default function CguPage() {
       <h2>4. Contenus musicaux</h2>
       <p>
         Les noms d&apos;albums et d&apos;artistes et les pochettes appartiennent à leurs ayants droit. Musicodex n&apos;est lié à aucun artiste,
-        label ou plateforme d&apos;écoute. Les nombres d&apos;écoutes viennent de services publics (ListenBrainz, Last.fm) et sont donnés à titre
+        label ou plateforme d&apos;écoute. Les nombres d&apos;écoutes viennent de Last.fm, un service public, et sont donnés à titre
         indicatif. Plus de détails dans les <Link href="/mentions-legales">mentions légales</Link>.
       </p>
 

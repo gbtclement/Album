@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // Plan du site : pages publiques et une URL par album du catalogue (limite d'un plan : 50 000 adresses)
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const albums = await db.query<{ slug: string; updated_at: Date }>(
-    "select slug, updated_at from albums where cover_url is not null order by listen_count desc nulls last limit 49000",
+    "select slug, updated_at from albums where cover_url is not null order by lastfm_playcount desc nulls last limit 49000",
   );
   const latest = albums.rows.reduce<Date | undefined>((max, album) => (!max || album.updated_at > max ? album.updated_at : max), undefined);
 

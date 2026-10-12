@@ -12,10 +12,8 @@ export type AlbumRow = {
   artist: string;
   release_year: number | null;
   cover_url: string | null;
-  // Écoutes ListenBrainz (bigint : renvoyé en texte par PostgreSQL)
-  listen_count: string | null;
-  listener_count: string | null;
-  // Écoutes Last.fm, affichées en priorité sur la fiche (null si pas encore récupérées ou album inconnu)
+  // Écoutes Last.fm, toutes versions additionnées (bigint : renvoyé en texte par PostgreSQL ;
+  // null si pas encore récupérées ou album inconnu de Last.fm)
   lastfm_playcount: string | null;
   lastfm_listeners: string | null;
   rarity_tier: RarityTier;
@@ -28,8 +26,6 @@ export type AlbumInput = {
   artist: string;
   releaseYear: number | null;
   coverUrl: string;
-  listens: number | null;
-  listeners: number | null;
   links: AlbumLinks;
 };
 
@@ -52,15 +48,13 @@ export function slugFor(artist: string, title: string, mbid: string) {
 export async function upsertAlbum(input: AlbumInput) {
   await db.query(
     `insert into albums
-       (mbid, slug, title, artist, release_year, cover_url, listen_count, listener_count, links)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       (mbid, slug, title, artist, release_year, cover_url, links)
+     values ($1, $2, $3, $4, $5, $6, $7)
      on conflict (mbid) do update set
        title = excluded.title,
        artist = excluded.artist,
        release_year = coalesce(excluded.release_year, albums.release_year),
        cover_url = excluded.cover_url,
-       listen_count = coalesce(excluded.listen_count, albums.listen_count),
-       listener_count = coalesce(excluded.listener_count, albums.listener_count),
        links = excluded.links,
        updated_at = now()`,
     [
@@ -71,8 +65,6 @@ export async function upsertAlbum(input: AlbumInput) {
       input.releaseYear,
       // Toujours en https (Cover Art Archive renvoie parfois du http://)
       input.coverUrl.replace(/^http:\/\//, "https://"),
-      input.listens,
-      input.listeners,
       JSON.stringify(input.links),
     ],
   );
@@ -84,41 +76,25 @@ export async function existingMbids() {
   return new Set(rows.map((row) => row.mbid));
 }
 
-// Met à jour les écoutes de tout le catalogue d'un coup
-export async function saveListens(listens: Map<string, { listens: number; listeners: number }>) {
-  const mbids = [...listens.keys()];
-  if (mbids.length === 0) return 0;
-  const result = await db.query(
-    `update albums set listen_count = data.listens, listener_count = data.listeners, updated_at = now()
-     from (select unnest($1::uuid[]) as mbid, unnest($2::bigint[]) as listens, unnest($3::bigint[]) as listeners) as data
-     where albums.mbid = data.mbid`,
-    [mbids, mbids.map((mbid) => listens.get(mbid)!.listens), mbids.map((mbid) => listens.get(mbid)!.listeners)],
-  );
-  return result.rowCount ?? 0;
+// Titres du catalogue par artiste (nom simplifié : casse et accents ignorés), pour ne pas réimporter un album
+export async function catalogTitlesByArtist(normalize: (artist: string) => string) {
+  const { rows } = await db.query<{ artist: string; title: string }>("select artist, title from albums");
+  const titles = new Map<string, string[]>();
+  for (const row of rows) titles.set(normalize(row.artist), [...(titles.get(normalize(row.artist)) ?? []), row.title]);
+  return titles;
 }
 
 // Recalcule la rareté de tout le catalogue à partir des écoutes Last.fm (seuils fixes, voir lib/rarity.ts) :
-// un album garde sa rareté quand d'autres arrivent. Sans aucune statistique : "commun".
-// Renvoie le nombre d'albums dont au moins une statistique est connue.
+// un album garde sa rareté quand d'autres arrivent. Album inconnu de Last.fm : "commun".
+// Renvoie le nombre d'albums dont les écoutes Last.fm sont connues.
 export async function recomputeRarity() {
-  const { rows } = await db.query<{
-    id: string;
-    lastfm_playcount: string | null;
-    lastfm_listeners: string | null;
-    listen_count: string | null;
-    listener_count: string | null;
-  }>("select id, lastfm_playcount, lastfm_listeners, listen_count, listener_count from albums");
+  const { rows } = await db.query<{ id: string; lastfm_playcount: string | null; lastfm_listeners: string | null }>(
+    "select id, lastfm_playcount, lastfm_listeners from albums",
+  );
   const number = (value: string | null) => (value === null ? null : Number(value));
   const ids = rows.map((row) => row.id);
   const tiers = rows.map((row) =>
-    tierForPlays(
-      rarityScore({
-        lastfmPlaycount: number(row.lastfm_playcount),
-        lastfmListeners: number(row.lastfm_listeners),
-        listens: number(row.listen_count),
-        listeners: number(row.listener_count),
-      }),
-    ),
+    tierForPlays(rarityScore({ lastfmPlaycount: number(row.lastfm_playcount), lastfmListeners: number(row.lastfm_listeners) })),
   );
 
   if (ids.length > 0) {
@@ -129,7 +105,7 @@ export async function recomputeRarity() {
       [ids, tiers],
     );
   }
-  return rows.filter((row) => row.lastfm_playcount !== null || row.listen_count !== null).length;
+  return rows.filter((row) => row.lastfm_playcount !== null).length;
 }
 
 export async function findAlbumBySlug(slug: string) {
@@ -142,7 +118,7 @@ export async function findAlbumsByArtist(artist: string, excludeId: string, limi
   const result = await db.query<Pick<AlbumRow, "slug" | "title" | "release_year" | "cover_url" | "rarity_tier">>(
     `select slug, title, release_year, cover_url, rarity_tier from albums
      where artist = $1 and id <> $2
-     order by listen_count desc nulls last, release_year
+     order by lastfm_playcount desc nulls last, release_year
      limit $3`,
     [artist, excludeId, limit],
   );

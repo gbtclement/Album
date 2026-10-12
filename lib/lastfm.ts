@@ -35,6 +35,10 @@ const RETRYABLE = new Set([11, 16, 29]);
 type LastfmResponse = { error?: number; message?: string };
 type AlbumInfoResponse = LastfmResponse & { album?: { playcount?: string | number; listeners?: string | number } };
 type TopAlbumsResponse = LastfmResponse & { topalbums?: { album?: Array<{ name?: string; playcount?: string | number }> } };
+type ArtistList = { artist?: Array<{ name?: string; mbid?: string }>; "@attr"?: { totalPages?: string } };
+type ArtistListResponse = LastfmResponse & { artists?: ArtistList; topartists?: ArtistList };
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Extrait les chiffres de la réponse d'album.getInfo (null si l'album est inconnu ou sans écoute)
 export function parseAlbumInfo(json: AlbumInfoResponse): LastfmStats | null {
@@ -76,6 +80,30 @@ export async function fetchArtistTopAlbums(artist: string) {
   return (json?.topalbums?.album ?? []).map((album) => ({ name: album.name ?? "", playcount: Number(album.playcount) || 0 }));
 }
 
+// Classements d'artistes : mondial (10 000 au plus), par pays (nom anglais : « France ») ou par genre (« french rap »)
+export type ArtistChart = { chart: true } | { country: string } | { tag: string };
+const ARTIST_PAGE = 500;
+
+export async function fetchLastfmArtists(source: ArtistChart, count: number, delayMs = LASTFM_DELAY_MS) {
+  const params: Record<string, string> =
+    "country" in source
+      ? { method: "geo.gettopartists", country: source.country }
+      : "tag" in source
+        ? { method: "tag.gettopartists", tag: source.tag }
+        : { method: "chart.gettopartists" };
+  const artists: Array<{ name: string; mbid: string | null }> = [];
+  for (let page = 1; artists.length < count; page++) {
+    const json = await lastfmGet<ArtistListResponse>({ ...params, limit: String(ARTIST_PAGE), page: String(page) });
+    const list = json?.artists ?? json?.topartists;
+    const batch = (list?.artist ?? []).flatMap((artist) => (artist.name ? [{ name: artist.name, mbid: artist.mbid || null }] : []));
+    artists.push(...batch);
+    await sleep(delayMs);
+    // Après la dernière page, Last.fm renvoie une liste vide ou répète la précédente
+    if (batch.length === 0 || page >= Number(list?.["@attr"]?.totalPages ?? 0)) break;
+  }
+  return artists.slice(0, count);
+}
+
 // Enregistre le résultat d'une recherche, même vide (l'album ne sera pas recherché de nouveau tout de suite)
 export async function saveLastfm(albumId: string, stats: LastfmStats | null) {
   await db.query(
@@ -92,20 +120,18 @@ async function artistsToCheck(days: number, limit: number) {
     `with due as (
        select id from albums
        where lastfm_checked_at is null or lastfm_checked_at < now() - make_interval(days => $1)
-       order by lastfm_checked_at nulls first, listen_count desc nulls last
+       order by lastfm_checked_at nulls first, lastfm_playcount desc nulls last
        limit $2
      )
      select a.artist, json_agg(json_build_object('id', a.id, 'title', a.title, 'due', a.id in (select id from due))) as albums
      from albums a
      where a.artist in (select artist from albums where id in (select id from due))
      group by a.artist
-     order by max(a.listen_count) desc nulls last`,
+     order by max(a.lastfm_playcount) desc nulls last`,
     [days, limit],
   );
   return rows;
 }
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Met à jour les écoutes Last.fm du catalogue. Une erreur définitive (clé refusée...) arrête tout ;
 // relancer reprend là où on s'est arrêté, grâce à lastfm_checked_at.

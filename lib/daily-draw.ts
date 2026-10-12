@@ -196,7 +196,7 @@ export async function searchAlbumTitles(query: string, limit = 8): Promise<Album
   const { rows } = await db.query<AlbumSuggestion>(
     `select id, title, artist from albums
      where title ilike '%' || $1 || '%'
-     order by (title ilike $1 || '%') desc, listen_count desc nulls last, title
+     order by (title ilike $1 || '%') desc, lastfm_playcount desc nulls last, title
      limit $2`,
     [pattern, limit],
   );

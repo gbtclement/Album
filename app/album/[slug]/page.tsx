@@ -55,10 +55,8 @@ export default async function AlbumPage({ params }: Props) {
     getAlbumCote(album.id),
     findAlbumsByArtist(album.artist, album.id),
   ]);
-  // Écoutes affichées : Last.fm (grande communauté) si on les a, sinon ListenBrainz
-  const lastfm = album.lastfm_playcount ? Number(album.lastfm_playcount) : null;
-  const listens = lastfm ?? (album.listen_count ? Number(album.listen_count) : null);
-  const listensSource = lastfm !== null ? "Last.fm" : "ListenBrainz";
+  // Écoutes Last.fm, toutes versions de l'album additionnées : ce sont elles qui fixent la rareté
+  const listens = album.lastfm_playcount ? Number(album.lastfm_playcount) : null;
 
   // Données structurées (schema.org) : aident les moteurs à comprendre la fiche
   // Fil d'Ariane : Accueil > Albums de l'artiste > Album
@@ -109,14 +107,14 @@ export default async function AlbumPage({ params }: Props) {
         </div>
 
         <div className="facts" style={{ marginTop: 14 }}>
-          <div className="fact"><b>{listens !== null ? formatCompact(listens) : "—"}</b><small>Écoutes {listensSource}</small></div>
+          <div className="fact"><b>{listens !== null ? formatCompact(listens) : "—"}</b><small>Écoutes Last.fm</small></div>
           <div className="fact"><b><i className="coin-i" aria-hidden="true" />{cote.cote ? Number(cote.cote).toLocaleString("fr-FR") : "—"}</b><small>Cote</small></div>
           <div className="fact"><b>{RARITY_POINTS[album.rarity_tier]}</b><small>Points</small></div>
         </div>
         <p className="sub" style={{ marginTop: 6 }}>
-          {lastfm !== null
+          {listens !== null
             ? `Écoutes comptées sur Last.fm, toutes versions de l'album confondues (remasterisée, deluxe...)${album.lastfm_listeners ? ` par ${formatCompact(Number(album.lastfm_listeners))} auditeurs` : ""} (et non sur Spotify, qui ne publie pas ses chiffres). `
-            : "Écoutes comptées sur ListenBrainz, un service d'écoutes ouvert (et non sur Spotify, qui ne publie pas ses chiffres). "}
+            : "Écoutes pas encore connues sur Last.fm. "}
           Plus un album est écouté, plus sa carte est rare.
         </p>
 

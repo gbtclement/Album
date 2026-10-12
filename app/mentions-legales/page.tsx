@@ -27,9 +27,8 @@ export default function MentionsLegalesPage() {
 
       <h2>Données musicales et pochettes</h2>
       <p>
-        Les informations sur les albums viennent de <a href="https://musicbrainz.org">MusicBrainz</a> et de{" "}
-        <a href="https://listenbrainz.org">ListenBrainz</a> (projets de la fondation MetaBrainz), le nombre d&apos;écoutes de{" "}
-        <a href="https://www.last.fm">Last.fm</a>, et les pochettes du <a href="https://coverartarchive.org">Cover Art Archive</a> ou de{" "}
+        Les informations sur les albums viennent de <a href="https://musicbrainz.org">MusicBrainz</a> (projet de la fondation MetaBrainz) et de{" "}
+        <a href="https://www.last.fm">Last.fm</a>, qui donne aussi le nombre d&apos;écoutes, et les pochettes du <a href="https://coverartarchive.org">Cover Art Archive</a> ou de{" "}
         <a href="https://www.deezer.com">Deezer</a>, d&apos;où viennent aussi les photos des artistes.
       </p>
       <p>

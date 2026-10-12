@@ -128,15 +128,25 @@ export async function browseArtistAlbums(artistMbid: string, artistName: string,
   const albums: ReleaseGroupInfo[] = [];
   for (let page = 0; page < maxPages; page++) {
     // Mise en cache : relancer un import ne redemande pas les discographies déjà parcourues
-    const data = await cached(`mb:artist-albums:${artistMbid}:${page}`, WEEK, () =>
+    // Avec le crédit de chaque album : le nom exact de l'artiste (« JAY-Z » sur Last.fm, « JAY‐Z » sur MusicBrainz)
+    const data = await cached(`mb:artist-albums-credits:${artistMbid}:${page}`, WEEK, () =>
       mbGet<{ "release-groups": ReleaseGroupDetails[]; "release-group-count": number }>(
-        `/release-group?artist=${artistMbid}&type=album&fmt=json&limit=100&offset=${page * 100}`,
+        `/release-group?artist=${artistMbid}&type=album&inc=artist-credits&fmt=json&limit=100&offset=${page * 100}`,
       ),
     );
     albums.push(...data["release-groups"].map((group) => toInfo(group, artistName)).filter((info) => info.studioAlbum));
     if ((page + 1) * 100 >= data["release-group-count"]) break;
   }
   return albums;
+}
+
+// Artistes MusicBrainz portant ce nom (plusieurs en cas d'homonymes), avec leur score de correspondance
+export async function searchArtists(name: string): Promise<Array<{ id: string; name: string; score: number }>> {
+  const query = `artist:"${escapeLucene(name)}"`;
+  const data = await cached(`mb:artist-search:${name.toLowerCase()}`, WEEK, () =>
+    mbGet<{ artists: Array<{ id: string; name: string; score: number }> }>(`/artist/?query=${encodeURIComponent(query)}&fmt=json&limit=5`),
+  );
+  return data.artists.map(({ id, name: found, score }) => ({ id, name: found, score }));
 }
 
 type LookupResponse = {
