@@ -171,6 +171,7 @@ const LOTS = [
   { lot: "RAR1", name: "Rareté calculée sur les écoutes Last.fm (toutes versions d'un album additionnées : remasterisée, deluxe...), plafonnées à 100 par auditeur, avec des seuils fixes (un album garde sa rareté quand le catalogue grandit) ; récupération Last.fm par artiste (artist.getTopAlbums) et signes typographiques corrigés (’ ‐ …)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PIO2", name: "Pioche : rareté cachée jusqu'à la réponse, série et chances centrées, la série de 7 offre un pack Épique", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "CAT2", name: "Catalogue 100 % Last.fm : import des artistes des classements Last.fm (mondial, par pays, par genre), albums d'au moins 100 000 écoutes confirmés albums studio par MusicBrainz ; ListenBrainz retiré (code, colonnes listen_count et listener_count, estimation de secours de la rareté)", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "PACK3", name: "Recharge des packs ralentie : un pack toutes les 10 minutes au lieu de 5", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
@@ -283,7 +284,7 @@ export default async function DocumentationPage() {
         <Section title="Règles du jeu">
           <ul className="list-disc space-y-2 pl-6">
             <li>
-              <strong>Packs :</strong> 5 cartes par pack. Un pack se recharge toutes les 5 minutes, 10 maximum en stock.
+              <strong>Packs :</strong> 5 cartes par pack. Un pack se recharge toutes les 10 minutes, 10 maximum en stock (15 en premium).
               Un nouveau compte commence avec 3 packs.
             </li>
             <li>

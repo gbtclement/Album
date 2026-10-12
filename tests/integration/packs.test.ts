@@ -71,17 +71,17 @@ describe("openPack", () => {
 });
 
 describe("recharge du stock", () => {
-  it("ajoute un pack toutes les 5 minutes écoulées", async () => {
+  it("ajoute un pack toutes les 10 minutes écoulées", async () => {
     const user = await createTestUser();
-    await setStock(user.id, 0, 11);
+    await setStock(user.id, 0, 22);
 
     const state = await getPackState(user.id);
 
     expect(state.stock).toBe(2);
-    // Prochain pack : 15 minutes après le départ, soit dans 4 minutes
+    // Prochain pack : 30 minutes après le départ, soit dans 8 minutes
     const remaining = state.nextPackAt!.getTime() - Date.now();
-    expect(remaining).toBeGreaterThan(3.5 * 60_000);
-    expect(remaining).toBeLessThan(4.5 * 60_000);
+    expect(remaining).toBeGreaterThan(7.5 * 60_000);
+    expect(remaining).toBeLessThan(8.5 * 60_000);
   });
 
   it("ne dépasse jamais le maximum", async () => {

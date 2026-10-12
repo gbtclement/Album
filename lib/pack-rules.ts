@@ -9,7 +9,8 @@ export const MAX_STOCK_PREMIUM = 15;
 export function maxStock(premium: boolean) {
   return premium ? MAX_STOCK_PREMIUM : MAX_STOCK;
 }
-export const PACK_INTERVAL_MS = 5 * 60 * 1000;
+// Un pack toutes les 10 minutes
+export const PACK_INTERVAL_MS = 10 * 60 * 1000;
 
 // Packs gagnés (quêtes, séries de la pioche, grands sets, passe) : gardés à part du stock, sans maximum.
 // Un pack classique contient PACK_SIZE albums, un pack Solo un seul.

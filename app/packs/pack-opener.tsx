@@ -81,7 +81,7 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
     <div className="big-pack">
       <h1>Packs</h1>
       <p className="sub">
-        {current.stock > 0 ? `${current.stock} pack${current.stock > 1 ? "s" : ""} prêt${current.stock > 1 ? "s" : ""}` : "Aucun pack prêt"} · +1 toutes les 5 min · {current.max} max
+        {current.stock > 0 ? `${current.stock} pack${current.stock > 1 ? "s" : ""} prêt${current.stock > 1 ? "s" : ""}` : "Aucun pack prêt"} · +1 toutes les 10 min · {current.max} max
       </p>
       {(current.bonus > 0 || SPECIAL_PACKS.some((pack) => current[pack.kind] > 0)) && (
         <div className="pack-stock">

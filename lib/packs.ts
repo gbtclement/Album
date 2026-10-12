@@ -62,7 +62,7 @@ async function rechargeStock(client: PoolClient, userId: string): Promise<PackSt
   const max = maxStock(row.premium);
   const extra = { bonus: row.bonus_packs, solo: row.solo_packs, epic: row.epic_packs, legendary: row.legendary_packs, max };
 
-  // Stock plein : le compteur repart de maintenant, pour qu'un pack dépensé soit recréé 5 minutes plus tard
+  // Stock plein : le compteur repart de maintenant, pour qu'un pack dépensé soit recréé 10 minutes plus tard
   if (row.stock >= max) {
     await client.query("update pack_stocks set last_recharged_at = now() where user_id = $1", [userId]);
     return { stock: row.stock, nextPackAt: null, ...extra };

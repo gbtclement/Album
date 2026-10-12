@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { analyzeOpenings, scoreSuspect } from "@/lib/cheat-rules";
+import { PACK_INTERVAL_MS } from "@/lib/pack-rules";
 
 const START = new Date("2026-10-05T00:00:00+02:00").getTime();
 const MIN = 60_000;
 
-// Robot : ouvre chaque pack 2 à 6 s après sa recharge (toutes les 5 min), jour et nuit, pendant `hours` heures
+// Robot : ouvre chaque pack 2 à 6 s après sa recharge (à chaque recharge), jour et nuit, pendant `hours` heures
 function botTimes(hours: number) {
   const times: Date[] = [];
   for (let t = START, i = 0; t < START + hours * 60 * MIN; i++) {
-    t += 5 * MIN + (2 + (i % 5)) * 1000;
+    t += PACK_INTERVAL_MS + (2 + (i % 5)) * 1000;
     times.push(new Date(t));
   }
   return times;

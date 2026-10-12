@@ -23,7 +23,7 @@ export default async function PremiumPage() {
   const price = formatEuros(PREMIUM_PRICE_CENTS);
 
   const tracks = [
-    { title: "Stock de packs", detail: "Toujours un pack toutes les 5 minutes, mais tu en gardes plus en réserve", value: `${MAX_STOCK_PREMIUM} au lieu de ${MAX_STOCK}` },
+    { title: "Stock de packs", detail: "Toujours un pack toutes les 10 minutes, mais tu en gardes plus en réserve", value: `${MAX_STOCK_PREMIUM} au lieu de ${MAX_STOCK}` },
     ...QUESTS.filter((quest) => quest.premium).map((quest) => ({
       title: `Quête premium ${PERIOD_NAMES[quest.period]}`,
       detail: quest.title,

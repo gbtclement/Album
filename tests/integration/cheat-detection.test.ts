@@ -1,16 +1,18 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { findSuspects } from "@/lib/cheat-detection";
 import { db } from "@/lib/db";
+import { PACK_INTERVAL_MS } from "@/lib/pack-rules";
 import { createAlbum, createTestUser, resetDatabase } from "./helpers";
 
 beforeEach(resetDatabase);
 
-// Ouvertures toutes les 5 min + quelques secondes, sur les `hours` dernières heures
+// Ouvertures à chaque recharge + quelques secondes, sur les `hours` dernières heures
+const BOT_GAP_S = PACK_INTERVAL_MS / 1000 + 4;
 async function botOpenings(userId: string, hours: number) {
   await db.query(
     `insert into pack_openings (user_id, album_ids, opened_at)
-     select $1, '{}', now() - make_interval(secs => g * 304 + (g % 5)) from generate_series(1, $2) g`,
-    [userId, Math.floor((hours * 3600) / 304)],
+     select $1, '{}', now() - make_interval(secs => g * $3 + (g % 5)) from generate_series(1, $2) g`,
+    [userId, Math.floor((hours * 3600) / BOT_GAP_S), BOT_GAP_S],
   );
 }
 

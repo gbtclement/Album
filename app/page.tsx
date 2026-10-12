@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 const STEPS = [
-  { title: "Ouvre des packs", text: `Un pack de ${PACK_SIZE} cartes se recharge toutes les 5 minutes, jusqu'à ${MAX_STOCK} en réserve. Chaque carte est un vrai album.` },
+  { title: "Ouvre des packs", text: `Un pack de ${PACK_SIZE} cartes se recharge toutes les 10 minutes, jusqu'à ${MAX_STOCK} en réserve. Chaque carte est un vrai album.` },
   { title: "Collectionne", text: "Plus un album est écouté dans le monde, plus sa carte est rare : commune, peu commune, rare, épique ou légendaire." },
   { title: "Échange et revends", text: "Troque avec tes amis, vends au marché en pièces et suis la cote de chaque album en bourse." },
   { title: "Grimpe au classement", text: "Chaque album possédé rapporte des points selon sa rareté. Les quêtes donnent des pièces et des packs." },
