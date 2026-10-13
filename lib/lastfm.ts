@@ -55,7 +55,17 @@ async function lastfmGet<T extends LastfmResponse>(params: Record<string, string
   const query = new URLSearchParams({ ...params, api_key: key, autocorrect: "1", format: "json" });
 
   for (let attempt = 1; ; attempt++) {
-    const res = await fetch(`${LASTFM_BASE}?${query}`, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" } });
+    const res = await fetch(`${LASTFM_BASE}?${query}`, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" } }).catch(
+      // Coupure réseau passagère : on réessaie comme pour une surcharge
+      (error: Error) => {
+        if (attempt === MAX_ATTEMPTS) throw new LastfmError(`Last.fm injoignable (${error.message})`);
+        return null;
+      },
+    );
+    if (!res) {
+      await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+      continue;
+    }
     const json = (await res.json().catch(() => ({}))) as T;
     if (json.error === NOT_FOUND) return null;
     if (res.ok && !json.error) return json;

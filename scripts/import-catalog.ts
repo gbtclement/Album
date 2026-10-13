@@ -6,6 +6,9 @@
 //                                                            classement mondial, par pays et par genre
 //   npm run import:catalog -- --lastfm --max-artists 50   -> essai sur 50 artistes
 //   ... --dry-run                                         -> montre les albums qui seraient importés, sans rien écrire
+//   ... --save-candidates albums.json                     -> enregistre la liste des albums repérés (avec --dry-run :
+//                                                            parcours seul, l'import se fera plus tard)
+//   npm run import:catalog -- --candidates albums.json    -> importe une liste enregistrée, sans refaire le parcours
 //
 // Options de --lastfm : --top 10000 (artistes du classement mondial), --per-country 1000, --per-tag 500,
 // --countries "France,Japan" et --tags "french rap,k-pop" (remplacent les listes par défaut ci-dessous),
@@ -17,11 +20,21 @@
 // Archive ou Deezer. Pochettes en panne après coup : npm run check:covers (scripts/check-covers.ts).
 // À la fin : écoutes Last.fm des nouveaux albums (scripts/import-lastfm.ts), rareté, photos des nouveaux artistes.
 
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { syncArtistPhotos } from "@/lib/artist-photos";
 import { catalogTitlesByArtist, existingMbids, recomputeRarity, upsertAlbum } from "@/lib/catalog";
 import { db } from "@/lib/db";
-import { exactArtistMatches, isRealArtist, type LastfmArtist, mergeArtists, missingGroups, popularGroups, selectNewAlbums } from "@/lib/lastfm-discovery-rules";
+import {
+  type Candidate,
+  exactArtistMatches,
+  isRealArtist,
+  type LastfmArtist,
+  mergeArtists,
+  missingGroups,
+  parseCandidates,
+  popularGroups,
+  selectNewAlbums,
+} from "@/lib/lastfm-discovery-rules";
 import { type ArtistChart, fetchArtistTopAlbums, fetchLastfmArtists, LASTFM_DELAY_MS, lastfmKey, syncLastfm } from "@/lib/lastfm";
 import { fullTitle, type LastfmAlbumEntry } from "@/lib/lastfm-variants";
 import { browseArtistAlbums, fetchCoverUrl, searchArtists, searchReleaseGroup } from "@/lib/musicbrainz";
@@ -36,14 +49,6 @@ const TAGS = [
   "pop", "k-pop", "j-pop", "latin", "reggaeton", "afrobeats", "rock", "classic rock", "hard rock", "alternative",
   "indie", "punk", "metal", "electronic", "house", "techno", "jazz", "blues", "reggae", "country", "folk",
 ];
-
-type Candidate = {
-  mbid: string;
-  title: string;
-  artist: string;
-  releaseYear: number | null;
-  playcount: number;
-};
 
 function readOption(name: string): string | null {
   const index = process.argv.indexOf(name);
@@ -164,7 +169,12 @@ async function main() {
   }
   const max = Number(readOption("--max") ?? Infinity);
   const known = await existingMbids();
-  const candidates = fromLastfm ? await lastfmCandidates(known) : await seedCandidates(readOption("--seed") ?? "data/seed-albums.json");
+  const savedList = readOption("--candidates");
+  const candidates = savedList
+    ? parseCandidates(await readFile(savedList, "utf8"))
+    : fromLastfm
+      ? await lastfmCandidates(known)
+      : await seedCandidates(readOption("--seed") ?? "data/seed-albums.json");
 
   // Les plus écoutés d'abord : si l'import s'arrête en route, l'essentiel est là
   const selected = candidates
@@ -172,9 +182,16 @@ async function main() {
     .sort((a, b) => b.playcount - a.playcount)
     .slice(0, max);
   console.log(`${selected.length} albums à importer.`);
+  // Liste enregistrée : l'import peut se faire plus tard, ou sur un autre ordinateur (--candidates)
+  const saveTo = readOption("--save-candidates");
+  if (saveTo) {
+    const list: Candidate[] = selected.map(({ mbid, title, artist, releaseYear, playcount }) => ({ mbid, title, artist, releaseYear, playcount }));
+    await writeFile(saveTo, JSON.stringify(list, null, 1));
+    console.log(`Liste enregistrée dans ${saveTo}.`);
+  }
   // Essai à blanc : on montre ce qui serait importé, sans rien écrire
   if (hasFlag("--dry-run")) {
-    for (const candidate of selected) console.log(`  ${candidate.artist} — ${candidate.title} (${candidate.releaseYear ?? "?"}, ${candidate.playcount.toLocaleString("fr-FR")} écoutes)`);
+    for (const candidate of saveTo ? [] : selected) console.log(`  ${candidate.artist} — ${candidate.title} (${candidate.releaseYear ?? "?"}, ${candidate.playcount.toLocaleString("fr-FR")} écoutes)`);
     return;
   }
 

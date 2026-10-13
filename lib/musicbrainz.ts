@@ -19,10 +19,14 @@ async function mbGet<T>(path: string): Promise<T> {
 
     const res = await fetch(`${MB_BASE}${path}`, {
       headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+    }).catch((error: Error) => {
+      // Coupure réseau passagère : on réessaie comme pour une surcharge
+      if (attempt === MAX_ATTEMPTS) throw new Error(`MusicBrainz injoignable (${error.message})`);
+      return null;
     });
-    if (res.ok) return (await res.json()) as T;
+    if (res?.ok) return (await res.json()) as T;
     // 503 : MusicBrainz est surchargé ou nous demande de ralentir. On patiente de plus en plus, puis on réessaie.
-    if (res.status !== 503 || attempt === MAX_ATTEMPTS) throw new Error(`MusicBrainz a répondu ${res.status}`);
+    if (res && (res.status !== 503 || attempt === MAX_ATTEMPTS)) throw new Error(`MusicBrainz a répondu ${res.status}`);
     await new Promise((resolve) => setTimeout(resolve, 3000 * attempt));
   }
 }

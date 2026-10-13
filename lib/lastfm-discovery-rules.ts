@@ -6,6 +6,27 @@ import { baseTitle, fullTitle, type LastfmAlbumEntry, matchVariants } from "@/li
 import type { ReleaseGroupInfo } from "@/lib/musicbrainz";
 
 export type LastfmArtist = { name: string; mbid: string | null };
+// Album repéré par le parcours des artistes, à importer
+export type Candidate = { mbid: string; title: string; artist: string; releaseYear: number | null; playcount: number };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Relit la liste enregistrée par --save-candidates (pour importer plus tard, ou sur un autre ordinateur).
+// Une ligne invalide arrête tout : mieux vaut un message clair qu'un import à moitié faux.
+export function parseCandidates(json: string): Candidate[] {
+  const data: unknown = JSON.parse(json);
+  if (!Array.isArray(data)) throw new Error("Le fichier doit contenir une liste d'albums.");
+  return data.map((item: Partial<Candidate>, index) => {
+    const ok =
+      typeof item?.mbid === "string" && UUID.test(item.mbid) &&
+      typeof item.title === "string" && item.title !== "" &&
+      typeof item.artist === "string" && item.artist !== "" &&
+      (item.releaseYear === null || Number.isInteger(item.releaseYear)) &&
+      typeof item.playcount === "number" && Number.isFinite(item.playcount);
+    if (!ok) throw new Error(`Album invalide ligne ${index + 1} : ${JSON.stringify(item).slice(0, 120)}`);
+    return { mbid: item.mbid!, title: item.title!, artist: item.artist!, releaseYear: item.releaseYear ?? null, playcount: item.playcount! };
+  });
+}
 export type AlbumGroup = { base: string; playcount: number };
 
 // Albums d'un artiste sur Last.fm regroupés par titre de base (versions additionnées), assez écoutés, les plus écoutés d'abord.

@@ -113,6 +113,8 @@ const COMMANDS = [
   { command: "npm run import:catalog", description: "Importer le catalogue de test (data/seed-albums.json)" },
   { command: "npm run import:catalog -- --lastfm", description: "Importer les albums des artistes les plus écoutés sur Last.fm (classement mondial, par pays et par genre), au moins 100 000 écoutes. Plusieurs heures : une requête MusicBrainz par seconde" },
   { command: "npm run import:catalog -- --lastfm --max-artists 50", description: "Essai de l'import sur 50 artistes" },
+  { command: "npm run import:catalog -- --lastfm --dry-run --save-candidates ~/lastfm-candidates.json", description: "Parcours des artistes seul : enregistre la liste des albums à importer, sans rien importer (pour importer plus tard ou sur un autre ordinateur)" },
+  { command: "npm run import:catalog -- --candidates ~/lastfm-candidates.json", description: "Importer une liste enregistrée, sans refaire le parcours (les albums déjà présents sont sautés : reprenable)" },
   { command: "npm run import:lastfm", description: "Récupérer les écoutes Last.fm des albums jamais vérifiés ou vérifiés il y a plus de 30 jours (clé LASTFM_API_KEY dans .env, environ 4 albums par seconde). Options --days 0 pour tout le catalogue, --max 200 pour un essai" },
   { command: "npm run import:photos", description: "Photos des artistes (onglet Artistes de la collection) depuis Deezer, sans clé : artistes jamais cherchés ou sans photo depuis 30 jours (--days 0 : tous les sans-photo, --max N : essai). Aussi lancé à la fin de import:catalog" },
   { command: "npm run check:covers", description: "Vérifier que chaque pochette s'affiche encore et remplacer celles en panne (Cover Art Archive, sinon Deezer). Option --max 200 pour un essai" },

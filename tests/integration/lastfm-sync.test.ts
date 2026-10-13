@@ -75,6 +75,19 @@ describe("classements d'artistes Last.fm", () => {
     expect(artists[0]).toEqual({ name: "Artiste 1-0", mbid: null });
     expect(await fetchLastfmArtists({ country: "France" }, 600, 0)).toHaveLength(600);
   });
+
+  it("réessaie après une coupure réseau passagère", async () => {
+    let calls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        if (++calls === 1) throw new TypeError("fetch failed");
+        return new Response(JSON.stringify({ artists: { artist: [{ name: "Booba", mbid: "" }], "@attr": { totalPages: "1" } } }));
+      }),
+    );
+    expect(await fetchLastfmArtists({ chart: true }, 10, 0)).toEqual([{ name: "Booba", mbid: null }]);
+    expect(calls).toBe(2);
+  });
 });
 
 describe("récupération Last.fm par artiste", () => {

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { exactArtistMatches, isRealArtist, mergeArtists, missingGroups, popularGroups, selectNewAlbums } from "@/lib/lastfm-discovery-rules";
+import {
+  exactArtistMatches,
+  isRealArtist,
+  mergeArtists,
+  missingGroups,
+  parseCandidates,
+  popularGroups,
+  selectNewAlbums,
+} from "@/lib/lastfm-discovery-rules";
 
 const album = (mbid: string, title: string, releaseYear: number | null = 2000) => ({ mbid, title, artist: "Ninho", releaseYear, studioAlbum: true });
 
@@ -62,6 +70,20 @@ describe("exactArtistMatches", () => {
     ]);
     expect(found).toEqual(["a", "b"]);
     expect(exactArtistMatches("Beyonce", [{ id: "e", name: "Beyoncé", score: 100 }])).toEqual(["e"]);
+  });
+});
+
+describe("parseCandidates", () => {
+  const valid = { mbid: "8a4f0f5c-6b0f-4b8e-9f3a-1c2d3e4f5a6b", title: "Destin", artist: "Ninho", releaseYear: 2019, playcount: 2_900_000 };
+
+  it("relit la liste enregistrée par le parcours des artistes", () => {
+    expect(parseCandidates(JSON.stringify([valid, { ...valid, mbid: "9b4f0f5c-6b0f-4b8e-9f3a-1c2d3e4f5a6b", releaseYear: null }]))).toHaveLength(2);
+  });
+
+  it("refuse un fichier abîmé ou d'un autre format", () => {
+    expect(() => parseCandidates("{}")).toThrow();
+    expect(() => parseCandidates(JSON.stringify([{ ...valid, mbid: "pas-un-uuid" }]))).toThrow(/ligne 1/);
+    expect(() => parseCandidates(JSON.stringify([valid, { ...valid, playcount: "beaucoup" }]))).toThrow(/ligne 2/);
   });
 });
 
