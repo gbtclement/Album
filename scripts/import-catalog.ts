@@ -57,6 +57,9 @@ function readOption(name: string): string | null {
 const hasFlag = (name: string) => process.argv.includes(name);
 const listOption = (name: string, fallback: string[]) => readOption(name)?.split(",").map((item) => item.trim()).filter(Boolean) ?? fallback;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// Erreur due à une coupure de connexion (après les nouvelles tentatives de lib/lastfm.ts et lib/musicbrainz.ts)
+const isOffline = (error: unknown) => /injoignable|fetch failed/.test((error as Error)?.message ?? "");
+const OFFLINE_WAITS = 60;
 
 // Liste écrite à la main : on cherche chaque album par son nom dans MusicBrainz
 async function seedCandidates(seedPath: string): Promise<Candidate[]> {
@@ -94,7 +97,11 @@ async function studioAlbumsFor(artist: LastfmArtist, entries: LastfmAlbumEntry[]
   const tried = new Set<string>();
   const attempt = async (mbid: string) => {
     tried.add(mbid);
-    const albums = await browseArtistAlbums(mbid, artist.name).catch(() => []);
+    // Identifiant inconnu de MusicBrainz : pas d'albums ; connexion coupée : l'erreur remonte (on attendra le réseau)
+    const albums = await browseArtistAlbums(mbid, artist.name).catch((error: Error) => {
+      if (isOffline(error)) throw error;
+      return [];
+    });
     // Correspondance sans tenir compte du catalogue : c'est bien le bon artiste, même si on a déjà tout
     return selectNewAlbums(albums, entries, minPlays, new Set()).length > 0 ? selectNewAlbums(albums, entries, minPlays, known) : null;
   };
@@ -120,21 +127,31 @@ async function lastfmCandidates(known: Set<string>): Promise<Candidate[]> {
   const found = new Map<string, Candidate>();
   let checked = 0;
   for (const [index, artist] of pool.entries()) {
-    try {
-      const entries = await fetchArtistTopAlbums(artist.name);
-      await sleep(LASTFM_DELAY_MS);
-      // Rien d'assez écouté qui manque au catalogue : inutile de demander sa discographie à MusicBrainz
-      const ownTitles = catalog.get(fullTitle(artist.name)) ?? [];
-      if (missingGroups(popularGroups(entries, minPlays), ownTitles).length > 0) {
-        checked++;
-        const owned = new Set(ownTitles.map(fullTitle));
-        for (const album of await studioAlbumsFor(artist, entries, minPlays, known)) {
-          // Même titre qu'un album déjà au catalogue (autre fiche MusicBrainz du même disque) : on n'en veut pas deux
-          if (!found.has(album.mbid) && !owned.has(fullTitle(album.title))) found.set(album.mbid, album);
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const entries = await fetchArtistTopAlbums(artist.name);
+        await sleep(LASTFM_DELAY_MS);
+        // Rien d'assez écouté qui manque au catalogue : inutile de demander sa discographie à MusicBrainz
+        const ownTitles = catalog.get(fullTitle(artist.name)) ?? [];
+        if (missingGroups(popularGroups(entries, minPlays), ownTitles).length > 0) {
+          checked++;
+          const owned = new Set(ownTitles.map(fullTitle));
+          for (const album of await studioAlbumsFor(artist, entries, minPlays, known)) {
+            // Même titre qu'un album déjà au catalogue (autre fiche MusicBrainz du même disque) : on n'en veut pas deux
+            if (!found.has(album.mbid) && !owned.has(fullTitle(album.title))) found.set(album.mbid, album);
+          }
         }
+        break;
+      } catch (error) {
+        // Connexion coupée : on attend qu'elle revienne (une heure au plus) au lieu de perdre l'artiste
+        if (isOffline(error) && attempt < OFFLINE_WAITS) {
+          if (attempt === 1) console.log(`Connexion coupée (${artist.name}) : nouvel essai chaque minute.`);
+          await sleep(60_000);
+          continue;
+        }
+        console.log(`Artiste ignoré (${artist.name}) : ${(error as Error).message}`);
+        break;
       }
-    } catch (error) {
-      console.log(`Artiste ignoré (${artist.name}) : ${(error as Error).message}`);
     }
     if ((index + 1) % 200 === 0) {
       console.log(`Artistes : ${index + 1}/${pool.length}, ${checked} discographies vérifiées, ${found.size} albums à importer.`);
