@@ -40,10 +40,13 @@ export type HudData = {
 };
 
 export async function getHudData(userId: string): Promise<HudData> {
-  // D'abord les succès et la fin de saison du passe : pièces et packs doivent apparaître dans les soldes affichés
-  await syncAchievements(userId);
-  const seasonRewards = await settlePastSeasons(userId);
-  const seasonAward = await settleSeasonRanking(userId);
+  // D'abord les succès et la fin de saison du passe : pièces et packs doivent apparaître dans les soldes affichés.
+  // Les succès et la fin de saison sont indépendants : vérifiés en même temps. Les deux versements de fin de saison
+  // restent l'un après l'autre (ils verrouillent les mêmes lignes de pass_progress, sans attendre l'autre).
+  const [, [seasonRewards, seasonAward]] = await Promise.all([
+    syncAchievements(userId),
+    (async () => [await settlePastSeasons(userId), await settleSeasonRanking(userId)] as const)(),
+  ]);
   const unlocked = await takeAchievementNotices(userId);
   const [user, pack, quests, social, drawPending, setsReady, pass, wishesOnSale] = await Promise.all([
     db.query<{ coins: number; cards: number }>(

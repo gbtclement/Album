@@ -44,9 +44,11 @@ export async function getAchievementStats(client: PoolClient | typeof db, userId
 
 // Débloque les succès atteints et verse leurs pièces ; renvoie ceux qui viennent d'être débloqués
 export async function syncAchievements(userId: string): Promise<AchievementDef[]> {
-  const stats = await getAchievementStats(db, userId);
   const { rows } = await db.query<{ key: string }>("select key from user_achievements where user_id = $1", [userId]);
   const unlocked = new Set(rows.map((row) => row.key));
+  // Tout est débloqué : inutile de recompter la partie du joueur à chaque page
+  if (ACHIEVEMENTS.every((item) => unlocked.has(item.key))) return [];
+  const stats = await getAchievementStats(db, userId);
   const reached = ACHIEVEMENTS.filter((item) => !unlocked.has(item.key) && stats[item.stat] >= item.target);
   if (reached.length === 0) return [];
 

@@ -72,18 +72,20 @@ export async function getArtistSets(userId: string): Promise<ArtistSet[]> {
   );
 }
 
-// Nombre de sets terminés dont la récompense attend (pastille de la barre de jeu)
+// Nombre de sets terminés dont la récompense attend (pastille de la barre de jeu, calculée à chaque page).
+// On part des albums du joueur (peu nombreux) et on ne compte le catalogue que pour les artistes dont il a déjà
+// au moins SET_MIN_ALBUMS albums : le coût suit la collection du joueur, pas la taille du catalogue.
 export async function countClaimableSets(userId: string): Promise<number> {
   const { rows } = await db.query<{ total: number }>(
     `select count(*)::int as total from (
-       select a.artist
-       from albums a
-       left join user_albums ua on ua.album_id = a.id and ua.user_id = $1 and ua.count > 0
-       where a.artist in (select a2.artist from user_albums u2 join albums a2 on a2.id = u2.album_id where u2.user_id = $1 and u2.count > 0)
+       select a.artist, count(*) as owned
+       from user_albums ua join lateral (select artist from albums where id = ua.album_id) a on true
+       where ua.user_id = $1 and ua.count > 0
        group by a.artist
-       having count(*) >= $2 and count(ua.album_id) = count(*)
-     ) done
-     where not exists (select 1 from artist_set_rewards r where r.user_id = $1 and r.artist = done.artist)`,
+       having count(*) >= $2
+     ) mine
+     where mine.owned = (select count(*) from albums a where a.artist = mine.artist)
+       and not exists (select 1 from artist_set_rewards r where r.user_id = $1 and r.artist = mine.artist)`,
     [userId, SET_MIN_ALBUMS],
   );
   return rows[0].total;
