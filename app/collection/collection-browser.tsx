@@ -40,44 +40,29 @@ export function CollectionBrowser({ cards }: { cards: CollectionCard[] }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
-  // Les cartes rangées par rareté, comme les intercalaires d'un bac de disquaire (déjà triées de la plus rare à la moins rare)
-  const groups = RARITY_TIERS.map((value) => ({ tier: value, cards: visible.filter((card) => card.rarity_tier === value) }))
-    .filter((group) => group.cards.length > 0)
-    .reverse();
-
   return (
     <>
-      <div className="coll-toolbar">
-        <SearchBar id="q-collection" value={query} onChange={setQuery} placeholder="Rechercher un album ou un artiste" />
-        <TierChips value={tier} onChange={setTier} />
-      </div>
+      <SearchBar id="q-collection" value={query} onChange={setQuery} placeholder="Rechercher un album ou un artiste" />
+      <TierChips value={tier} onChange={setTier} />
 
-      {visible.length === 0 ? (
-        <p className="empty">
-          {query ? `Aucun album de ta collection ne correspond à « ${query} ».` : "Aucune carte de cette rareté pour l'instant. Ouvre des packs pour en trouver."}
-        </p>
-      ) : (
-        groups.map((group) => (
-          <section key={group.tier} className={`crate tier-${group.tier}`} aria-label={RARITY_LABELS[group.tier]}>
-            <h2 className="crate-head">
-              <span>{RARITY_LABELS[group.tier]}</span>
-              <small>{group.cards.length}</small>
-            </h2>
-            <div className="crate-grid">
-              {group.cards.map((card) => (
-                <button key={card.slug} type="button" className="sleeve" onClick={() => setSelected(card)}>
-                  <span className="sleeve-art">
-                    <CoverImage src={smallCover(card.cover_url)} fallback={card.cover_url} title={card.title} lazy sizes="(min-width: 900px) 150px, 30vw" />
-                    {card.count > 1 && <b aria-label={`${card.count} exemplaires`}>×{card.count}</b>}
-                  </span>
-                  <span className="sleeve-t">{card.title}</span>
-                  <span className="sleeve-a">{card.artist}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-        ))
-      )}
+      <div className="cards">
+        {visible.length === 0 ? (
+          <p className="empty">
+            {query ? `Aucun album de ta collection ne correspond à « ${query} ».` : "Aucune carte de cette rareté pour l'instant. Ouvre des packs pour en trouver."}
+          </p>
+        ) : (
+          visible.map((card) => (
+            <button key={card.slug} type="button" className={`card tier-${card.rarity_tier}`} onClick={() => setSelected(card)}>
+              <span className="cover">
+                <CoverImage src={smallCover(card.cover_url)} fallback={card.cover_url} title={card.title} lazy />
+                {card.count > 1 && <b>x{card.count}</b>}
+              </span>
+              <span className="t">{card.title}</span>
+              <span className="a">{card.artist}</span>
+            </button>
+          ))
+        )}
+      </div>
 
       {selected && <AlbumSheet card={selected} onClose={() => setSelected(null)} />}
     </>

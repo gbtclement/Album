@@ -28,15 +28,11 @@ export function PressPanel({ dust, summary }: { dust: number; summary: Summary }
     <details className="quest press">
       <summary>
         <span className="dust-i" aria-hidden="true" />
-        <div className="l">
-          <strong>Pressoir à vinyle</strong>
-          <small>
-            {pressable > 0
-              ? `${pressable} doublon${pressable > 1 ? "s" : ""} à presser · ${dust.toLocaleString("fr-FR")} poussière${dust > 1 ? "s" : ""}`
-              : "Aucun doublon à presser pour l'instant"}
-          </small>
-        </div>
-        <span className="press-open" aria-hidden="true">{pressable > 0 ? "Presser" : "Voir"}<i>›</i></span>
+        <span className="press-dust"><b>{dust.toLocaleString("fr-FR")}</b> poussière{dust > 1 ? "s" : ""} de vinyle</span>
+        <span className="press-open">
+          {pressable > 0 ? `Presser ${pressable} doublon${pressable > 1 ? "s" : ""}` : "Le pressoir"}
+          <i aria-hidden="true">›</i>
+        </span>
       </summary>
       <div className="press-body">
         <p className="set-note">

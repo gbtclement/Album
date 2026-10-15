@@ -42,18 +42,16 @@ export default async function CollectionPage({ searchParams }: Props) {
     <>
       <SiteNav message={message} />
       <main className="game-page coll">
-        {/* En-tête : chiffres clés sur une ligne, sans boîte ; un filet sous le titre montre la part du catalogue possédée */}
+        {/* En-tête : le titre et une phrase, les chiffres mis en avant dans le texte (pas de tableau de bord) */}
         <header className="coll-head">
           <h1>Collection</h1>
-          <dl className="coll-stats">
-            <div><dt>Albums</dt><dd>{formatNumber(cards.length)}<small> / {formatNumber(catalogSize)}</small></dd></div>
-            <div><dt>Cartes</dt><dd>{formatNumber(totalCards)}</dd></div>
-            <div><dt>Score</dt><dd>{formatNumber(collectionScore(cards))}</dd></div>
-            <div><dt>Poussière</dt><dd><span className="dust-i" aria-hidden="true" /> {formatNumber(dust)}</dd></div>
-          </dl>
-          <div className="coll-meter" role="img" aria-label={`${cards.length} albums sur ${catalogSize} au catalogue`}>
-            <i style={{ width: `${catalogSize ? Math.max(0.6, (cards.length / catalogSize) * 100) : 0}%` }} />
-          </div>
+          <p className="coll-line">
+            <b>{formatNumber(cards.length)}</b> albums sur {formatNumber(catalogSize)}
+            <span aria-hidden="true"> · </span>
+            <b>{formatNumber(totalCards)}</b> carte{totalCards > 1 ? "s" : ""}
+            <span aria-hidden="true"> · </span>
+            score <b>{formatNumber(collectionScore(cards))}</b>
+          </p>
         </header>
 
         <nav className="coll-tabs" aria-label="Vues de la collection">
