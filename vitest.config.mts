@@ -25,7 +25,8 @@ export default defineConfig({
           include: ["tests/integration/**/*.test.ts"],
           // Crée la base de test si besoin et lui applique les migrations
           globalSetup: ["tests/integration/global-setup.ts"],
-          env: { DATABASE_URL: testDatabaseUrl(), REDIS_URL: testRedisUrl() },
+          // DRAW_REPLAY du .env de développement ignoré : les tests de la pioche l'activent eux-mêmes quand il le faut
+          env: { DATABASE_URL: testDatabaseUrl(), REDIS_URL: testRedisUrl(), DRAW_REPLAY: "" },
           // Les fichiers partagent la même base : on les lance l'un après l'autre
           fileParallelism: false,
         },

@@ -101,8 +101,9 @@ export async function exportUserData(userId: string) {
       userId,
     ),
     rows(
-      `select d.draw_date as jour, a.title as album, d.guess_title as reponse, d.solved as trouve, d.streak as serie
-       from daily_draws d join albums a on a.id = d.album_id where d.user_id = $1 order by d.draw_date`,
+      `select d.draw_date as jour, d.round as pioche_du_jour, a.title as album, d.wrong_guesses as mauvaises_reponses,
+              d.guess_title as reponse, d.solved as trouve, d.streak as serie
+       from daily_draws d join albums a on a.id = d.album_id where d.user_id = $1 order by d.draw_date, d.round`,
       userId,
     ),
     rows(

@@ -10,9 +10,19 @@ export const DRAW_RATES: Record<RarityTier, number> = {
   legendaire: 0.03,
 };
 
-// Le morceau montré fait 30 % de la largeur et de la hauteur de la pochette (un onzième de l'image) :
-// assez pour reconnaître une pochette connue, rarement assez pour lire le titre en entier
-export const CROP_SIZE = 0.3;
+// Trois essais. Le morceau montré fait d'abord 30 % de la largeur et de la hauteur de la pochette (un onzième de
+// l'image) : assez pour reconnaître une pochette connue, rarement assez pour lire le titre. Chaque mauvaise réponse
+// élargit le cadrage autour du même endroit (50 %, puis 75 %).
+export const DRAW_ATTEMPTS = 3;
+export const CROP_SIZES = [0.3, 0.5, 0.75] as const;
+export const CROP_SIZE = CROP_SIZES[0];
+
+// Cadrage après `wrong` mauvaises réponses : même centre que le premier morceau, sans sortir de la pochette
+export function cropFor(x: number, y: number, wrong: number) {
+  const size = CROP_SIZES[Math.min(wrong, CROP_SIZES.length - 1)];
+  const recenter = (start: number) => Math.min(1 - size, Math.max(0, start + CROP_SIZE / 2 - size / 2));
+  return { x: recenter(x), y: recenter(y), size };
+}
 
 // Une série de 7 bonnes réponses d'affilée rapporte un pack Épique (ajouté aux packs gagnés)
 export const STREAK_BONUS_EVERY = 7;

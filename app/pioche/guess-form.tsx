@@ -15,8 +15,9 @@ function ConfirmButton() {
   );
 }
 
-// Recherche guidée : on tape le début du titre, on choisit dans la liste, puis on valide (une seule chance)
-export function GuessForm() {
+// Recherche guidée : on tape le début du titre, on choisit dans la liste, puis on valide (trois essais)
+export function GuessForm({ attemptsLeft }: { attemptsLeft: number }) {
+  const left = attemptsLeft === 1 ? "Dernier essai" : `Encore ${attemptsLeft} essais`;
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Suggestion[]>([]);
   const [active, setActive] = useState(-1);
@@ -63,7 +64,7 @@ export function GuessForm() {
           <strong>{chosen.title}</strong>
           <small>{chosen.artist}</small>
         </div>
-        <p className="guess-warn">Une seule chance : c&apos;est bien ta réponse ?</p>
+        <p className="guess-warn">{left} : c&apos;est bien ta réponse ?</p>
         <div className="sheet-actions">
           <button
             type="button"
@@ -132,7 +133,7 @@ export function GuessForm() {
           </ul>
         )}
       </div>
-      <p className="guess-hint">Choisis un titre dans la liste. Tu n&apos;as qu&apos;une seule réponse par jour.</p>
+      <p className="guess-hint">Choisis un titre dans la liste. {left} : chaque erreur élargit l&apos;image.</p>
     </div>
   );
 }
