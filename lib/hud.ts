@@ -7,6 +7,7 @@ import { getPassState, settlePastSeasons } from "@/lib/pass";
 import { PASS_TIERS, XP_PER_TIER } from "@/lib/pass-rules";
 import { settleSeasonRanking, type SeasonAward } from "@/lib/season";
 import { getQuestStatus, isClaimable } from "@/lib/quests";
+import { countWishesOnSale } from "@/lib/wishlist";
 
 // Données de la barre d'infos (haut) et des pastilles de la barre de jeu (bas), pour le joueur connecté
 export type HudData = {
@@ -22,6 +23,8 @@ export type HudData = {
   questsReady: number;
   social: number;
   setsReady: number;
+  // Albums souhaités mis en vente par d'autres joueurs (pastille du Marché)
+  wishesOnSale: number;
   // Passe de combat : palier atteint, progression vers le suivant (0 à 100), récompenses à réclamer
   passLevel: number;
   passProgress: number;
@@ -42,7 +45,7 @@ export async function getHudData(userId: string): Promise<HudData> {
   const seasonRewards = await settlePastSeasons(userId);
   const seasonAward = await settleSeasonRanking(userId);
   const unlocked = await takeAchievementNotices(userId);
-  const [user, pack, quests, social, drawPending, setsReady, pass] = await Promise.all([
+  const [user, pack, quests, social, drawPending, setsReady, pass, wishesOnSale] = await Promise.all([
     db.query<{ coins: number; cards: number }>(
       `select u.coins, coalesce((select sum(count) from user_albums where user_id = u.id), 0)::int as cards
        from users u where u.id = $1`,
@@ -59,6 +62,7 @@ export async function getHudData(userId: string): Promise<HudData> {
     isDrawPending(userId),
     countClaimableSets(userId),
     getPassState(userId),
+    countWishesOnSale(userId),
   ]);
 
   return {
@@ -73,6 +77,7 @@ export async function getHudData(userId: string): Promise<HudData> {
     questsReady: quests.filter((quest) => isClaimable(quest, pass.premium)).length + (drawPending ? 1 : 0),
     social: social.rows[0]?.total ?? 0,
     setsReady,
+    wishesOnSale,
     passLevel: pass.level,
     passProgress: pass.level >= PASS_TIERS ? 100 : Math.floor(((pass.xp % XP_PER_TIER) / XP_PER_TIER) * 100),
     passTierXp: pass.level >= PASS_TIERS ? XP_PER_TIER : pass.xp % XP_PER_TIER,

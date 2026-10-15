@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { CardsIcon, CartIcon, PodiumIcon, SwapIcon, TrendIcon, TrophyIcon, UserPlusIcon, UsersIcon } from "@/components/icons";
+import { CardsIcon, CartIcon, HeartIcon, PodiumIcon, SwapIcon, TrendIcon, TrophyIcon, UserPlusIcon, UsersIcon } from "@/components/icons";
 import { PACK_INTERVAL_MS } from "@/lib/pack-rules";
 
 // Temps restant avant le prochain pack, mis à jour chaque seconde.
@@ -51,6 +51,7 @@ const GROUPS: Record<"marche" | "social", Group> = {
     icon: <CartIcon />,
     items: [
       { href: "/marche", label: "Marché", icon: <CartIcon /> },
+      { href: "/marche?souhaits=1", label: "Mes souhaits", icon: <HeartIcon /> },
       { href: "/bourse", label: "Bourse", icon: <TrendIcon /> },
       { href: "/echanges", label: "Échanges", icon: <SwapIcon /> },
     ],
@@ -80,10 +81,12 @@ type DockProps = {
   social: number;
   // Collections d'artiste terminées dont la récompense attend
   collection: number;
+  // Albums de la liste de souhaits mis en vente par d'autres joueurs
+  market: number;
 };
 
 // Barre de jeu en bas de l'écran : Collection, Marché (plateau), vinyle des packs, Quêtes, Social (plateau)
-export function Dock({ stock, extra, nextPackAt, questsReady, social, collection }: DockProps) {
+export function Dock({ stock, extra, nextPackAt, questsReady, social, collection, market }: DockProps) {
   const available = stock + extra;
   const pathname = usePathname();
   const remaining = useNextPack(nextPackAt);
@@ -161,7 +164,7 @@ export function Dock({ stock, extra, nextPackAt, questsReady, social, collection
             <CardsIcon />
             <span className="lbl">Collection</span>
           </Link>
-          {groupButton("marche")}
+          {groupButton("marche", market)}
           <Link
             href="/packs"
             className="pack-btn"

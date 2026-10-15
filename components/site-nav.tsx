@@ -92,7 +92,7 @@ export async function SiteNav({ message }: { message?: string } = {}) {
           </Link>
         </div>
       </header>
-      <Dock stock={hud.stock} extra={hud.extraPacks} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} collection={hud.setsReady} />
+      <Dock stock={hud.stock} extra={hud.extraPacks} nextPackAt={hud.nextPackAt} questsReady={hud.questsReady} social={hud.social} collection={hud.setsReady} market={hud.wishesOnSale} />
       <Toast key={message} message={message} />
       {/* Fin de mois : un seul message pour le passe (paliers versés) et le classement saisonnier (top 20) */}
       {(hud.seasonRewards > 0 || hud.seasonAward) && (

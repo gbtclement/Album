@@ -7,10 +7,12 @@ import { formatNumber } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
 import { getArtistSets } from "@/lib/artist-sets";
 import { collectionScore, getAlbumsCount, getCollectionCards } from "@/lib/collection";
-import { ArtistSets } from "./artist-sets";
 import { getDust, getPressableSummary } from "@/lib/dust";
+import { getWishlist } from "@/lib/wishlist";
+import { ArtistSets } from "./artist-sets";
 import { CollectionBrowser } from "./collection-browser";
 import { PressPanel } from "./press-panel";
+import { WishList } from "./wish-list";
 
 export const metadata: Metadata = { title: "Collection" };
 
@@ -22,15 +24,17 @@ export default async function CollectionPage({ searchParams }: Props) {
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
   const { message, vue } = await searchParams;
-  const tab = vue === "artistes" ? "artists" : "cards";
+  const tab = vue === "artistes" ? "artists" : vue === "souhaits" ? "wishes" : "cards";
 
-  const [cards, catalogSize, sets, dust, pressable] = await Promise.all([
+  const [cards, catalogSize, sets, dust, pressable, wishes] = await Promise.all([
     getCollectionCards(session.user.id),
     getAlbumsCount(),
     getArtistSets(session.user.id),
     getDust(session.user.id),
     getPressableSummary(session.user.id),
+    getWishlist(session.user.id),
   ]);
+  const wishesOnSale = wishes.filter((wish) => !wish.owned && wish.on_sale > 0).length;
   const totalCards = cards.reduce((sum, card) => sum + card.count, 0);
   const claimable = sets.filter((set) => !set.claimed && set.owned === set.total).length;
   const completed = sets.filter((set) => set.claimed || set.owned === set.total).length;
@@ -49,9 +53,14 @@ export default async function CollectionPage({ searchParams }: Props) {
           <Link href="/collection?vue=artistes" aria-current={tab === "artists" ? "page" : undefined}>
             Artistes{claimable > 0 && <b>{claimable}</b>}
           </Link>
+          <Link href="/collection?vue=souhaits" aria-current={tab === "wishes" ? "page" : undefined}>
+            Souhaits{wishesOnSale > 0 && <b>{wishesOnSale}</b>}
+          </Link>
         </nav>
 
-        {tab === "artists" ? (
+        {tab === "wishes" ? (
+          <WishList wishes={wishes} dust={dust} />
+        ) : tab === "artists" ? (
           <>
             <div className="progress-card">
               <span className="big">{completed}</span>

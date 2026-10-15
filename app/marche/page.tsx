@@ -12,6 +12,7 @@ import { getCollection } from "@/lib/collection";
 import { Pagination, SortLinks, withParams } from "@/components/list-controls";
 import { listMarketPage, listMyListings, MARKET_PAGE_SIZE, MARKET_SORTS, type ListingView, type MarketSort } from "@/lib/market";
 import { RARITY_LABELS, RARITY_TIERS, type RarityTier } from "@/lib/rarity";
+import { countWishesOnSale } from "@/lib/wishlist";
 import { buyListingAction, cancelListingAction } from "./actions";
 
 export const metadata: Metadata = { title: "Marché" };
@@ -24,7 +25,7 @@ const SORT_LABELS: Record<MarketSort, string> = {
 };
 
 type Props = {
-  searchParams: Promise<{ message?: string; onglet?: string; rarete?: string; tri?: string; page?: string }>;
+  searchParams: Promise<{ message?: string; onglet?: string; rarete?: string; tri?: string; page?: string; souhaits?: string }>;
 };
 
 export default async function MarchePage({ searchParams }: Props) {
@@ -32,27 +33,30 @@ export default async function MarchePage({ searchParams }: Props) {
   if (!session?.user?.id) redirect("/connexion");
   const userId = session.user.id;
 
-  const { message, onglet, rarete, tri, page: pageParam } = await searchParams;
+  const { message, onglet, rarete, tri, page: pageParam, souhaits } = await searchParams;
   if (!(await isEmailVerified(userId))) return <VerifyGate title="Marché" message={message} />;
   const tab = onglet === "mes-annonces" ? "mine" : "buy";
   const tier = RARITY_TIERS.find((value) => value === rarete) ?? null;
   const sort = MARKET_SORTS.find((value) => value === tri) ?? "recentes";
   const page = Math.max(1, Math.floor(Number(pageParam)) || 1);
+  const wishlist = souhaits === "1";
 
-  const [market, myListings, mine, balance] = await Promise.all([
-    listMarketPage({ excludeSellerId: userId, tier, sort, page }),
+  const [market, myListings, mine, balance, wishesOnSale] = await Promise.all([
+    listMarketPage({ excludeSellerId: userId, tier, sort, page, wishlist }),
     listMyListings(userId),
     getCollection(userId, null),
     db.query<{ coins: number }>("select coins from users where id = $1", [userId]),
+    countWishesOnSale(userId),
   ]);
   const coins = balance.rows[0]?.coins ?? 0;
   const owned = new Set(mine.map((item) => item.slug));
   const others = market.listings;
   const pageCount = Math.ceil(market.total / MARKET_PAGE_SIZE);
-  // Rareté et tri restent dans l'adresse ; changer l'un des deux ramène à la première page
-  const marketHref = (changes: { rarete?: RarityTier | null; tri?: MarketSort; page?: number }) => {
+  // Rareté, tri et filtre des souhaits restent dans l'adresse ; changer l'un d'eux ramène à la première page
+  const marketHref = (changes: { rarete?: RarityTier | null; tri?: MarketSort; page?: number; souhaits?: boolean }) => {
     const nextSort = changes.tri ?? sort;
     return withParams("/marche", {
+      souhaits: (changes.souhaits ?? wishlist) ? "1" : null,
       rarete: "rarete" in changes ? changes.rarete : tier,
       tri: nextSort === "recentes" ? null : nextSort,
       page: changes.page && changes.page > 1 ? String(changes.page) : null,
@@ -95,6 +99,10 @@ export default async function MarchePage({ searchParams }: Props) {
         ) : (
           <>
             <div className="chips">
+              <Link href={marketHref({ souhaits: !wishlist })} className="chip wish-chip" aria-pressed={wishlist}>
+                <span aria-hidden="true">♥</span>
+                Mes souhaits{wishesOnSale > 0 && <b>{wishesOnSale}</b>}
+              </Link>
               <Link href={marketHref({ rarete: null })} className="chip" aria-current={tier === null ? "page" : undefined}>Toutes</Link>
               {[...RARITY_TIERS].reverse().map((value: RarityTier) => (
                 <Link key={value} href={marketHref({ rarete: value })} className="chip" style={{ "--c": `var(--r-${value})` } as CSSProperties} aria-current={tier === value ? "page" : undefined}>
@@ -110,7 +118,11 @@ export default async function MarchePage({ searchParams }: Props) {
             />
             <div className="stack two">
               {others.length === 0 ? (
-                <p className="empty">{tier ? "Aucune annonce pour cette rareté." : "Aucune annonce pour l'instant."}</p>
+                <p className="empty">
+                  {wishlist
+                    ? "Aucun album de ta liste de souhaits n'est en vente. Ajoute des albums depuis leur fiche (bouton ♥)."
+                    : tier ? "Aucune annonce pour cette rareté." : "Aucune annonce pour l'instant."}
+                </p>
               ) : (
                 others.map((listing) => (
                   <ListingRow key={listing.id} listing={listing}>

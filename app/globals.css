@@ -910,3 +910,14 @@ input[name="terms"] { width: 22px; height: 22px; flex: none; accent-color: var(-
 .craft .l { flex: 1; min-width: 180px; font-size: 13px; color: var(--muted); }
 .craft .l strong { display: block; color: var(--ink); font-size: 14px; }
 .sheet-press { margin-top: 8px; }
+
+/* Liste de souhaits (lot WISH1) */
+.wish-btn { margin-top: 6px; }
+.wish-btn span { color: var(--coral); }
+.wish-btn.on { background: color-mix(in srgb, var(--coral) 22%, var(--dock)); box-shadow: 0 3px 0 var(--coral-deep); }
+.chip.wish-chip span { color: var(--coral); }
+.chip.wish-chip[aria-pressed="true"] { background: var(--dock); color: var(--ink); outline: 2px solid var(--coral); outline-offset: -2px; }
+.chip.wish-chip b { background: var(--coral); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; }
+.wish-head { align-items: center; margin-bottom: 8px; }
+.wish-head .sub { margin: 0; }
+.item.wish-owned { opacity: .55; }

@@ -11,6 +11,9 @@ export function CardsIcon(props: IconProps) {
 export function CartIcon(props: IconProps) {
   return <svg viewBox="0 0 24 24" aria-hidden="true" {...stroke} {...props}><path d="M4 9h16l-1.5 11h-13z" /><path d="M8 9V7a4 4 0 0 1 8 0v2" /></svg>;
 }
+export function HeartIcon(props: IconProps) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" {...stroke} {...props}><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>;
+}
 export function TrophyIcon(props: IconProps) {
   return <svg viewBox="0 0 24 24" aria-hidden="true" {...stroke} {...props}><path d="M6 3h12v5a6 6 0 0 1-12 0z" /><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3M9 21h6M12 14v7" /></svg>;
 }

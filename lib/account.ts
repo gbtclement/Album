@@ -27,6 +27,7 @@ export const USER_TABLES = [
   "pass_claims",
   "season_awards",
   "crafts",
+  "wishlist",
 ] as const;
 
 async function rows<T>(sql: string, userId: string) {
@@ -47,7 +48,7 @@ export async function exportUserData(userId: string) {
   );
   if (!account) return null;
 
-  const [packs, collection, openings, friends, trades, listings, quests, draws, sets, achievements, pass, links, crafts] = await Promise.all([
+  const [packs, collection, openings, friends, trades, listings, quests, draws, sets, achievements, pass, links, crafts, wishes] = await Promise.all([
     rows(
       `select stock as packs_en_reserve, last_recharged_at as dernier_rechargement,
               bonus_packs as packs_gagnes, solo_packs as packs_solo,
@@ -133,6 +134,11 @@ export async function exportUserData(userId: string) {
        from crafts c left join albums a on a.id = c.album_id where c.user_id = $1 order by c.created_at`,
       userId,
     ),
+    rows(
+      `select a.title as album, a.artist as artiste, w.created_at as ajoute_le
+       from wishlist w join albums a on a.id = w.album_id where w.user_id = $1 order by w.created_at`,
+      userId,
+    ),
   ]);
 
   return {
@@ -151,6 +157,7 @@ export async function exportUserData(userId: string) {
     succes: achievements,
     passe_de_combat: pass,
     albums_fabriques: crafts,
+    liste_de_souhaits: wishes,
     liens_envoyes_par_email: links[0],
   };
 }

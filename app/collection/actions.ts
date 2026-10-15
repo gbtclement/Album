@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { ArtistSetError, claimArtistSet } from "@/lib/artist-sets";
 import { craftAlbum, DustError, pressDuplicates } from "@/lib/dust";
 import type { RarityTier } from "@/lib/rarity";
+import { toggleWish, WishlistError } from "@/lib/wishlist";
 
 function backTo(message: string, path = "/collection?vue=artistes"): never {
   redirect(`${path}${path.includes("?") ? "&" : "?"}message=${encodeURIComponent(message)}`);
@@ -52,6 +53,20 @@ export async function pressAlbumAction(formData: FormData) {
     backTo(pressMessage(await pressDuplicates(userId, { slug: String(formData.get("slug") ?? "") })), "/collection");
   } catch (error) {
     if (error instanceof DustError) backTo(error.message, "/collection");
+    throw error;
+  }
+}
+
+// Ajoute ou retire un album de la liste de souhaits ; retour sur la page d'où vient le clic (fiche ou onglet Souhaits)
+export async function toggleWishAction(formData: FormData) {
+  const userId = await requireUserId();
+  const slug = String(formData.get("slug") ?? "");
+  const back = formData.get("from") === "souhaits" ? "/collection?vue=souhaits" : `/album/${encodeURIComponent(slug)}`;
+  try {
+    const added = await toggleWish(userId, slug);
+    backTo(added ? "Ajouté à ta liste de souhaits." : "Retiré de ta liste de souhaits.", back);
+  } catch (error) {
+    if (error instanceof WishlistError) backTo(error.message, back);
     throw error;
   }
 }

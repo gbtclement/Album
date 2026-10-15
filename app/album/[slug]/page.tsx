@@ -11,7 +11,8 @@ import { findAlbumBySlug, findAlbumsByArtist, type AlbumLinks } from "@/lib/cata
 import { getOwnedCount } from "@/lib/collection";
 import { getDust } from "@/lib/dust";
 import { craftCost } from "@/lib/dust-rules";
-import { craftAlbumAction } from "@/app/collection/actions";
+import { isWished } from "@/lib/wishlist";
+import { craftAlbumAction, toggleWishAction } from "@/app/collection/actions";
 import { getAlbumCote } from "@/lib/market";
 import { RARITY_LABELS, RARITY_POINTS } from "@/lib/rarity";
 import { absoluteUrl, jsonLd } from "@/lib/seo";
@@ -55,11 +56,12 @@ export default async function AlbumPage({ params, searchParams }: Props) {
   if (!album) notFound();
 
   const session = await auth();
-  const [owned, cote, sameArtist, dust] = await Promise.all([
+  const [owned, cote, sameArtist, dust, wished] = await Promise.all([
     session?.user?.id ? getOwnedCount(session.user.id, album.id) : Promise.resolve(null),
     getAlbumCote(album.id),
     findAlbumsByArtist(album.artist, album.id),
     session?.user?.id ? getDust(session.user.id) : Promise.resolve(0),
+    session?.user?.id ? isWished(session.user.id, album.id) : Promise.resolve(false),
   ]);
   const cost = craftCost(album.rarity_tier);
   // Écoutes Last.fm, toutes versions de l'album additionnées : ce sont elles qui fixent la rareté
@@ -109,6 +111,15 @@ export default async function AlbumPage({ params, searchParams }: Props) {
               <p className="sub">
                 {owned > 0 ? `Tu possèdes ${owned} exemplaire${owned > 1 ? "s" : ""}` : "Pas encore dans ta collection"}
               </p>
+            )}
+            {owned !== null && (owned === 0 || wished) && (
+              <form action={toggleWishAction}>
+                <input type="hidden" name="slug" value={album.slug} />
+                <button type="submit" className={`btn wish-btn${wished ? " on" : ""}`} aria-pressed={wished}>
+                  <span aria-hidden="true">♥</span>
+                  {wished ? "Dans mes souhaits" : "Ajouter à mes souhaits"}
+                </button>
+              </form>
             )}
           </div>
         </div>

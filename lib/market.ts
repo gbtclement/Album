@@ -186,19 +186,25 @@ export async function listMarketPage(options: {
   tier: RarityTier | null;
   sort: MarketSort;
   page: number;
+  // Seulement les albums de la liste de souhaits du joueur, pas encore possédés
+  wishlist?: boolean;
 }): Promise<{ listings: ListingView[]; total: number }> {
-  const where = "l.status = 'active' and l.seller_id <> $1 and ($2::text is null or a.rarity_tier::text = $2)";
+  const where = `l.status = 'active' and l.seller_id <> $1 and ($2::text is null or a.rarity_tier::text = $2)
+    and (not $3::boolean or (exists (select 1 from wishlist w where w.user_id = $1 and w.album_id = l.album_id)
+                             and not exists (select 1 from user_albums ua where ua.user_id = $1 and ua.album_id = l.album_id)))`;
+  const wishlist = options.wishlist ?? false;
   const offset = (Math.max(1, options.page) - 1) * MARKET_PAGE_SIZE;
   const [rows, count] = await Promise.all([
-    db.query<ListingView>(`${LISTING_SELECT} where ${where} order by ${SORT_SQL[options.sort]} limit $3 offset $4`, [
+    db.query<ListingView>(`${LISTING_SELECT} where ${where} order by ${SORT_SQL[options.sort]} limit $4 offset $5`, [
       options.excludeSellerId,
       options.tier,
+      wishlist,
       MARKET_PAGE_SIZE,
       offset,
     ]),
     db.query<{ total: number }>(
       `select count(*)::int as total from listings l join albums a on a.id = l.album_id where ${where}`,
-      [options.excludeSellerId, options.tier],
+      [options.excludeSellerId, options.tier, wishlist],
     ),
   ]);
   return { listings: rows.rows, total: count.rows[0].total };

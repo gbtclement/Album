@@ -77,6 +77,7 @@ const TABLES = [
   { name: "pass_claims", description: "Paliers du passe récupérés : saison, palier (1 à 30), ligne (free ou premium), auto = versé en fin de saison" },
   { name: "daily_draws", description: "Pioche du jour : album tiré par joueur et par jour (heure de Paris), position du morceau montré, réponse, réussite et série en cours" },
   { name: "artist_set_rewards", description: "Collections d'artiste terminées : récompense récupérée par joueur et par artiste (taille du set, pièces, pack), une seule fois" },
+  { name: "wishlist", description: "Liste de souhaits : albums recherchés par joueur (100 au plus), date d'ajout" },
   { name: "crafts", description: "Albums fabriqués avec la poussière de vinyle : joueur, album, poussière dépensée, date" },
   { name: "user_achievements", description: "Succès débloqués par joueur (clé du succès, pièces versées, date, notification déjà affichée ou non). La liste des succès est dans lib/achievement-rules.ts" },
   { name: "listings", description: "Annonces du marché : vente en pièces ou troc contre un album ; acheteur (buyer_id, sans clé étrangère, effacé à la suppression de son compte) pour repérer les comptes mules" },
@@ -177,6 +178,7 @@ const LOTS = [
   { lot: "PACK3", name: "Recharge des packs ralentie : un pack toutes les 10 minutes au lieu de 5", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "C14", name: "Correctif : le vinyle des packs (barre du bas) et la barre du haut se mettent à jour à chaque pack ouvert, sans attendre la fermeture de l'écran d'ouverture", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "DUP1", name: "Poussière de vinyle : les doublons se pressent (pressoir de la collection ou fiche d'une carte, un exemplaire gardé, ceux en vente ou en échange protégés) et la poussière fabrique l'album de son choix depuis sa fiche (migration 029, table crafts, export RGPD)", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "WISH1", name: "Liste de souhaits : bouton ♥ sur la fiche album, onglet Souhaits de la collection, filtre « Mes souhaits » du marché, pastille du Marché quand un album souhaité est en vente (migration 030, export RGPD)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
@@ -255,7 +257,7 @@ export default async function DocumentationPage() {
         <Section title="Interface (version jeu)">
           <ul className="list-disc space-y-1 pl-6">
             <li>Styles dans <code>app/globals.css</code> : couleurs (fond aubergine nuit, or pour packs et pièces, corail pour les notifications, une couleur par rareté), polices Lilita One (titres, chiffres), Chakra Petch (interface) et Nunito (texte), éléments en relief avec une tranche 3D.</li>
-            <li><code>components/site-nav.tsx</code> : barre d&apos;infos en haut (avatar et pseudo vers le profil, pièces, packs et minuteur du prochain pack) et barre de jeu en bas (<code>components/game-nav.tsx</code>) : Collection, Marché (plateau Marché / Bourse / Échanges), vinyle central des Packs (pastille = packs prêts, anneau = progression du suivant), Quêtes (pastille = récompenses à réclamer), Social (plateau Amis / Classement, pastille = demandes d&apos;ami et échanges reçus).</li>
+            <li><code>components/site-nav.tsx</code> : barre d&apos;infos en haut (avatar et pseudo vers le profil, pièces, packs et minuteur du prochain pack) et barre de jeu en bas (<code>components/game-nav.tsx</code>) : Collection, Marché (plateau Marché / Mes souhaits / Bourse / Échanges, pastille = albums souhaités en vente), vinyle central des Packs (pastille = packs prêts, anneau = progression du suivant), Quêtes (pastille = récompenses à réclamer), Social (plateau Amis / Classement, pastille = demandes d&apos;ami et échanges reçus).</li>
             <li>Messages de retour : les actions redirigent avec <code>?message=</code>, affiché en haut puis retiré de l&apos;adresse.</li>
             <li>Ouverture des packs : par défaut le joueur retourne lui-même chaque carte (« tout révéler » possible) ; le réglage « Révéler automatiquement » (Profil ou page Packs) les retourne une à une. Halo de couleur pour rare et plus, reflet pour épique et plus, et pour une légendaire : carte qui se soulève, ondes sonores, notes de musique et léger flash doré.</li>
             <li>Animations coupées quand l&apos;appareil demande moins d&apos;animations (<code>prefers-reduced-motion</code>).</li>
@@ -369,6 +371,13 @@ export default async function DocumentationPage() {
               que ceux engagés dans une annonce active ou une proposition d&apos;échange en attente. La poussière fabrique un album
               absent de la collection depuis sa fiche, pour 4 fois ce que rapporte un doublon de sa rareté (commun 20 à légendaire
               600) ; un album fabriqué ne rapporte ni XP, ni points de saison, ni progression de quête (comme un achat au marché).
+            </li>
+            <li>
+              <strong>Liste de souhaits</strong> (<code>lib/wishlist.ts</code>) : bouton « ♥ Ajouter à mes souhaits » sur la fiche
+              d&apos;un album non possédé, 100 albums au plus, onglet Souhaits de la collection (en vente dès N pièces, ou coût de
+              fabrication). Un album obtenu reste dans la liste, grisé, et ne compte plus ailleurs. La pastille du Marché (barre du bas)
+              et du filtre « ♥ Mes souhaits » du marché (<code>/marche?souhaits=1</code>) compte les albums souhaités, pas encore
+              possédés, mis en vente par un autre joueur. Pas d&apos;e-mail pour l&apos;instant.
             </li>
             <li>
               <strong>Points de classement :</strong> Commun 1, Peu commun 2, Rare 5, Épique 10, Légendaire 25 (un album compte une seule fois).
