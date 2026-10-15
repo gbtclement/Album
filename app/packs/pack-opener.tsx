@@ -5,6 +5,7 @@ import { CoverImage } from "@/components/cover-image";
 import { smallCover } from "@/components/game-ui";
 import { useCallback, useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
 import { PACK_LABELS, PACK_RATES, PACK_SIZE, type PackKind } from "@/lib/pack-rules";
+import { PASS_XP } from "@/lib/pass-rules";
 import type { PackCard } from "@/lib/packs";
 import { RARITY_LABELS, RARITY_TIERS, type RarityTier } from "@/lib/rarity";
 import { openPackAction, setAutoRevealAction, type Stocks } from "./actions";
@@ -47,6 +48,9 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
   const [reduced] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [, startTransition] = useTransition();
   const openings = useRef(0);
+  // Cartes de la série d'ouvertures en cours (de l'arrivée sur l'écran d'ouverture à « Continuer ») pour le bilan
+  const [series, setSeries] = useState<PackCard[][]>([]);
+  const [recap, setRecap] = useState<PackCard[][] | null>(null);
   const current = liveStocks ?? stocks;
   // Packs classiques : le stock qui se recharge, puis les packs gagnés
   const classic = current.stock + current.bonus;
@@ -60,6 +64,8 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
       return;
     }
     setLiveStocks(result.stocks);
+    const drawn = result.cards;
+    setSeries((current) => [...current, drawn]);
     // Le vinyle de la barre du bas et le HUD sont rendus côté serveur : on les recalcule tout de suite,
     // sans attendre la fermeture (l'ouverture en cours garde son état)
     router.refresh();
@@ -71,6 +77,9 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
   function close() {
     setOpening(null);
     setLiveStocks(null);
+    // Plusieurs packs d'affilée : un bilan avant de revenir à la page (un seul pack : l'écran d'ouverture suffit)
+    if (series.length > 1) setRecap(series);
+    setSeries([]);
     router.refresh();
   }
 
@@ -140,6 +149,64 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
           />
         </div>
       )}
+
+      {recap && (
+        <div className={`opening${reduced ? " static" : ""}`} role="dialog" aria-modal="true" aria-label="Bilan des packs ouverts">
+          <SeriesRecap packs={recap} onClose={() => setRecap(null)} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Bilan d'une série de packs : cartes par rareté, nouveaux albums, XP du Disque d'Or et meilleures cartes
+function SeriesRecap({ packs, onClose }: { packs: PackCard[][]; onClose: () => void }) {
+  const cards = packs.flat();
+  const fresh = cards.filter((card) => card.isNew).length;
+  const xp = cards.reduce((sum, card) => sum + PASS_XP[card.tier], 0);
+  const best = [...cards].sort((a, b) => tierRank(b.tier) - tierRank(a.tier)).filter((card) => tierRank(card.tier) >= tierRank("rare")).slice(0, 6);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => (event.key === "Escape" || event.key === "Enter") && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="recap">
+      <h2 className="op-title">Bilan : {packs.length} packs</h2>
+      <div className="facts">
+        <div className="fact"><b>{cards.length}</b><small>Cartes</small></div>
+        <div className="fact"><b>{fresh}</b><small>Nouveaux albums</small></div>
+        <div className="fact"><b>+{xp.toLocaleString("fr-FR")}</b><small>XP Disque d&apos;Or</small></div>
+      </div>
+      <div className="rates">
+        {[...RARITY_TIERS].reverse().map((tier) => {
+          const count = cards.filter((card) => card.tier === tier).length;
+          return (
+            <div key={tier} className={`rate tier-${tier}${count === 0 ? " none" : ""}`}>
+              <span><i />{RARITY_LABELS[tier]}</span>
+              <b>{count}</b>
+            </div>
+          );
+        })}
+      </div>
+      {best.length > 0 && (
+        <>
+          <h3 className="label">Meilleures cartes</h3>
+          <div className="recap-best">
+            {best.map((card, i) => (
+              <span key={`${card.slug}-${i}`} className={`recap-card tier-${card.tier}`} title={`${card.title}, ${card.artist}`}>
+                <CoverImage src={smallCover(card.coverUrl)} fallback={card.coverUrl} title={card.title} sizes="96px" />
+                {card.isNew && <em>Nouveau</em>}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+      <div className="op-actions">
+        <button type="button" className="btn lg gold" onClick={onClose} autoFocus>Fermer</button>
+      </div>
     </div>
   );
 }

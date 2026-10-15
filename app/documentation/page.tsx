@@ -179,6 +179,7 @@ const LOTS = [
   { lot: "C14", name: "Correctif : le vinyle des packs (barre du bas) et la barre du haut se mettent à jour à chaque pack ouvert, sans attendre la fermeture de l'écran d'ouverture", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "DUP1", name: "Poussière de vinyle : les doublons se pressent (pressoir de la collection ou fiche d'une carte, un exemplaire gardé, ceux en vente ou en échange protégés) et la poussière fabrique l'album de son choix depuis sa fiche (migration 029, table crafts, export RGPD)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "WISH1", name: "Liste de souhaits : bouton ♥ sur la fiche album, onglet Souhaits de la collection, filtre « Mes souhaits » du marché, pastille du Marché quand un album souhaité est en vente (migration 030, export RGPD)", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "RECAP1", name: "Bilan après une série de packs : en fermant l'écran d'ouverture après au moins 2 packs d'affilée, nombre de cartes par rareté, nouveaux albums, XP du Disque d'Or gagnée et meilleures cartes (rare et plus)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
