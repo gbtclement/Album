@@ -151,7 +151,7 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
       )}
 
       {recap && (
-        <div className={`opening${reduced ? " static" : ""}`} role="dialog" aria-modal="true" aria-label="Bilan des packs ouverts">
+        <div className={`opening recap-screen${reduced ? " static" : ""}`} role="dialog" aria-modal="true" aria-label="Bilan des packs ouverts">
           <SeriesRecap packs={recap} onClose={() => setRecap(null)} />
         </div>
       )}

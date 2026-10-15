@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { craftCost, DUST_PER_DUPLICATE, pressableCopies } from "@/lib/dust-rules";
+import { RARITY_TIERS } from "@/lib/rarity";
 
 describe("poussière de vinyle", () => {
-  it("fabriquer coûte 4 doublons de la même rareté", () => {
-    expect(craftCost("commun")).toBe(DUST_PER_DUPLICATE.commun * 4);
-    expect(craftCost("legendaire")).toBe(600);
+  it("fabriquer coûte bien plus cher que ce que rapporte un doublon (légendaire : 10 000)", () => {
+    expect(craftCost("legendaire")).toBe(10_000);
+    for (const tier of RARITY_TIERS) expect(craftCost(tier)).toBeGreaterThanOrEqual(DUST_PER_DUPLICATE[tier] * 50);
   });
 
   it("garde toujours un exemplaire, et ceux en vente ou en échange", () => {

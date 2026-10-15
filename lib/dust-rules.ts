@@ -10,11 +10,18 @@ export const DUST_PER_DUPLICATE: Record<RarityTier, number> = {
   legendaire: 150,
 };
 
-// Fabriquer un album coûte 4 doublons de sa rareté : choisir sa carte se paie
-export const CRAFT_MULTIPLIER = 4;
+// Prix de fabrication d'un album, volontairement très élevés (50 à 67 doublons de sa rareté) : choisir sa carte
+// reste exceptionnel, les packs et le marché restent la voie normale
+export const CRAFT_COST: Record<RarityTier, number> = {
+  commun: 250,
+  peu_commun: 600,
+  rare: 1_500,
+  epique: 4_000,
+  legendaire: 10_000,
+};
 
 export function craftCost(tier: RarityTier) {
-  return DUST_PER_DUPLICATE[tier] * CRAFT_MULTIPLIER;
+  return CRAFT_COST[tier];
 }
 
 // Exemplaires qu'on peut presser : on garde toujours un exemplaire, et ceux engagés dans une annonce du marché

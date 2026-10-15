@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { CRAFT_MULTIPLIER, DUST_PER_DUPLICATE } from "@/lib/dust-rules";
+import { CRAFT_COST, DUST_PER_DUPLICATE } from "@/lib/dust-rules";
 import { RARITY_LABELS, RARITY_TIERS, type RarityTier } from "@/lib/rarity";
 import { pressDuplicatesAction } from "./actions";
 
@@ -37,7 +37,8 @@ export function PressPanel({ dust, summary }: { dust: number; summary: Summary }
       <div className="press-body">
         <p className="set-note">
           Un exemplaire de chaque album est toujours gardé, ainsi que ceux en vente ou proposés en échange. Fabriquer un album
-          depuis sa fiche coûte {CRAFT_MULTIPLIER} fois ce que rapporte un doublon de sa rareté.
+          depuis sa fiche coûte cher : {CRAFT_COST.commun.toLocaleString("fr-FR")} poussières pour un commun,{" "}
+          {CRAFT_COST.legendaire.toLocaleString("fr-FR")} pour un légendaire.
         </p>
         <div className="chips wrap">
           {[...RARITY_TIERS].reverse().map((tier) => (

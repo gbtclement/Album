@@ -53,9 +53,9 @@ describe("fabriquer un album", () => {
   it("dépense la poussière et ajoute l'album", async () => {
     const user = await createTestUser();
     const album = await createAlbum("rare");
-    await setDust(user.id, 130);
+    await setDust(user.id, 1_530);
 
-    expect(await craftAlbum(user.id, album.slug)).toMatchObject({ cost: 100 });
+    expect(await craftAlbum(user.id, album.slug)).toMatchObject({ cost: 1_500 });
     expect(await ownedCount(user.id, album.id)).toBe(1);
     expect(await getDust(user.id)).toBe(30);
   });
@@ -63,24 +63,24 @@ describe("fabriquer un album", () => {
   it("refuse sans assez de poussière ou si l'album est déjà possédé", async () => {
     const user = await createTestUser();
     const album = await createAlbum("legendaire");
-    await setDust(user.id, 599);
-    await expect(craftAlbum(user.id, album.slug)).rejects.toThrow("600");
+    await setDust(user.id, 9_999);
+    await expect(craftAlbum(user.id, album.slug)).rejects.toThrow(/10\s000/);
 
-    await setDust(user.id, 2000);
+    await setDust(user.id, 20_000);
     await giveAlbum(user.id, album.id);
     await expect(craftAlbum(user.id, album.slug)).rejects.toThrow("déjà dans ta collection");
-    expect(await getDust(user.id)).toBe(2000);
+    expect(await getDust(user.id)).toBe(20_000);
   });
 
   it("deux fabrications simultanées ne dépensent pas deux fois la même poussière", async () => {
     const user = await createTestUser();
     const first = await createAlbum("rare");
     const second = await createAlbum("rare");
-    await setDust(user.id, 150);
+    await setDust(user.id, 2_000);
     await warmPool();
 
     const results = await Promise.allSettled([craftAlbum(user.id, first.slug), craftAlbum(user.id, second.slug)]);
     expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
-    expect(await getDust(user.id)).toBe(50);
+    expect(await getDust(user.id)).toBe(500);
   });
 });

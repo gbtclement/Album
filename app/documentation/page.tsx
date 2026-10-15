@@ -371,8 +371,8 @@ export default async function DocumentationPage() {
               rare 25, épique 60, légendaire 150 par doublon, depuis le pressoir de la collection (raretés au choix, commun à rare
               cochés par défaut, confirmation) ou la fiche d&apos;une carte. Un exemplaire de chaque album est toujours gardé, ainsi
               que ceux engagés dans une annonce active ou une proposition d&apos;échange en attente. La poussière fabrique un album
-              absent de la collection depuis sa fiche, pour 4 fois ce que rapporte un doublon de sa rareté (commun 20 à légendaire
-              600) ; un album fabriqué ne rapporte ni XP, ni points de saison, ni progression de quête (comme un achat au marché).
+              absent de la collection depuis sa fiche, à prix volontairement très élevé pour éviter les abus (<code>CRAFT_COST</code> :
+              commun 250, peu commun 600, rare 1 500, épique 4 000, légendaire 10 000) ; un album fabriqué ne rapporte ni XP, ni points de saison, ni progression de quête (comme un achat au marché).
             </li>
             <li>
               <strong>Liste de souhaits</strong> (<code>lib/wishlist.ts</code>) : bouton « ♥ Ajouter à mes souhaits » sur la fiche
