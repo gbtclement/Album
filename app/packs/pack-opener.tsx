@@ -42,7 +42,7 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
   const router = useRouter();
   const [autoReveal, setAutoReveal] = useState(initialAuto);
   const [opening, setOpening] = useState<Opening | null>(null);
-  // Réserves renvoyées par le serveur après une ouverture (la page n'est rechargée qu'à la fermeture)
+  // Réserves renvoyées par le serveur après une ouverture (affichées sans attendre le rechargement de la page)
   const [liveStocks, setLiveStocks] = useState<Stocks | null>(null);
   const [reduced] = useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [, startTransition] = useTransition();
@@ -60,6 +60,9 @@ export function PackRoom({ stocks, autoReveal: initialAuto }: { stocks: Stocks; 
       return;
     }
     setLiveStocks(result.stocks);
+    // Le vinyle de la barre du bas et le HUD sont rendus côté serveur : on les recalcule tout de suite,
+    // sans attendre la fermeture (l'ouverture en cours garde son état)
+    router.refresh();
     // De la moins rare à la plus rare : la meilleure carte arrive en dernier
     const sorted = [...result.cards].sort((a, b) => tierRank(a.tier) - tierRank(b.tier));
     setOpening({ id, kind, cards: sorted.map((card) => ({ ...card, notes: card.tier === "legendaire" ? legendNotes() : [] })) });

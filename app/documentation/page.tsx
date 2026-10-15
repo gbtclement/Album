@@ -174,6 +174,7 @@ const LOTS = [
   { lot: "PIO2", name: "Pioche : rareté cachée jusqu'à la réponse, série et chances centrées, la série de 7 offre un pack Épique", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "CAT2", name: "Catalogue 100 % Last.fm : import des artistes des classements Last.fm (mondial, par pays, par genre), albums d'au moins 100 000 écoutes confirmés albums studio par MusicBrainz ; ListenBrainz retiré (code, colonnes listen_count et listener_count, estimation de secours de la rareté)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PACK3", name: "Recharge des packs ralentie : un pack toutes les 10 minutes au lieu de 5", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "C14", name: "Correctif : le vinyle des packs (barre du bas) et la barre du haut se mettent à jour à chaque pack ouvert, sans attendre la fermeture de l'écran d'ouverture", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
