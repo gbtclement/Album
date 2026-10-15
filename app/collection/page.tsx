@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import type { CSSProperties } from "react";
 import { auth } from "@/auth";
 import { formatNumber } from "@/components/game-ui";
 import { SiteNav } from "@/components/site-nav";
@@ -42,13 +41,22 @@ export default async function CollectionPage({ searchParams }: Props) {
   return (
     <>
       <SiteNav message={message} />
-      <main className="game-page">
-        <h1>Collection</h1>
-        <p className="sub">
-          {formatNumber(totalCards)} carte{totalCards > 1 ? "s" : ""} · score {formatNumber(collectionScore(cards))}
-        </p>
+      <main className="game-page coll">
+        {/* En-tête : chiffres clés sur une ligne, sans boîte ; un filet sous le titre montre la part du catalogue possédée */}
+        <header className="coll-head">
+          <h1>Collection</h1>
+          <dl className="coll-stats">
+            <div><dt>Albums</dt><dd>{formatNumber(cards.length)}<small> / {formatNumber(catalogSize)}</small></dd></div>
+            <div><dt>Cartes</dt><dd>{formatNumber(totalCards)}</dd></div>
+            <div><dt>Score</dt><dd>{formatNumber(collectionScore(cards))}</dd></div>
+            <div><dt>Poussière</dt><dd><span className="dust-i" aria-hidden="true" /> {formatNumber(dust)}</dd></div>
+          </dl>
+          <div className="coll-meter" role="img" aria-label={`${cards.length} albums sur ${catalogSize} au catalogue`}>
+            <i style={{ width: `${catalogSize ? Math.max(0.6, (cards.length / catalogSize) * 100) : 0}%` }} />
+          </div>
+        </header>
 
-        <nav className="seg" aria-label="Vues de la collection">
+        <nav className="coll-tabs" aria-label="Vues de la collection">
           <Link href="/collection" aria-current={tab === "cards" ? "page" : undefined}>Cartes</Link>
           <Link href="/collection?vue=artistes" aria-current={tab === "artists" ? "page" : undefined}>
             Artistes{claimable > 0 && <b>{claimable}</b>}
@@ -62,29 +70,14 @@ export default async function CollectionPage({ searchParams }: Props) {
           <WishList wishes={wishes} dust={dust} />
         ) : tab === "artists" ? (
           <>
-            <div className="progress-card">
-              <span className="big">{completed}</span>
-              <div className="l">
-                <strong>collection{completed > 1 ? "s" : ""} d&apos;artiste terminée{completed > 1 ? "s" : ""} sur {sets.length} commencée{sets.length > 1 ? "s" : ""}</strong>
-                <div className="bar">
-                  <div style={{ width: `${sets.length ? (completed / sets.length) * 100 : 0}%`, "--c": "var(--gold)" } as CSSProperties} />
-                </div>
-              </div>
-            </div>
+            <p className="coll-note">
+              <b>{completed}</b> collection{completed > 1 ? "s" : ""} d&apos;artiste terminée{completed > 1 ? "s" : ""} sur{" "}
+              <b>{sets.length}</b> commencée{sets.length > 1 ? "s" : ""}
+            </p>
             <ArtistSets sets={sets} />
           </>
         ) : (
           <>
-            <div className="progress-card">
-              <span className="big">{cards.length}</span>
-              <div className="l">
-                <strong>albums différents sur {formatNumber(catalogSize)}</strong>
-                <div className="bar">
-                  <div style={{ width: `${catalogSize ? (cards.length / catalogSize) * 100 : 0}%`, "--c": "var(--r-rare)" } as CSSProperties} />
-                </div>
-              </div>
-            </div>
-
             <PressPanel dust={dust} summary={pressable} />
 
             {cards.length === 0 ? (

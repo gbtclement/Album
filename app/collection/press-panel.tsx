@@ -17,7 +17,7 @@ export function PressPanel({ dust, summary }: { dust: number; summary: Summary }
   const chosen = tiers.filter((tier) => summary[tier].cards > 0);
   const cards = chosen.reduce((sum, tier) => sum + summary[tier].cards, 0);
   const gain = chosen.reduce((sum, tier) => sum + summary[tier].dust, 0);
-  const pressable = RARITY_TIERS.some((tier) => summary[tier].cards > 0);
+  const pressable = RARITY_TIERS.reduce((sum, tier) => sum + summary[tier].cards, 0);
 
   function toggle(tier: RarityTier) {
     setConfirming(false);
@@ -29,10 +29,14 @@ export function PressPanel({ dust, summary }: { dust: number; summary: Summary }
       <summary>
         <span className="dust-i" aria-hidden="true" />
         <div className="l">
-          <strong>{dust.toLocaleString("fr-FR")} poussière{dust > 1 ? "s" : ""} de vinyle</strong>
-          <small>{pressable ? "Presse tes doublons pour fabriquer les albums qui te manquent" : "Aucun doublon à presser pour l'instant"}</small>
+          <strong>Pressoir à vinyle</strong>
+          <small>
+            {pressable > 0
+              ? `${pressable} doublon${pressable > 1 ? "s" : ""} à presser · ${dust.toLocaleString("fr-FR")} poussière${dust > 1 ? "s" : ""}`
+              : "Aucun doublon à presser pour l'instant"}
+          </small>
         </div>
-        <span className="btn">Presser</span>
+        <span className="press-open" aria-hidden="true">{pressable > 0 ? "Presser" : "Voir"}<i>›</i></span>
       </summary>
       <div className="press-body">
         <p className="set-note">

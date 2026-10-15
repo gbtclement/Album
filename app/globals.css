@@ -928,6 +928,9 @@ input[name="terms"] { width: 22px; height: 22px; flex: none; accent-color: var(-
 /* Fond plein : la page Packs ne doit pas se lire derrière le bilan. */
 .opening.recap-screen { background: radial-gradient(circle at 50% 35%, rgba(244,183,64,.14), transparent 55%), var(--night); }
 .recap .facts { width: 100%; }
+.recap .fact { text-align: center; }
+.recap .fact b { justify-content: center; }
+.recap .fact small { display: block; line-height: 1.3; margin-top: 2px; }
 .recap .label { width: 100%; margin: 4px 0 0; }
 .rate.none { opacity: .4; }
 .recap-best { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
@@ -935,3 +938,60 @@ input[name="terms"] { width: 22px; height: 22px; flex: none; accent-color: var(-
 .recap-card.tier-legendaire, .recap-card.tier-epique { box-shadow: 0 0 14px color-mix(in srgb, var(--rar) 55%, transparent); }
 .recap-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .recap-card em { position: absolute; left: 0; right: 0; bottom: 0; font-style: normal; font-family: var(--f-ui); font-weight: 800; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; background: var(--coral); color: #fff; padding: 2px 0; }
+
+/* Page Collection (lot UI1) : les pochettes d'abord, comme un bac de disquaire. Peu de boîtes, des filets,
+   la rareté portée par les intercalaires et un liseré sous chaque pochette. Styles limités à .coll. */
+.coll-head { display: grid; gap: 10px; margin-bottom: 4px; }
+.coll-head h1 { margin: 6px 0 0; }
+.coll-stats { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 0; }
+.coll-stats div { display: grid; gap: 1px; }
+.coll-stats dt { font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.coll-stats dd { margin: 0; display: flex; align-items: center; gap: 6px; font-family: var(--f-display); font-size: 21px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.coll-stats dd small { font-family: var(--f-ui); font-size: 13px; color: var(--muted); }
+.coll-meter { height: 3px; border-radius: 3px; background: color-mix(in srgb, var(--line) 70%, transparent); overflow: hidden; }
+.coll-meter i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--gold), var(--coral)); }
+
+.coll-tabs { display: flex; gap: 26px; margin: 14px 0 16px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.coll-tabs a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--muted); text-decoration: none; font-family: var(--f-ui); font-weight: 700; font-size: 14px; letter-spacing: .02em; box-shadow: inset 0 -2px 0 transparent; transition: color .15s, box-shadow .15s; white-space: nowrap; }
+.coll-tabs a:hover { color: var(--ink); }
+.coll-tabs a[aria-current="page"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--gold); }
+.coll-tabs b { font-family: var(--f-ui); font-size: 11px; font-weight: 800; color: #fff; background: var(--coral); border-radius: 999px; padding: 1px 7px; }
+
+.coll .quest.press { background: color-mix(in srgb, var(--night-2) 70%, transparent); border-color: color-mix(in srgb, var(--line) 70%, transparent); border-radius: 14px; }
+.coll .press summary { padding: 10px 12px; min-height: 44px; }
+.coll .press summary .dust-i { width: 26px; height: 26px; }
+.coll .press summary strong { font-size: 14px; }
+.press-open { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-ui); font-weight: 700; font-size: 13px; color: var(--gold); }
+.press-open i { font-style: normal; font-size: 18px; line-height: 1; transition: transform .2s ease-out; }
+.press[open] .press-open i { transform: rotate(90deg); }
+
+.coll-toolbar { display: grid; gap: 10px; margin: 18px 0 4px; }
+.coll-toolbar .searchbar, .coll-toolbar .chips { margin-bottom: 0; }
+.coll-toolbar .searchbar input { background: transparent; }
+@media (min-width: 900px) { .coll-toolbar { grid-template-columns: minmax(260px, 340px) 1fr; align-items: center; gap: 16px; } .coll-toolbar .chips { padding-bottom: 2px; } }
+.coll .chip { background: transparent; box-shadow: none; border: 1px solid var(--line); min-height: 36px; }
+.coll .chip:hover { color: var(--ink); }
+.coll .chip[aria-pressed="true"] { background: var(--night-3); color: var(--ink); outline: 0; border-color: var(--c, var(--gold)); }
+
+.coll-note { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+.coll-note b { color: var(--ink); font-family: var(--f-display); font-weight: 400; font-size: 17px; }
+.crate { margin-top: 26px; }
+.crate-head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px; font-family: var(--f-display); font-weight: 400; font-size: 19px; color: var(--rar); }
+.crate-head small { font-family: var(--f-ui); font-weight: 700; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.crate-head::after { content: ""; flex: 1; height: 1px; align-self: center; background: linear-gradient(90deg, color-mix(in srgb, var(--rar) 45%, transparent), transparent); }
+.crate-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 10px; }
+@media (min-width: 640px) { .crate-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 14px; } }
+@media (min-width: 900px) { .crate-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px 18px; } }
+
+.sleeve { display: grid; gap: 1px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; border-radius: 8px; }
+.sleeve-art { position: relative; display: block; aspect-ratio: 1; border-radius: 6px; overflow: hidden; background: var(--night-3); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 10px 20px -12px rgba(0,0,0,.9); transition: transform .18s ease-out, box-shadow .18s ease-out; }
+.sleeve-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sleeve-art::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--rar); }
+.crate.tier-legendaire .sleeve-art { box-shadow: inset 0 0 0 1px rgba(244,183,64,.55), 0 10px 24px -10px rgba(244,183,64,.45); }
+.crate.tier-epique .sleeve-art { box-shadow: inset 0 0 0 1px rgba(181,108,242,.45), 0 10px 22px -12px rgba(181,108,242,.4); }
+.sleeve:hover .sleeve-art { transform: translateY(-3px); }
+.sleeve:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+.sleeve-art b { position: absolute; right: 6px; bottom: 9px; font-family: var(--f-ui); font-weight: 700; font-size: 11px; color: #fff; background: rgba(10,8,22,.82); border-radius: 999px; padding: 1px 7px; }
+.sleeve-t { margin-top: 7px; font-size: 12.5px; font-weight: 800; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sleeve-a { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .sleeve-art, .press-open i { transition: none; } .sleeve:hover .sleeve-art { transform: none; } }
