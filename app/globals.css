@@ -894,3 +894,19 @@ input[name="terms"] { width: 22px; height: 22px; flex: none; accent-color: var(-
 .adm-help { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
 .adm-help strong { color: var(--ink); }
 .premium-tag.admin-tag { margin-left: 6px; background: var(--dock); color: var(--ink); box-shadow: 0 3px 0 var(--dock-edge); }
+
+/* Poussière de vinyle (lot DUP1) : pressoir des doublons dans la collection, fabrication sur la fiche album */
+.dust-i { flex: none; display: inline-block; width: 15px; height: 15px; border-radius: 50%; vertical-align: -2px; background: radial-gradient(circle at 30% 30%, #fff6d8 0 1.5px, transparent 2px), radial-gradient(circle at 70% 60%, #ffe08a 0 1.5px, transparent 2px), radial-gradient(circle at 40% 75%, var(--coral) 0 1.5px, transparent 2px), radial-gradient(circle, #3a335f, #1a1730); border: 2px solid color-mix(in srgb, var(--gold) 70%, var(--coral)); }
+.quest.press { display: block; padding: 0; margin-bottom: 12px; }
+.press summary { display: flex; gap: 12px; align-items: center; padding: 12px; cursor: pointer; list-style: none; }
+.press summary::-webkit-details-marker { display: none; }
+.press summary .dust-i { width: 30px; height: 30px; }
+.press summary small { display: block; font-size: 12px; color: var(--muted); }
+.press[open] summary .btn { visibility: hidden; }
+.press-body { padding: 0 12px 12px; display: grid; gap: 10px; }
+.chips.wrap { flex-wrap: wrap; overflow: visible; margin-bottom: 0; }
+.chip:disabled { opacity: .4; cursor: not-allowed; }
+.craft { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--night-2); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin-top: 14px; }
+.craft .l { flex: 1; min-width: 180px; font-size: 13px; color: var(--muted); }
+.craft .l strong { display: block; color: var(--ink); font-size: 14px; }
+.sheet-press { margin-top: 8px; }

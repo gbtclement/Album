@@ -8,7 +8,9 @@ import { SiteNav } from "@/components/site-nav";
 import { getArtistSets } from "@/lib/artist-sets";
 import { collectionScore, getAlbumsCount, getCollectionCards } from "@/lib/collection";
 import { ArtistSets } from "./artist-sets";
+import { getDust, getPressableSummary } from "@/lib/dust";
 import { CollectionBrowser } from "./collection-browser";
+import { PressPanel } from "./press-panel";
 
 export const metadata: Metadata = { title: "Collection" };
 
@@ -22,10 +24,12 @@ export default async function CollectionPage({ searchParams }: Props) {
   const { message, vue } = await searchParams;
   const tab = vue === "artistes" ? "artists" : "cards";
 
-  const [cards, catalogSize, sets] = await Promise.all([
+  const [cards, catalogSize, sets, dust, pressable] = await Promise.all([
     getCollectionCards(session.user.id),
     getAlbumsCount(),
     getArtistSets(session.user.id),
+    getDust(session.user.id),
+    getPressableSummary(session.user.id),
   ]);
   const totalCards = cards.reduce((sum, card) => sum + card.count, 0);
   const claimable = sets.filter((set) => !set.claimed && set.owned === set.total).length;
@@ -71,6 +75,8 @@ export default async function CollectionPage({ searchParams }: Props) {
                 </div>
               </div>
             </div>
+
+            <PressPanel dust={dust} summary={pressable} />
 
             {cards.length === 0 ? (
               <p className="empty">

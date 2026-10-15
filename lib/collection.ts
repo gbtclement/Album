@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { AlbumLinks, AlbumRow } from "@/lib/catalog";
+import { RESERVED_SQL } from "@/lib/dust";
 import { RARITY_POINTS, type RarityTier } from "@/lib/rarity";
 
 export type CollectionItem = {
@@ -16,6 +17,8 @@ export type CollectionCard = CollectionItem & {
   links: AlbumLinks;
   // Cote : moyenne des 10 dernières ventes en pièces (null sans vente)
   cote: number | null;
+  // Exemplaires engagés dans une annonce du marché ou une proposition d'échange (ne peuvent pas être pressés)
+  reserved: number;
 };
 
 // Albums possédés par le joueur, éventuellement filtrés par palier
@@ -37,7 +40,8 @@ export async function getCollectionCards(userId: string): Promise<CollectionCard
     `select a.slug, a.title, a.artist, a.cover_url, a.rarity_tier, ua.count, a.release_year, a.links,
             (select round(avg(x.price_coins))::int
                from (select price_coins from market_sales ms where ms.album_id = a.id
-                     order by ms.created_at desc limit 10) x) as cote
+                     order by ms.created_at desc limit 10) x) as cote,
+            ${RESERVED_SQL} as reserved
      from user_albums ua
      join albums a on a.id = ua.album_id
      where ua.user_id = $1 and ua.count > 0

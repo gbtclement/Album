@@ -9,12 +9,16 @@ import { SiteNav } from "@/components/site-nav";
 import { formatCompact, smallCover } from "@/components/game-ui";
 import { findAlbumBySlug, findAlbumsByArtist, type AlbumLinks } from "@/lib/catalog";
 import { getOwnedCount } from "@/lib/collection";
+import { getDust } from "@/lib/dust";
+import { craftCost } from "@/lib/dust-rules";
+import { craftAlbumAction } from "@/app/collection/actions";
 import { getAlbumCote } from "@/lib/market";
 import { RARITY_LABELS, RARITY_POINTS } from "@/lib/rarity";
 import { absoluteUrl, jsonLd } from "@/lib/seo";
 
 type Props = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ message?: string }>;
 };
 
 const PLATFORMS: Array<{ key: keyof AlbumLinks; label: string }> = [
@@ -44,17 +48,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function AlbumPage({ params }: Props) {
+export default async function AlbumPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { message } = await searchParams;
   const album = await getAlbum(slug);
   if (!album) notFound();
 
   const session = await auth();
-  const [owned, cote, sameArtist] = await Promise.all([
+  const [owned, cote, sameArtist, dust] = await Promise.all([
     session?.user?.id ? getOwnedCount(session.user.id, album.id) : Promise.resolve(null),
     getAlbumCote(album.id),
     findAlbumsByArtist(album.artist, album.id),
+    session?.user?.id ? getDust(session.user.id) : Promise.resolve(0),
   ]);
+  const cost = craftCost(album.rarity_tier);
   // Écoutes Last.fm, toutes versions de l'album additionnées : ce sont elles qui fixent la rareté
   const listens = album.lastfm_playcount ? Number(album.lastfm_playcount) : null;
 
@@ -87,7 +94,7 @@ export default async function AlbumPage({ params }: Props) {
 
   return (
     <>
-      <SiteNav />
+      <SiteNav message={message} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }} />
       <main className={`game-page narrow tier-${album.rarity_tier}`}>
         <div className="sheet-top" style={{ alignItems: "flex-start", marginTop: 8 }}>
@@ -134,6 +141,21 @@ export default async function AlbumPage({ params }: Props) {
           <div className="sheet-actions" style={{ marginTop: 14 }}>
             <Link href={`/marche/vendre?album=${album.slug}`} className="btn gold">Mettre en vente</Link>
             <Link href="/amis" className="btn">Proposer en échange</Link>
+          </div>
+        )}
+
+        {/* Fabrication avec la poussière de vinyle (doublons pressés dans la collection) */}
+        {owned === 0 && (
+          <div className="craft">
+            <span className="dust-i" aria-hidden="true" style={{ width: 30, height: 30 }} />
+            <div className="l">
+              <strong>Fabriquer cet album : {cost.toLocaleString("fr-FR")} poussières</strong>
+              Tu en as {dust.toLocaleString("fr-FR")}. Presse tes doublons dans ta collection pour en gagner.
+            </div>
+            <form action={craftAlbumAction}>
+              <input type="hidden" name="slug" value={album.slug} />
+              <button type="submit" className="btn gold" disabled={dust < cost}>Fabriquer</button>
+            </form>
           </div>
         )}
 

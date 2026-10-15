@@ -26,6 +26,7 @@ export const USER_TABLES = [
   "pass_progress",
   "pass_claims",
   "season_awards",
+  "crafts",
 ] as const;
 
 async function rows<T>(sql: string, userId: string) {
@@ -39,14 +40,14 @@ export async function exportUserData(userId: string) {
     `select pseudo, email, email_verified_at as email_verifie_le, created_at as inscrit_le,
             terms_accepted_at as cgu_acceptees_le, last_seen_at as derniere_visite,
             case when password_hash is null then 'Google' else 'e-mail et mot de passe' end as connexion,
-            coins as pieces, auto_reveal as reglage_revelation_auto, premium_until as premium_jusqu_au,
+            coins as pieces, dust as poussiere_de_vinyle, auto_reveal as reglage_revelation_auto, premium_until as premium_jusqu_au,
             premium_trial_used_at as mois_offert_utilise_le
      from users where id = $1`,
     userId,
   );
   if (!account) return null;
 
-  const [packs, collection, openings, friends, trades, listings, quests, draws, sets, achievements, pass, links] = await Promise.all([
+  const [packs, collection, openings, friends, trades, listings, quests, draws, sets, achievements, pass, links, crafts] = await Promise.all([
     rows(
       `select stock as packs_en_reserve, last_recharged_at as dernier_rechargement,
               bonus_packs as packs_gagnes, solo_packs as packs_solo,
@@ -127,6 +128,11 @@ export async function exportUserData(userId: string) {
               (select expires_at from password_resets where user_id = $1) as lien_mot_de_passe_expire_le`,
       userId,
     ),
+    rows(
+      `select a.title as album, a.artist as artiste, c.cost as poussiere_depensee, c.created_at as fabrique_le
+       from crafts c left join albums a on a.id = c.album_id where c.user_id = $1 order by c.created_at`,
+      userId,
+    ),
   ]);
 
   return {
@@ -144,6 +150,7 @@ export async function exportUserData(userId: string) {
     collections_artiste: sets,
     succes: achievements,
     passe_de_combat: pass,
+    albums_fabriques: crafts,
     liens_envoyes_par_email: links[0],
   };
 }

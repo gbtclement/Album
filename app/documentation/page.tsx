@@ -61,7 +61,7 @@ const ROUTES = [
 ];
 
 const TABLES = [
-  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement), dates d'acceptation des CGU, de dernière visite et d'avertissement d'inactivité, fin du premium (premium_until, null si jamais premium), date du premier premium (premium_trial_used_at : rempli = plus de mois offert), rôle (role : joueur ou admin, changé uniquement en base)" },
+  { name: "users", description: "Joueurs : e-mail, pseudo, hash du mot de passe, pièces (coins), date de vérification de l'e-mail, version des sessions, réglage auto_reveal (cartes retournées automatiquement), dates d'acceptation des CGU, de dernière visite et d'avertissement d'inactivité, fin du premium (premium_until, null si jamais premium), date du premier premium (premium_trial_used_at : rempli = plus de mois offert), rôle (role : joueur ou admin, changé uniquement en base), poussière de vinyle (dust)" },
   { name: "email_verifications", description: "Lien de vérification en cours par joueur (empreinte SHA-256 du jeton, date d'expiration)" },
   { name: "password_resets", description: "Lien de réinitialisation du mot de passe en cours par joueur (empreinte SHA-256 du jeton, expiration 1 h)" },
   { name: "schema_migrations", description: "Migrations déjà appliquées (nom du fichier et date), tenue par scripts/migrate.mjs" },
@@ -77,6 +77,7 @@ const TABLES = [
   { name: "pass_claims", description: "Paliers du passe récupérés : saison, palier (1 à 30), ligne (free ou premium), auto = versé en fin de saison" },
   { name: "daily_draws", description: "Pioche du jour : album tiré par joueur et par jour (heure de Paris), position du morceau montré, réponse, réussite et série en cours" },
   { name: "artist_set_rewards", description: "Collections d'artiste terminées : récompense récupérée par joueur et par artiste (taille du set, pièces, pack), une seule fois" },
+  { name: "crafts", description: "Albums fabriqués avec la poussière de vinyle : joueur, album, poussière dépensée, date" },
   { name: "user_achievements", description: "Succès débloqués par joueur (clé du succès, pièces versées, date, notification déjà affichée ou non). La liste des succès est dans lib/achievement-rules.ts" },
   { name: "listings", description: "Annonces du marché : vente en pièces ou troc contre un album ; acheteur (buyer_id, sans clé étrangère, effacé à la suppression de son compte) pour repérer les comptes mules" },
   { name: "admin_actions", description: "Journal de l'admin : admin, compte visé (pseudos copiés), action, détails avant → après, date. Gardé un an (purge:inactive)" },
@@ -175,6 +176,7 @@ const LOTS = [
   { lot: "CAT2", name: "Catalogue 100 % Last.fm : import des artistes des classements Last.fm (mondial, par pays, par genre), albums d'au moins 100 000 écoutes confirmés albums studio par MusicBrainz ; ListenBrainz retiré (code, colonnes listen_count et listener_count, estimation de secours de la rareté)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PACK3", name: "Recharge des packs ralentie : un pack toutes les 10 minutes au lieu de 5", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "C14", name: "Correctif : le vinyle des packs (barre du bas) et la barre du haut se mettent à jour à chaque pack ouvert, sans attendre la fermeture de l'écran d'ouverture", status: "Terminé", branch: "paiement1-stripe" },
+  { lot: "DUP1", name: "Poussière de vinyle : les doublons se pressent (pressoir de la collection ou fiche d'une carte, un exemplaire gardé, ceux en vente ou en échange protégés) et la poussière fabrique l'album de son choix depuis sa fiche (migration 029, table crafts, export RGPD)", status: "Terminé", branch: "paiement1-stripe" },
   { lot: "PAY2", name: "Paiement Stripe : abonnement via Stripe Checkout, webhook qui prolonge premium_until, résiliation depuis le portail client Stripe, CGV et mentions de paiement", status: "À faire", branch: "-" },
 ];
 
@@ -360,7 +362,13 @@ export default async function DocumentationPage() {
               Last.fm : commun.
             </li>
             <li>
-              <strong>Doublons :</strong> conservés. La carte affiche un badge xN quand le joueur en possède plusieurs.
+              <strong>Doublons :</strong> conservés. La carte affiche un badge xN quand le joueur en possède plusieurs. Ils peuvent
+              être pressés en poussière de vinyle (<code>lib/dust-rules.ts</code>, <code>lib/dust.ts</code>) : commun 5, peu commun 10,
+              rare 25, épique 60, légendaire 150 par doublon, depuis le pressoir de la collection (raretés au choix, commun à rare
+              cochés par défaut, confirmation) ou la fiche d&apos;une carte. Un exemplaire de chaque album est toujours gardé, ainsi
+              que ceux engagés dans une annonce active ou une proposition d&apos;échange en attente. La poussière fabrique un album
+              absent de la collection depuis sa fiche, pour 4 fois ce que rapporte un doublon de sa rareté (commun 20 à légendaire
+              600) ; un album fabriqué ne rapporte ni XP, ni points de saison, ni progression de quête (comme un achat au marché).
             </li>
             <li>
               <strong>Points de classement :</strong> Commun 1, Peu commun 2, Rare 5, Épique 10, Légendaire 25 (un album compte une seule fois).

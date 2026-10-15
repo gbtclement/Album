@@ -6,6 +6,8 @@ import { matchesSearch, SearchBar, TierChips } from "@/components/game-controls"
 import { CoverImage } from "@/components/cover-image";
 import { smallCover } from "@/components/game-ui";
 import type { CollectionCard } from "@/lib/collection";
+import { DUST_PER_DUPLICATE, pressableCopies } from "@/lib/dust-rules";
+import { pressAlbumAction } from "./actions";
 import { RARITY_LABELS, RARITY_POINTS, RARITY_TIERS, type RarityTier } from "@/lib/rarity";
 
 const PLATFORMS = [
@@ -68,6 +70,7 @@ export function CollectionBrowser({ cards }: { cards: CollectionCard[] }) {
 }
 
 function AlbumSheet({ card, onClose }: { card: CollectionCard; onClose: () => void }) {
+  const pressable = pressableCopies(card.count, card.reserved);
   return (
     <div className="sheet-wrap">
       <button type="button" className="sheet-back" aria-label="Fermer" onClick={onClose} />
@@ -104,6 +107,15 @@ function AlbumSheet({ card, onClose }: { card: CollectionCard; onClose: () => vo
           <Link href={`/marche/vendre?album=${card.slug}`} className="btn gold">Mettre en vente</Link>
           <Link href="/amis" className="btn">Proposer en échange</Link>
         </div>
+        {pressable > 0 && (
+          <form action={pressAlbumAction} className="sheet-press">
+            <input type="hidden" name="slug" value={card.slug} />
+            <button type="submit" className="btn block">
+              <span className="dust-i" aria-hidden="true" />
+              Presser {pressable > 1 ? `les ${pressable} doublons` : "le doublon"} (+{pressable * DUST_PER_DUPLICATE[card.rarity_tier]})
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
